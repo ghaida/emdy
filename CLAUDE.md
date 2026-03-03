@@ -7,16 +7,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Emdy is a minimal Markdown reader app for macOS. It is intentionally limited in scope — it reads and renders Markdown files, nothing more.
 
 ### Core Features (exhaustive list)
-- Open and render Markdown files as formatted text
+- Open and render Markdown files (GFM) as formatted text
+- Open a directory to browse its Markdown files via a sidebar
 - Enlarge/reduce document display size
 - Switch font style: serif, sans-serif, monospace
 - Copy selected text in RTF format for pasting into other apps
+- Print / Save as PDF (via standard macOS print dialog)
+- Open Recent / reopen last file
 
 ### Non-goals
 - No Markdown editing or writing
-- No file management, sidebar, or tabs
-- No export (PDF, HTML, etc.)
+- No export to HTML/DOCX
 - No plugins or extensions
+- No recursive directory browsing (sidebar shows one level)
 
 ## Tech Stack
 
