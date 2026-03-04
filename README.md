@@ -12,8 +12,10 @@ Emdy renders Markdown files as clean, formatted documents. Double-click and read
 
 - **GitHub Flavored Markdown** — headings, lists, tables, code blocks, task lists, images, and more
 - **File and folder support** — open a single file, or a directory to browse its Markdown files in a sidebar
+- **Light, Dark, and System themes** — dark mode uses a warm, Braun-inspired palette
+- **Optimal reading width** — text stays within a comfortable column, centered in the window
 - **Font switcher** — serif, sans-serif, or monospace
-- **Zoom** — enlarge or reduce the document display
+- **Zoom** — enlarge or reduce the document display, with a live percentage readout
 - **RTF copy** — copied text pastes formatted into Mail, Google Docs, Slack, etc.
 - **Print / Save as PDF** — via the standard macOS print dialog
 - **Native macOS app** — built with Swift and SwiftUI
@@ -28,8 +30,9 @@ Requires macOS 14 (Sonoma) or later.
 
 - **Open a file:** Double-click any `.md` file, or use File > Open
 - **Open a folder:** Drag a directory into Emdy to browse its Markdown files
-- **Zoom:** `Cmd +` / `Cmd -`
-- **Change font:** View menu > Font
+- **Zoom:** `Cmd +` / `Cmd -` (click the percentage in the toolbar to reset)
+- **Change font:** View menu or the Font dropdown in the toolbar
+- **Switch theme:** View menu or the Theme button in the toolbar
 - **Copy as RTF:** Select text and `Cmd C`
 - **Print / PDF:** `Cmd P`
 
@@ -38,10 +41,11 @@ Requires macOS 14 (Sonoma) or later.
 ```bash
 git clone https://github.com/ghaida/emdy.git
 cd emdy
+xcodegen generate
 xcodebuild -scheme Emdy -configuration Debug build
 ```
 
-Or open the Xcode project and hit Run.
+The project uses [xcodegen](https://github.com/yonaskolb/XcodeGen) — `project.yml` is the source of truth. Run `xcodegen generate` after cloning or adding/removing files.
 
 ## License
 
