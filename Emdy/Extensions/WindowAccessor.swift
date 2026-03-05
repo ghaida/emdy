@@ -19,11 +19,12 @@ struct WindowAccessor: NSViewRepresentable {
 }
 
 extension View {
-    func configureWindow() -> some View {
+    func configureWindow(minWidth: CGFloat = 700, minHeight: CGFloat = 500) -> some View {
         background(WindowAccessor { window in
             guard let window else { return }
             window.titlebarAppearsTransparent = false
             window.isMovableByWindowBackground = true
+            window.minSize = NSSize(width: minWidth, height: minHeight)
         })
     }
 

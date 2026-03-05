@@ -2,6 +2,8 @@ import AppKit
 
 final class EmdyTextView: NSTextView {
 
+    override var acceptsFirstResponder: Bool { true }
+
     override func copy(_ sender: Any?) {
         guard let textStorage = textStorage else {
             super.copy(sender)
@@ -26,5 +28,18 @@ final class EmdyTextView: NSTextView {
         menu.addItem(selectAllItem)
 
         return menu
+    }
+
+    static func findIn(window: NSWindow?) -> EmdyTextView? {
+        guard let contentView = window?.contentView else { return nil }
+        return findTextView(in: contentView)
+    }
+
+    private static func findTextView(in view: NSView) -> EmdyTextView? {
+        if let textView = view as? EmdyTextView { return textView }
+        for subview in view.subviews {
+            if let found = findTextView(in: subview) { return found }
+        }
+        return nil
     }
 }

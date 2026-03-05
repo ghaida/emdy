@@ -57,4 +57,5 @@ extension Notification.Name {
     static let zoomReset = Notification.Name("emdy.zoomReset")
     static let setFont = Notification.Name("emdy.setFont")
     static let setTheme = Notification.Name("emdy.setTheme")
+    static let openDirectory = Notification.Name("emdy.openDirectory")
 }

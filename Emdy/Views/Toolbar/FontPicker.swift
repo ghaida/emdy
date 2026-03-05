@@ -10,19 +10,15 @@ struct FontPicker: View {
                 Button {
                     settings.fontFamily = family
                 } label: {
-                    HStack {
+                    if settings.fontFamily == family {
+                        Label(family.rawValue, systemImage: "checkmark")
+                    } else {
                         Text(family.rawValue)
-                        if settings.fontFamily == family {
-                            Image(systemName: "checkmark")
-                        }
                     }
                 }
             }
         } label: {
-            Text("Font")
-                .font(.system(size: 12))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+            Label("Font", systemImage: "textformat")
         }
         .disabled(!isEnabled)
     }

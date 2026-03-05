@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct EmdyApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var showDefaultHandlerPrompt = false
 
     var body: some Scene {
@@ -20,7 +21,7 @@ struct EmdyApp: App {
         .defaultSize(width: 800, height: 600)
         .commands {
             EmdyMenuCommands()
-            OpenFolderCommand()
+            OpenCommands()
         }
 
         WindowGroup("Directory Browser", for: URL.self) { $url in
@@ -29,26 +30,39 @@ struct EmdyApp: App {
                     .configureWindow()
             }
         }
-        .defaultSize(width: 960, height: 600)
+        .defaultSize(width: 1200, height: 800)
     }
 }
 
-struct OpenFolderCommand: Commands {
+struct OpenCommands: Commands {
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
-        CommandGroup(after: .newItem) {
-            Button("Open Folder\u{2026}") {
+        CommandGroup(replacing: .newItem) {
+            Button("Open\u{2026}") {
                 let panel = NSOpenPanel()
-                panel.canChooseFiles = false
+                panel.canChooseFiles = true
                 panel.canChooseDirectories = true
                 panel.allowsMultipleSelection = false
-                panel.message = "Choose a folder containing Markdown files"
+                panel.message = "Select a file or folder to open"
+                panel.prompt = "Open"
 
-                guard panel.runModal() == .OK, let url = panel.url else { return }
-                openWindow(value: url)
+                panel.begin { [openWindow] response in
+                    guard response == .OK, let url = panel.url else { return }
+                    panel.close()
+
+                    var isDir: ObjCBool = false
+                    FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
+
+                    if isDir.boolValue {
+                        openWindow(value: url)
+                    } else {
+                        NSDocumentController.shared.openDocument(
+                            withContentsOf: url, display: true) { _, _, _ in }
+                    }
+                }
             }
-            .keyboardShortcut("o", modifiers: [.command, .shift])
+            .keyboardShortcut("o", modifiers: .command)
         }
     }
 }

@@ -26,16 +26,7 @@ struct ThemePicker: View {
                 }
             }
         } label: {
-            HStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.system(size: 10))
-                Text("Theme")
-                    .font(.system(size: 12))
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            Label("Theme", systemImage: icon)
         }
-        .menuStyle(.borderlessButton)
-        .fixedSize()
     }
 }

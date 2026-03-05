@@ -25,6 +25,16 @@ struct DocumentContentView: View {
         ).render(currentText)
     }
 
+    /// Always light palette and print-friendly sizes for copy/print/PDF.
+    private var exportText: NSAttributedString {
+        MarkdownRenderer(
+            fontFamily: settings.fontFamily,
+            zoomLevel: 0.75,
+            fileURL: document.fileURL,
+            isDark: false
+        ).render(currentText)
+    }
+
     var body: some View {
         Group {
             if hasContent {
@@ -41,27 +51,28 @@ struct DocumentContentView: View {
         }
         .applyTheme(settings.theme)
         .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .automatic) {
                 ZoomControls(settings: settings, isEnabled: hasContent)
                 FontPicker(settings: settings, isEnabled: hasContent)
                 ThemePicker(settings: settings)
+            }
 
-                Spacer()
-
-                CopyButton(action: {
-                    NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
-                }, isEnabled: hasContent)
-
-                PrintButton(action: {
-                    PrintService.print(attributedString: renderedText)
-                }, isEnabled: hasContent)
-
-                PDFButton(action: {
-                    let name = document.fileURL?.lastPathComponent ?? "document.md"
-                    if PDFExportService.savePDF(attributedString: renderedText, suggestedName: name) {
-                        toastMessage = ToastMessage(message: "PDF saved successfully")
-                    }
-                }, isEnabled: hasContent)
+            ToolbarItem(placement: .primaryAction) {
+                ActionButtonGroup(
+                    copyAction: {
+                        PasteboardService.copyRTF(from: exportText, range: NSRange())
+                    },
+                    printAction: {
+                        PrintService.print(attributedString: exportText)
+                    },
+                    pdfAction: {
+                        let name = document.fileURL?.lastPathComponent ?? "document.md"
+                        if PDFExportService.savePDF(attributedString: exportText, suggestedName: name) {
+                            toastMessage = ToastMessage(message: "PDF saved successfully")
+                        }
+                    },
+                    isEnabled: hasContent
+                )
             }
         }
         .toast($toastMessage)

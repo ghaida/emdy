@@ -1,60 +1,24 @@
 import SwiftUI
 
-private let toolbarFont: Font = .system(size: 12)
-private let toolbarIconFont: Font = .system(size: 10)
-
-struct CopyButton: View {
-    var action: () -> Void
+struct ActionButtonGroup: View {
+    var copyAction: () -> Void
+    var printAction: () -> Void
+    var pdfAction: (() -> Void)?
     var isEnabled: Bool
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                Image(systemName: "doc.on.doc")
-                    .font(toolbarIconFont)
-                Text("Copy")
-                    .font(toolbarFont)
+        ControlGroup {
+            Button(action: copyAction) {
+                Label("Copy", systemImage: "doc.on.doc")
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-        }
-        .disabled(!isEnabled)
-    }
-}
-
-struct PrintButton: View {
-    var action: () -> Void
-    var isEnabled: Bool
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                Image(systemName: "printer")
-                    .font(toolbarIconFont)
-                Text("Print")
-                    .font(toolbarFont)
+            Button(action: printAction) {
+                Label("Print", systemImage: "printer")
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-        }
-        .disabled(!isEnabled)
-    }
-}
-
-struct PDFButton: View {
-    var action: () -> Void
-    var isEnabled: Bool
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                Image(systemName: "arrow.down.doc")
-                    .font(toolbarIconFont)
-                Text("Save PDF")
-                    .font(toolbarFont)
+            if let pdfAction {
+                Button(action: pdfAction) {
+                    Label("PDF", systemImage: "arrow.down.doc")
+                }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
         }
         .disabled(!isEnabled)
     }
