@@ -12,7 +12,7 @@ Existing evidence baseline: `docs/design-brief.md` § User Research, § Key Assu
 
 We have forum posts and anecdotal evidence that non-technical users struggle with `.md` files. What we don't have is a sense of *scale* or *severity*. Is this a recurring frustration or a once-a-year annoyance? Does it block real work, or do people shrug and ask for a PDF?
 
-- [ ] **Desk research: quantify the pain** — Search for support tickets, forum threads, and social media complaints about opening `.md` files. Estimate frequency and recency. Look for signals in Apple Community, Reddit (r/macapps, r/productivity, r/ChatGPT), Twitter/X, and Hacker News. Track whether complaints are increasing (AI-tool adoption as a leading indicator).
+- [x] **Desk research: quantify the pain** — 25 new sources documented in `docs/desk-research.md`. AI-generated Markdown is a recurring, documented pain point. Complaints are accelerating. Severity: real-but-manageable, trending toward hair-on-fire for frequent AI users. Apple validated Markdown at the platform level (iOS 26 Notes) but macOS Quick Look still shows raw text.
 - [ ] **Intercept interviews (5–8 people)** — Find non-technical professionals who have received `.md` files in the last 3 months. Ask: How often does this happen? What did you do? How much time did you lose? Did it block anything? Rate the frustration 1–10. Recruit from Slack communities, LinkedIn, or personal network.
 - [ ] **Survey: problem frequency and severity (target n=50+)** — Short screener survey distributed to non-technical knowledge workers. Key questions: Have you received a `.md` file in the past 6 months? How did you open it? How would you rate the experience? Would you install a dedicated app to solve this? Distribute via social media, relevant Slack/Discord communities, and direct outreach.
 - [ ] **Deliverable: Problem Validation Brief** — Synthesize findings into a one-page summary: problem severity rating (hair-on-fire / real-but-manageable / mild-inconvenience), estimated frequency per user, growth trajectory, and go/no-go recommendation.
@@ -54,12 +54,12 @@ The current feature set was designed from assumptions about what a "Markdown rea
 
 The design brief asserts that "every competitor is an editor first." That's the hypothesis. A thorough competitive audit tests whether this gap is real, how big it is, and whether anyone else is moving to fill it.
 
-- [ ] **Competitive audit: direct competitors** — Catalog every macOS app that renders Markdown: Typora, MacDown, Marked 2, Obsidian, iA Writer, Bear, QLMarkdown, Markview, and others. For each, document: primary use case (editor vs. reader vs. notes), pricing model, install base (estimated), platform support, key features, UX complexity, and how they handle the "just reading" scenario.
-- [ ] **Competitive audit: indirect competitors** — Map adjacent solutions people use instead of a Markdown reader: VS Code preview pane, GitHub web rendering, browser-based viewers (Dillinger, StackEdit), Notion import, pandoc conversion, ChatGPT "render this for me." Understand why people reach for these and what's good enough about them.
-- [ ] **Competitive positioning map** — Plot competitors on two axes: complexity (simple → powerful) and primary intent (reading → writing). Identify where Emdy sits and whether the "simple reader" quadrant is truly empty or just underserved.
-- [ ] **Pricing and business model survey** — Document how each competitor monetizes: free, freemium, one-time purchase, subscription. Identify whether "free + tip jar" is unique or just underfunded relative to competitors. Look at competitors' stated revenue or sustainability signals.
-- [ ] **Switching cost analysis** — For users currently using Typora, Marked 2, or VS Code to read Markdown, what would make them switch to Emdy? What would prevent it? Is "simpler" a strong enough pull, or do they need a forcing function?
-- [ ] **Deliverable: Competitive Landscape Report** — Full audit with comparison table, positioning map, gap analysis, and strategic implications. Identify Emdy's defensible differentiation and the biggest competitive risks.
+- [x] **Competitive audit: direct competitors** — Full audit in `docs/competitive-landscape.md`. The "simple reader" quadrant is occupied but ownerless — small apps (MarkView, MD Viewer, Markoff) exist but none has traction or native macOS quality. Every established player (Typora, Obsidian, iA Writer, Bear) is an editor/notes tool first.
+- [x] **Competitive audit: indirect competitors** — VS Code preview, GitHub rendering, pandoc, browser viewers all documented. Most are "good enough" for technical users but inaccessible to non-technical ones.
+- [x] **Competitive positioning map** — Included in report. Emdy's quadrant (simple + reading) has no strong incumbent.
+- [x] **Pricing and business model survey** — Documented per competitor. "Free + tip jar" is uncommon but appropriate for Emdy's scope; requires 10K+ active users for meaningful revenue.
+- [x] **Switching cost analysis** — Included. Biggest risk is Apple adding native Quick Look rendering. Biggest opportunity is becoming the default recommendation developers give colleagues.
+- [x] **Deliverable: Competitive Landscape Report** — Complete at `docs/competitive-landscape.md`.
 - **Decision gate:** If a free, well-designed competitor already occupies the "simple reader" space, Emdy needs a sharper angle — or a different market entry strategy.
 
 #### Research operations
