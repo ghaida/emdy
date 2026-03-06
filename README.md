@@ -24,6 +24,10 @@ Emdy renders Markdown files as clean, formatted documents. Double-click and read
 - **Print** — via the standard macOS print dialog
 - **Native macOS app** — built with Swift and SwiftUI
 
+## Status
+
+The core app is functional. We're currently running user research to validate whether this is the right problem, the right audience, and the right form factor before continuing feature work. See `docs/project-plan.md` for the research plan and `docs/design-brief.md` for existing findings.
+
 ## Install
 
 Download the latest release from the [Releases](https://github.com/ghaida/emdy/releases) page.

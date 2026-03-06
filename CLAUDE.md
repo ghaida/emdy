@@ -62,6 +62,10 @@ The app follows a straightforward SwiftUI document-based app pattern:
 - **Syntax highlighting**: `SyntaxHighlighter` applies regex-based coloring to fenced code blocks. Supports Swift, Python, JS/TS, Go, Rust, Java/Kotlin, C/C++, Ruby, Bash, SQL, and a generic fallback. Colors defined in `ColorPalette` (syntaxKeyword, syntaxString, syntaxComment, syntaxNumber).
 - **Sidebar width**: Constrained to 200–320px (ideal 240) via `navigationSplitViewColumnWidth` plus a `SidebarWidthSetter` that overrides any cached NSSplitView state
 
+## Project Status
+
+The core app is functional. Before continuing feature development, we are running a structured user research phase to validate assumptions about the problem, audience, solution form factor, feature set, and competitive landscape. See `docs/project-plan.md` § User Research for the full research plan and `docs/design-brief.md` for the existing evidence baseline.
+
 ## Key Files
 
 | Area | Files |
@@ -73,6 +77,7 @@ The app follows a straightforward SwiftUI document-based app pattern:
 | Toolbar | `Views/Toolbar/ZoomControls.swift`, `Views/Toolbar/FontPicker.swift`, `Views/Toolbar/ThemePicker.swift`, `Views/Toolbar/ActionButtons.swift` |
 | Commands | `Commands/EmdyMenuCommands.swift` |
 | Tests | `EmdyTests/MarkdownRendererTests.swift` |
+| Research & planning | `docs/project-plan.md`, `docs/design-brief.md`, `docs/user-journeys.md`, `docs/service-blueprint.md`, `docs/system-architecture.md` |
 
 ## Conventions
 

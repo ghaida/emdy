@@ -2,6 +2,73 @@
 
 ## To Do
 
+### User Research
+
+The design brief captures initial desk research (Reddit, Apple Community, forums) that surfaces real pain points around Markdown readability for non-technical users. That research is a starting point, not a conclusion. Before investing further in features, distribution, and marketing, we need to pressure-test the core assumptions this product is built on. The following research tracks are structured around five strategic questions.
+
+Existing evidence baseline: `docs/design-brief.md` § User Research, § Key Assumptions & Open Questions.
+
+#### 1. Problem Validation — Is this truly a problem people have?
+
+We have forum posts and anecdotal evidence that non-technical users struggle with `.md` files. What we don't have is a sense of *scale* or *severity*. Is this a recurring frustration or a once-a-year annoyance? Does it block real work, or do people shrug and ask for a PDF?
+
+- [ ] **Desk research: quantify the pain** — Search for support tickets, forum threads, and social media complaints about opening `.md` files. Estimate frequency and recency. Look for signals in Apple Community, Reddit (r/macapps, r/productivity, r/ChatGPT), Twitter/X, and Hacker News. Track whether complaints are increasing (AI-tool adoption as a leading indicator).
+- [ ] **Intercept interviews (5–8 people)** — Find non-technical professionals who have received `.md` files in the last 3 months. Ask: How often does this happen? What did you do? How much time did you lose? Did it block anything? Rate the frustration 1–10. Recruit from Slack communities, LinkedIn, or personal network.
+- [ ] **Survey: problem frequency and severity (target n=50+)** — Short screener survey distributed to non-technical knowledge workers. Key questions: Have you received a `.md` file in the past 6 months? How did you open it? How would you rate the experience? Would you install a dedicated app to solve this? Distribute via social media, relevant Slack/Discord communities, and direct outreach.
+- [ ] **Deliverable: Problem Validation Brief** — Synthesize findings into a one-page summary: problem severity rating (hair-on-fire / real-but-manageable / mild-inconvenience), estimated frequency per user, growth trajectory, and go/no-go recommendation.
+- **Decision gate:** If the problem is real but mild, reconsider positioning (utility vs. must-have). If it's not a real problem, stop here.
+
+#### 2. Audience Definition — Who exactly has this problem?
+
+The design brief proposes two audiences: non-technical professionals who receive `.md` files, and developers who want a quick previewer. These are hypotheses. Research should confirm, refine, or replace them.
+
+- [ ] **Segment mapping from interview data** — Using the intercept interviews above, map respondents into distinct segments by: role, technical comfort, frequency of Markdown encounters, source of `.md` files (AI tools vs. developers vs. documentation), and context (work vs. personal).
+- [ ] **Behavioral clustering** — From survey responses, identify natural groupings. Are there distinct "archetypes" beyond the two in the brief? Possible segments to test: PM/manager receiving developer docs, marketer getting AI-generated content, executive reviewing briefings, developer wanting a lightweight previewer, student encountering `.md` in coursework.
+- [ ] **Context and motivation interviews (3–5 per top segment)** — For each confirmed segment, understand: Where are they when they encounter `.md` files? What device? What's the surrounding workflow? What triggers the need? What would "good enough" look like for them?
+- [ ] **Deliverable: Audience Profiles** — 2–4 evidence-based audience profiles with: context, frequency, pain severity, current workarounds, willingness to adopt a new tool, and what "success" looks like for them. Replace the current Primary/Secondary audience framing in the design brief if findings diverge.
+- **Decision gate:** If the primary audience turns out to be developers (not non-technical users), the product positioning, marketing, and feature set all shift.
+
+#### 3. Solution Fit — Is a native macOS app the right form factor?
+
+We assumed "native macOS desktop app" early. That assumption needs testing. The right solution might be a Quick Look plugin (zero-install), a browser extension (cross-platform), a web app (no download friction), a mobile app (if people receive `.md` on phones), or some combination.
+
+- [ ] **Platform and context audit** — From interview and survey data, map where users encounter `.md` files: desktop (macOS vs. Windows vs. Linux), mobile, web (email attachments, Slack, Google Drive), IDE. If 60% of encounters happen in a browser context, a browser extension might matter more than a native app.
+- [ ] **Competitive form factor analysis** — Catalog the form factors competitors use (native app, web app, browser extension, CLI tool, Quick Look plugin, VS Code extension). Note adoption patterns — which form factors gained traction and which didn't? Why?
+- [ ] **Quick Look plugin evaluation** — macOS Quick Look is the zero-friction path: no app to open, just press Space in Finder. Evaluate: Would a high-quality Quick Look plugin solve 80% of the problem for 80% of users? What rendering limitations exist? Could Emdy ship *both* a standalone app and a QL plugin?
+- [ ] **"Where do you read?" card sort (during interviews)** — Ask users to rank where they'd want Markdown rendering: Finder preview, standalone app, browser, phone, inside Slack/Teams, inside email. Identify the highest-value touchpoints.
+- [ ] **Deliverable: Solution Fit Analysis** — One-page comparison of form factors against user needs, with a recommendation. Include: reach (how many users each form factor serves), friction (install/adoption cost), capability (what each form factor can and can't do), and strategic fit (what positions Emdy best long-term).
+- **Decision gate:** If a Quick Look plugin or browser extension solves the core problem with less friction, the standalone app becomes a secondary play — or the product ships both.
+
+#### 4. Feature Validation — Is the feature set right?
+
+The current feature set was designed from assumptions about what a "Markdown reader" needs. Research should validate whether users actually want these features, and surface anything missing that could drive adoption.
+
+- [ ] **Feature desirability testing (during interviews)** — Show the current feature list to interview participants. For each feature, ask: Would you use this? How often? Is this essential, nice-to-have, or unnecessary? Then ask the open question: What's missing? What would make you recommend this to a colleague?
+- [ ] **Kano analysis (in survey)** — Include Kano-style questions for key features: How would you feel if Emdy had [feature]? How would you feel if it didn't? Categorize features as must-have, performance (more is better), delighter, or indifferent. Priority features to test: directory browsing, font switching, zoom, dark mode, export to PDF, copy as RTF, find in page, minimap.
+- [ ] **Killer feature discovery** — Specifically probe for unmet needs: Do you ever need to *do* anything with the rendered content beyond reading? (Copy into a presentation? Share a specific section? Annotate? Search across multiple files?) Look for a feature that would shift Emdy from "nice to have" to "can't live without."
+- [ ] **Feature usage analytics plan** — Define what instrumentation to add post-launch to track actual feature usage. Which features get used daily vs. never? This feeds Phase 2 prioritization.
+- [ ] **Deliverable: Feature Validation Matrix** — Table mapping each current and proposed feature against: user demand (from interviews/survey), competitive differentiation, implementation cost, and recommendation (keep / cut / add / defer).
+- **Decision gate:** If a killer feature emerges (e.g., "I need to share a rendered link with my team"), it could reshape the product. If users don't care about features like minimap or font switching, simplify.
+
+#### 5. Competitive Landscape — What already exists?
+
+The design brief asserts that "every competitor is an editor first." That's the hypothesis. A thorough competitive audit tests whether this gap is real, how big it is, and whether anyone else is moving to fill it.
+
+- [ ] **Competitive audit: direct competitors** — Catalog every macOS app that renders Markdown: Typora, MacDown, Marked 2, Obsidian, iA Writer, Bear, QLMarkdown, Markview, and others. For each, document: primary use case (editor vs. reader vs. notes), pricing model, install base (estimated), platform support, key features, UX complexity, and how they handle the "just reading" scenario.
+- [ ] **Competitive audit: indirect competitors** — Map adjacent solutions people use instead of a Markdown reader: VS Code preview pane, GitHub web rendering, browser-based viewers (Dillinger, StackEdit), Notion import, pandoc conversion, ChatGPT "render this for me." Understand why people reach for these and what's good enough about them.
+- [ ] **Competitive positioning map** — Plot competitors on two axes: complexity (simple → powerful) and primary intent (reading → writing). Identify where Emdy sits and whether the "simple reader" quadrant is truly empty or just underserved.
+- [ ] **Pricing and business model survey** — Document how each competitor monetizes: free, freemium, one-time purchase, subscription. Identify whether "free + tip jar" is unique or just underfunded relative to competitors. Look at competitors' stated revenue or sustainability signals.
+- [ ] **Switching cost analysis** — For users currently using Typora, Marked 2, or VS Code to read Markdown, what would make them switch to Emdy? What would prevent it? Is "simpler" a strong enough pull, or do they need a forcing function?
+- [ ] **Deliverable: Competitive Landscape Report** — Full audit with comparison table, positioning map, gap analysis, and strategic implications. Identify Emdy's defensible differentiation and the biggest competitive risks.
+- **Decision gate:** If a free, well-designed competitor already occupies the "simple reader" space, Emdy needs a sharper angle — or a different market entry strategy.
+
+#### Research operations
+
+- [ ] **Recruit interview participants** — Build a screener and recruit 10–15 participants across target segments. Mix of non-technical professionals and developers. Prioritize people who have received `.md` files recently.
+- [ ] **Build and distribute survey** — Design survey instrument covering problem validation, feature desirability, and platform preferences. Target 50+ responses. Use Typeform, Google Forms, or similar.
+- [ ] **Synthesis workshop** — After data collection, consolidate all findings into a single research debrief. Update the design brief with validated (or invalidated) assumptions. Flag any strategic pivots.
+- [ ] **Update design brief** — Revise `docs/design-brief.md` with research findings. Replace assumptions with evidence. Adjust audience definitions, scope, and positioning as needed.
+
 ### App Features
 - [ ] Register as default macOS handler for `.md` / `.markdown` (UTType in Info.plist + first-launch prompt)
 - [ ] File watching — re-render when the open file changes on disk
