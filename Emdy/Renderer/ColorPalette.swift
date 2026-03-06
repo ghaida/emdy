@@ -110,7 +110,7 @@ extension ColorPalette {
             headline: hdl, body: bdy, medium: med, muted: mut,
             accent: acc, link: lnk,
             success: suc, successBackground: sucBg, error: err,
-            codeBackground: NSColor(hex: "#222222"), codeText: bdy,
+            codeBackground: NSColor(hex: "#131314"), codeText: bdy,
             syntaxKeyword: NSColor(hex: "#D4A574"),
             syntaxString: NSColor(hex: "#8A9B50"),
             syntaxComment: mut,

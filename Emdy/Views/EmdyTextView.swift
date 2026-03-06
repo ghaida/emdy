@@ -27,6 +27,42 @@ final class EmdyTextView: NSTextView {
         textContainerInset = savedInset
     }
 
+    override func resetCursorRects() {
+        discardCursorRects()
+    }
+
+    override func cursorUpdate(with event: NSEvent) {
+        updateCursorForEvent(event)
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        updateCursorForEvent(event)
+        // Don't call super — NSTextView sets I-beam in its mouseMoved.
+    }
+
+    private func updateCursorForEvent(_ event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        if isOverText(at: point) {
+            NSCursor.iBeam.set()
+        } else {
+            NSCursor.arrow.set()
+        }
+    }
+
+    private func isOverText(at point: NSPoint) -> Bool {
+        guard let layoutManager = layoutManager,
+              let textContainer = textContainer else { return false }
+        let origin = textContainerOrigin
+        let textPoint = NSPoint(x: point.x - origin.x, y: point.y - origin.y)
+        guard textPoint.x >= 0, textPoint.y >= 0,
+              textPoint.x <= textContainer.size.width else { return false }
+        let charIndex = layoutManager.characterIndex(for: textPoint, in: textContainer, fractionOfDistanceBetweenInsertionPoints: nil)
+        guard charIndex < contentLength else { return false }
+        let glyphRange = layoutManager.glyphRange(forCharacterRange: NSRange(location: charIndex, length: 1), actualCharacterRange: nil)
+        let lineRect = layoutManager.lineFragmentUsedRect(forGlyphAt: glyphRange.location, effectiveRange: nil)
+        return textPoint.y >= lineRect.minY && textPoint.y <= lineRect.maxY && textPoint.x <= lineRect.maxX
+    }
+
     override func selectionRange(forProposedRange proposedCharRange: NSRange, granularity: NSSelectionGranularity) -> NSRange {
         let clamped = NSIntersectionRange(proposedCharRange, NSRange(location: 0, length: contentLength))
         return super.selectionRange(forProposedRange: clamped, granularity: granularity)

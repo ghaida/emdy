@@ -25,7 +25,7 @@ struct FontProvider {
     var code: NSFont { monoFont(size: 13, weight: .regular) }
     var codeBold: NSFont { monoFont(size: 13, weight: .semibold) }
 
-    var tableHeader: NSFont { font(size: 13, weight: .semibold) }
+    var tableHeader: NSFont { font(size: 13, weight: .bold) }
     var tableBody: NSFont { font(size: 13, weight: .regular) }
 
     // MARK: - Line heights

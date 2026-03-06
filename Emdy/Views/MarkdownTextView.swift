@@ -145,6 +145,8 @@ struct MarkdownTextView: NSViewRepresentable {
             }
         }
 
+        scrollView.hasVerticalScroller = !showMinimap
+
         if let minimap = coord.minimap {
             minimap.isHidden = !showMinimap
             coord.scrollTrailingToMinimap?.isActive = showMinimap

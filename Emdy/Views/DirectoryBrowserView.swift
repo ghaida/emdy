@@ -99,7 +99,7 @@ struct DirectoryBrowserView: View {
                 MinimapToggle(settings: settings)
             }
         }
-        .toast($toastMessage)
+        .toast($toastMessage, showMinimap: settings.showMinimap, isDark: settings.theme.isDark)
         .applyTheme(settings.theme)
         .background(SidebarWidthSetter(targetWidth: 240))
         .background(WindowAccessor { window in

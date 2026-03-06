@@ -103,7 +103,7 @@ struct DocumentContentView: View {
                 MinimapToggle(settings: settings)
             }
         }
-        .toast($toastMessage)
+        .toast($toastMessage, showMinimap: settings.showMinimap, isDark: settings.theme.isDark)
         .onAppear {
             setupFileWatcher()
         }

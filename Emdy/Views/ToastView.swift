@@ -1,67 +1,162 @@
 import SwiftUI
+import AppKit
 
-struct ToastView: View {
+struct ToastView: NSViewRepresentable {
     let message: String
+    let palette: ColorPalette
     let onDismiss: () -> Void
 
-    @Environment(\.colorScheme) private var colorScheme
-    @State private var isVisible = true
+    func makeNSView(context: Context) -> ToastNSView {
+        let view = ToastNSView(message: message, palette: palette, onDismiss: onDismiss)
+        return view
+    }
 
-    private var palette: ColorPalette { .current(for: colorScheme) }
+    func updateNSView(_ nsView: ToastNSView, context: Context) {}
+}
 
-    var body: some View {
-        if isVisible {
-            HStack(spacing: 10) {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(Color(nsColor: palette.success))
+final class ToastNSView: NSView {
+    private let onDismiss: () -> Void
+    private var dismissButton: NSView?
 
-                Text(message)
-                    .font(.system(.body, design: .monospaced))
-                    .foregroundStyle(Color(nsColor: palette.body))
+    init(message: String, palette: ColorPalette, onDismiss: @escaping () -> Void) {
+        self.onDismiss = onDismiss
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.backgroundColor = palette.successBackground.cgColor
+        layer?.cornerRadius = 6
 
-                Spacer()
+        let icon = NSImageView()
+        icon.image = NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil)
+        icon.contentTintColor = palette.success
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        icon.setContentHuggingPriority(.required, for: .horizontal)
 
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Color(nsColor: palette.medium))
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(Color(nsColor: palette.successBackground))
-            .cornerRadius(6)
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
-            .transition(.move(edge: .bottom).combined(with: .opacity))
-            .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
-                    dismiss()
-                }
-            }
+        let label = NSTextField(labelWithString: message)
+        label.font = .systemFont(ofSize: 13)
+        label.textColor = palette.body
+        label.lineBreakMode = .byTruncatingTail
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        let xButton = NSButton(title: "", target: self, action: #selector(dismissTapped))
+        xButton.image = NSImage(systemSymbolName: "xmark", accessibilityDescription: "Dismiss")
+        xButton.imagePosition = .imageOnly
+        xButton.isBordered = false
+        xButton.contentTintColor = palette.medium
+        xButton.translatesAutoresizingMaskIntoConstraints = false
+        xButton.setContentHuggingPriority(.required, for: .horizontal)
+        dismissButton = xButton
+
+        addSubview(icon)
+        addSubview(label)
+        addSubview(xButton)
+
+        NSLayoutConstraint.activate([
+            icon.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
+            icon.centerYAnchor.constraint(equalTo: centerYAnchor),
+            icon.widthAnchor.constraint(equalToConstant: 16),
+            icon.heightAnchor.constraint(equalToConstant: 16),
+
+            label.leadingAnchor.constraint(equalTo: icon.trailingAnchor, constant: 10),
+            label.centerYAnchor.constraint(equalTo: centerYAnchor),
+
+            xButton.leadingAnchor.constraint(greaterThanOrEqualTo: label.trailingAnchor, constant: 6),
+            xButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
+            xButton.centerYAnchor.constraint(equalTo: centerYAnchor),
+            xButton.widthAnchor.constraint(equalToConstant: 24),
+            xButton.heightAnchor.constraint(equalToConstant: 24),
+
+            heightAnchor.constraint(equalToConstant: 40),
+        ])
+
+        let tracking = NSTrackingArea(
+            rect: .zero,
+            options: [.cursorUpdate, .mouseMoved, .activeAlways, .inVisibleRect, .mouseEnteredAndExited],
+            owner: self
+        )
+        addTrackingArea(tracking)
+
+        // Auto-dismiss after 4 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            self?.dismissTapped()
         }
     }
 
-    private func dismiss() {
-        withAnimation(.easeOut(duration: 0.2)) {
-            isVisible = false
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) not implemented")
+    }
+
+    // Capture all hits so nothing leaks to the text view underneath
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        let local = convert(point, from: superview)
+        guard bounds.contains(local) else { return nil }
+        if let btn = dismissButton, btn.frame.contains(local) {
+            return btn
         }
+        return self
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        NSCursor.arrow.set()
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        let loc = convert(event.locationInWindow, from: nil)
+        if let btn = dismissButton, btn.frame.contains(loc) {
+            NSCursor.pointingHand.set()
+        } else {
+            NSCursor.arrow.set()
+        }
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        NSCursor.pop()
+    }
+
+    override func cursorUpdate(with event: NSEvent) {
+        let loc = convert(event.locationInWindow, from: nil)
+        if let btn = dismissButton, btn.frame.contains(loc) {
+            NSCursor.pointingHand.set()
+        } else {
+            NSCursor.arrow.set()
+        }
+    }
+
+    override func resetCursorRects() {
+        discardCursorRects()
+        addCursorRect(bounds, cursor: .arrow)
+        if let btn = dismissButton {
+            addCursorRect(btn.frame, cursor: .pointingHand)
+        }
+    }
+
+    @objc private func dismissTapped() {
         onDismiss()
     }
 }
 
 struct ToastModifier: ViewModifier {
     @Binding var toast: ToastMessage?
+    var showMinimap: Bool = false
+    var isDark: Bool = false
+
+    private var trailingInset: CGFloat {
+        showMinimap ? MinimapView.minimapWidth + 12 : 28
+    }
+
+    private var palette: ColorPalette {
+        .current(dark: isDark)
+    }
 
     func body(content: Content) -> some View {
-        content.overlay(alignment: .bottom) {
+        content.overlay(alignment: .topTrailing) {
             if let toast {
-                ToastView(message: toast.message) {
+                ToastView(message: toast.message, palette: palette) {
                     self.toast = nil
                 }
+                .frame(maxWidth: 440, maxHeight: 40)
+                .padding(.top, 12)
+                .padding(.trailing, trailingInset)
             }
         }
         .animation(.easeInOut(duration: 0.2), value: toast != nil)
@@ -73,7 +168,7 @@ struct ToastMessage: Equatable {
 }
 
 extension View {
-    func toast(_ toast: Binding<ToastMessage?>) -> some View {
-        modifier(ToastModifier(toast: toast))
+    func toast(_ toast: Binding<ToastMessage?>, showMinimap: Bool = false, isDark: Bool = false) -> some View {
+        modifier(ToastModifier(toast: toast, showMinimap: showMinimap, isDark: isDark))
     }
 }

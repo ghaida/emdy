@@ -68,11 +68,15 @@ final class MinimapView: NSView {
 
     private var frameObserver: NSObjectProtocol?
     private var contentReady = false
+    private var lastDocHeight: CGFloat = 0
+    private var revealWorkItem: DispatchWorkItem?
 
     func observeScrollView(_ scrollView: NSScrollView) {
         targetScrollView = scrollView
         contentReady = false
+        lastDocHeight = 0
         alphaValue = 0
+        revealWorkItem?.cancel()
 
         if let old = scrollObserver {
             NotificationCenter.default.removeObserver(old)
@@ -91,7 +95,7 @@ final class MinimapView: NSView {
             self?.needsDisplay = true
         }
 
-        // Wait for the document view to finish layout, then reveal
+        // Reveal only after doc height has stabilized (same value on consecutive checks).
         if let docView = scrollView.documentView {
             docView.postsFrameChangedNotifications = true
             frameObserver = NotificationCenter.default.addObserver(
@@ -100,14 +104,24 @@ final class MinimapView: NSView {
                 queue: .main
             ) { [weak self] _ in
                 guard let self = self, !self.contentReady else { return }
-                guard scrollView.documentView != nil else { return }
-                self.contentReady = true
-                self.updateStickyOffset()
-                self.needsDisplay = true
-                NSAnimationContext.runAnimationGroup { ctx in
-                    ctx.duration = 0.2
-                    self.animator().alphaValue = 1
+                let currentHeight = docView.frame.height
+                self.lastDocHeight = currentHeight
+
+                self.revealWorkItem?.cancel()
+                let work = DispatchWorkItem { [weak self] in
+                    guard let self = self, !self.contentReady else { return }
+                    // Only reveal if the height hasn't changed since we scheduled
+                    guard docView.frame.height == self.lastDocHeight else { return }
+                    self.contentReady = true
+                    self.updateStickyOffset()
+                    self.needsDisplay = true
+                    NSAnimationContext.runAnimationGroup { ctx in
+                        ctx.duration = 0.2
+                        self.animator().alphaValue = 1
+                    }
                 }
+                self.revealWorkItem = work
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: work)
             }
         }
     }
@@ -180,11 +194,13 @@ final class MinimapView: NSView {
             if let c = NSColor.controlAccentColor.usingColorSpace(.sRGB) {
                 let grey = c.redComponent * 0.299 + c.greenComponent * 0.587 + c.blueComponent * 0.114
                 let sat: CGFloat = 0.25
+                let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+                let alpha: CGFloat = isDark ? 0.45 : 0.50
                 resolved = NSColor(
                     red: grey * (1 - sat) + c.redComponent * sat,
                     green: grey * (1 - sat) + c.greenComponent * sat,
                     blue: grey * (1 - sat) + c.blueComponent * sat,
-                    alpha: 0.45
+                    alpha: alpha
                 )
             }
         }
@@ -207,7 +223,7 @@ final class MinimapView: NSView {
         let maxScroll = max(1, totalHeight - visibleHeight)
         let scrollRatio = min(max(0, scrollY / maxScroll), 1)
 
-        let vpHeight = visibleHeight / totalHeight * scaledDocHeight
+        let vpHeight = min(visibleHeight / totalHeight * scaledDocHeight, scaledDocHeight)
         let vpTop = scrollRatio * max(0, scaledDocHeight - vpHeight)
 
         return (vpTop, vpHeight)
@@ -237,7 +253,8 @@ final class MinimapView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         guard !lines.isEmpty else { return }
 
-        palette.background.setFill()
+        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        (isDark ? NSColor(hex: "#222222") : palette.background).setFill()
         bounds.fill()
 
         let rowHeight = lineHeight + lineGap
