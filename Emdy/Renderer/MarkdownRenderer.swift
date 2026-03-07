@@ -54,6 +54,7 @@ final class MarkdownRenderer {
         var isOrderedList = false
         var listItemIndex: Int = 0
         var isTableHeader = false
+        var followsList = false
     }
 
     // MARK: - AST walker
@@ -68,6 +69,9 @@ final class MarkdownRenderer {
             renderChildren(of: node, into: result, context: ctx)
 
         case CMARK_NODE_PARAGRAPH:
+            if previousSiblingIsList(node) {
+                ctx.followsList = true
+            }
             renderChildren(of: node, into: result, context: ctx)
             if !isLastChild(node) && !isInsideTightList(node) {
                 result.append(newline())
@@ -126,6 +130,9 @@ final class MarkdownRenderer {
             }
 
         case CMARK_NODE_CODE_BLOCK:
+            if result.length > 0 && !result.string.hasSuffix("\n") {
+                result.append(newline())
+            }
             if let literal = cmark_node_get_literal(node) {
                 let text = String(cString: literal)
                 let language = cmark_node_get_fence_info(node).flatMap {
@@ -174,6 +181,9 @@ final class MarkdownRenderer {
             ctx.isOrderedList = isOrdered
             ctx.listItemIndex = 0
             renderChildren(of: node, into: result, context: ctx)
+            if !result.string.hasSuffix("\n") {
+                result.append(newline())
+            }
 
         case CMARK_NODE_ITEM:
             ctx.listItemIndex += 1
@@ -302,6 +312,10 @@ final class MarkdownRenderer {
         } else {
             para.lineSpacing = fontProvider.bodyLineHeight - font.pointSize
             para.paragraphSpacing = 16
+            if ctx.followsList {
+                para.paragraphSpacingBefore = 20
+                para.paragraphSpacing = 20
+            }
         }
 
         if ctx.isBlockquote {
@@ -402,6 +416,11 @@ final class MarkdownRenderer {
 
     private func isLastChild(_ node: UnsafeMutablePointer<cmark_node>) -> Bool {
         cmark_node_next(node) == nil
+    }
+
+    private func previousSiblingIsList(_ node: UnsafeMutablePointer<cmark_node>) -> Bool {
+        guard let prev = cmark_node_previous(node) else { return false }
+        return cmark_node_get_type(prev) == CMARK_NODE_LIST
     }
 
     private func isInsideTightList(_ node: UnsafeMutablePointer<cmark_node>) -> Bool {

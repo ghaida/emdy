@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 560" font-family="IBM Plex Mono, monospace">
+  <rect width="720" height="560" fill="#fafafa"/>
+
+  <!-- Axes -->
+  <line x1="360" y1="40" x2="360" y2="520" stroke="#999" stroke-width="1.5"/>
+  <line x1="40" y1="280" x2="680" y2="280" stroke="#999" stroke-width="1.5"/>
+
+  <!-- Axis labels -->
+  <text x="360" y="28" text-anchor="middle" font-size="13" font-weight="600" fill="#555">POWERFUL</text>
+  <text x="360" y="542" text-anchor="middle" font-size="13" font-weight="600" fill="#555">SIMPLE</text>
+  <text x="28" y="284" text-anchor="middle" font-size="13" font-weight="600" fill="#555" transform="rotate(-90,28,284)">READING</text>
+  <text x="700" y="284" text-anchor="middle" font-size="13" font-weight="600" fill="#555" transform="rotate(90,700,284)">WRITING</text>
+
+  <!-- Top-left: Powerful + Reading -->
+  <circle cx="200" cy="80" r="4" fill="#888"/>
+  <text x="212" y="85" font-size="12" fill="#333">Obsidian</text>
+
+  <circle cx="220" cy="140" r="4" fill="#888"/>
+  <text x="232" y="145" font-size="12" fill="#333">Marked 2</text>
+
+  <circle cx="180" cy="200" r="4" fill="#888"/>
+  <text x="192" y="205" font-size="12" fill="#333">VS Code preview</text>
+
+  <circle cx="140" cy="240" r="4" fill="#888"/>
+  <text x="152" y="245" font-size="12" fill="#333">QLMarkdown</text>
+
+  <!-- Top-right: Powerful + Writing -->
+  <circle cx="520" cy="100" r="4" fill="#888"/>
+  <text x="532" y="105" font-size="12" fill="#333">Notion (import)</text>
+
+  <circle cx="500" cy="140" r="4" fill="#888"/>
+  <text x="512" y="145" font-size="12" fill="#333">iA Writer</text>
+
+  <circle cx="480" cy="190" r="4" fill="#888"/>
+  <text x="492" y="195" font-size="12" fill="#333">Bear</text>
+
+  <circle cx="460" cy="230" r="4" fill="#888"/>
+  <text x="472" y="235" font-size="12" fill="#333">Typora</text>
+
+  <circle cx="460" cy="260" r="4" fill="#888"/>
+  <text x="472" y="265" font-size="12" fill="#333">MacDown</text>
+
+  <!-- Bottom-right: Simple + Writing -->
+  <circle cx="460" cy="340" r="4" fill="#888"/>
+  <text x="472" y="345" font-size="12" fill="#333">StackEdit</text>
+
+  <circle cx="460" cy="370" r="4" fill="#888"/>
+  <text x="472" y="375" font-size="12" fill="#333">Dillinger</text>
+
+  <!-- Bottom-left: Simple + Reading -->
+  <circle cx="160" cy="340" r="4" fill="#888"/>
+  <text x="172" y="345" font-size="12" fill="#666">MarkView</text>
+
+  <circle cx="160" cy="365" r="4" fill="#888"/>
+  <text x="172" y="370" font-size="12" fill="#666">MD Viewer</text>
+
+  <circle cx="160" cy="390" r="4" fill="#888"/>
+  <text x="172" y="395" font-size="12" fill="#666">MarkdownViewer</text>
+
+  <circle cx="160" cy="415" r="4" fill="#888"/>
+  <text x="172" y="420" font-size="12" fill="#666">Markoff</text>
+
+  <!-- Emdy -->
+  <rect x="120" y="450" width="120" height="32" rx="4" fill="#222" opacity="0.9"/>
+  <text x="180" y="471" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">EMDY</text>
+</svg>

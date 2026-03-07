@@ -8,6 +8,13 @@ final class EmdyTextView: NSTextView {
     /// (e.g. during inset changes from sidebar open/close).
     var suppressScrollAdjustment = false
 
+    /// When true, suppress NSTextView's automatic scrollRangeToVisible
+    /// (e.g. during initial text load to prevent jumping past top inset).
+    var suppressAutoScroll = false
+
+    /// When true, force scroll to stay at top (blocks all scroll sources during startup).
+    var lockScrollToTop = false
+
     /// Length of the actual document content (excluding trailing margin).
     var contentLength: Int = Int.max
 
@@ -68,7 +75,25 @@ final class EmdyTextView: NSTextView {
         return super.selectionRange(forProposedRange: clamped, granularity: granularity)
     }
 
+    override func scrollRangeToVisible(_ range: NSRange) {
+        if suppressAutoScroll || lockScrollToTop { return }
+        super.scrollRangeToVisible(range)
+    }
+
+    override func scroll(_ point: NSPoint) {
+        if lockScrollToTop {
+            super.scroll(.zero)
+            return
+        }
+        super.scroll(point)
+    }
+
     override func adjustScroll(_ newVisible: NSRect) -> NSRect {
+        if lockScrollToTop {
+            var rect = newVisible
+            rect.origin = .zero
+            return rect
+        }
         if suppressScrollAdjustment {
             return enclosingScrollView?.contentView.bounds ?? newVisible
         }

@@ -83,10 +83,11 @@ struct MarkdownTextView: NSViewRepresentable {
             minimap.widthAnchor.constraint(equalToConstant: MinimapView.minimapWidth),
         ])
 
+        textView.lockScrollToTop = true
         let attributed = renderMarkdown()
         let withMargin = appendBottomMargin(to: attributed)
         textView.textStorage?.setAttributedString(withMargin)
-        (textView as? EmdyTextView)?.contentLength = attributed.length
+        textView.contentLength = attributed.length
         updateContentInsets(textView)
         scrollView.contentView.scroll(to: .zero)
         scrollView.reflectScrolledClipView(scrollView.contentView)
@@ -211,6 +212,7 @@ struct MarkdownTextView: NSViewRepresentable {
         var lastFontFamily: FontFamily = .sansSerif
         var lastZoomLevel: CGFloat = 1.0
         var lastIsDark: Bool = false
+        var initialLayoutDone = false
 
         func textView(_ textView: NSTextView, clickedOnLink link: Any, at charIndex: Int) -> Bool {
             LinkHandler.handleLink(link, fileURL: fileURL)
@@ -228,6 +230,19 @@ struct MarkdownTextView: NSViewRepresentable {
             } else {
                 horizontalInset = (viewWidth - maxWidth) / 2
             }
+
+            if !initialLayoutDone {
+                initialLayoutDone = true
+                textView.textContainerInset = NSSize(width: horizontalInset, height: 92)
+                scrollView.contentView.scroll(to: .zero)
+                scrollView.reflectScrolledClipView(scrollView.contentView)
+                // Release lock after layout has fully settled.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    textView.lockScrollToTop = false
+                }
+                return
+            }
+
             let scrollY = scrollView.contentView.bounds.origin.y
             textView.suppressScrollAdjustment = true
             textView.textContainerInset = NSSize(width: horizontalInset, height: 92)

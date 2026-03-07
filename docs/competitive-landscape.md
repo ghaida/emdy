@@ -70,32 +70,7 @@ The gap Emdy targets — a native macOS app where you double-click a .md file an
 - **X-axis: Primary Intent** — Reading (left) to Writing (right)
 - **Y-axis: Complexity** — Simple (bottom) to Powerful (top)
 
-```
-                         POWERFUL
-                            |
-              Obsidian  *   |
-                            |        * Notion (import)
-          Marked 2  *       |   * iA Writer
-                            |
-        VS Code preview *   |   * Bear
-                            |
-                            |   * Typora
-                            |
-    QLMarkdown *            |   * MacDown
-                            |
-                            |
-         READING -----------+------------ WRITING
-                            |
-                            |
-    MarkView *              |   * StackEdit
-    MD Viewer *             |   * Dillinger
-    MarkdownViewer *        |
-    Markoff *               |
-                            |
-              >>> EMDY <<<  |
-                            |
-                         SIMPLE
-```
+![Competitive positioning map](images/positioning-map.svg)
 
 ### Analysis
 

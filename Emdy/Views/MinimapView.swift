@@ -14,9 +14,10 @@ final class MinimapView: NSView {
     private let lineGap: CGFloat = 1
     private let charWidth: CGFloat = 2
     private let leftPadding: CGFloat = 12
+    private let topPadding: CGFloat = 12
 
     private var scaledDocHeight: CGFloat {
-        CGFloat(totalLineCount) * (lineHeight + lineGap)
+        topPadding + CGFloat(totalLineCount) * (lineHeight + lineGap)
     }
 
     // Sticky offset — only moves when viewport reaches edges
@@ -257,7 +258,7 @@ final class MinimapView: NSView {
 
         for i in firstVisibleLine...lastVisibleLine {
             let line = lines[i]
-            let y = CGFloat(i) * rowHeight - minimapOffset
+            let y = topPadding + CGFloat(i) * rowHeight - minimapOffset
 
             for run in line.runs {
                 let x = leftPadding + CGFloat(run.startChar) * charWidth
