@@ -12,7 +12,6 @@ Existing evidence baseline: `docs/design-brief.md` § User Research, § Key Assu
 
 We have forum posts and anecdotal evidence that non-technical users struggle with `.md` files. What we don't have is a sense of *scale* or *severity*. Is this a recurring frustration or a once-a-year annoyance? Does it block real work, or do people shrug and ask for a PDF?
 
-- [x] **Desk research: quantify the pain** — 25 new sources documented in `docs/desk-research.md`. AI-generated Markdown is a recurring, documented pain point. Complaints are accelerating. Severity: real-but-manageable, trending toward hair-on-fire for frequent AI users. Apple validated Markdown at the platform level (iOS 26 Notes) but macOS Quick Look still shows raw text.
 - [ ] **Intercept interviews (5–8 people)** — Find non-technical professionals who have received `.md` files in the last 3 months. Ask: How often does this happen? What did you do? How much time did you lose? Did it block anything? Rate the frustration 1–10. Recruit from Slack communities, LinkedIn, or personal network.
 - [ ] **Survey: problem frequency and severity (target n=50+)** — Short screener survey distributed to non-technical knowledge workers. Key questions: Have you received a `.md` file in the past 6 months? How did you open it? How would you rate the experience? Would you install a dedicated app to solve this? Distribute via social media, relevant Slack/Discord communities, and direct outreach.
 - [ ] **Deliverable: Problem Validation Brief** — Synthesize findings into a one-page summary: problem severity rating (hair-on-fire / real-but-manageable / mild-inconvenience), estimated frequency per user, growth trajectory, and go/no-go recommendation.
@@ -50,29 +49,14 @@ The current feature set was designed from assumptions about what a "Markdown rea
 - [ ] **Deliverable: Feature Validation Matrix** — Table mapping each current and proposed feature against: user demand (from interviews/survey), competitive differentiation, implementation cost, and recommendation (keep / cut / add / defer).
 - **Decision gate:** If a killer feature emerges (e.g., "I need to share a rendered link with my team"), it could reshape the product. If users don't care about features like minimap or font switching, simplify.
 
-#### 5. Competitive Landscape — What already exists?
-
-The design brief asserts that "every competitor is an editor first." That's the hypothesis. A thorough competitive audit tests whether this gap is real, how big it is, and whether anyone else is moving to fill it.
-
-- [x] **Competitive audit: direct competitors** — Full audit in `docs/competitive-landscape.md`. The "simple reader" quadrant is occupied but ownerless — small apps (MarkView, MD Viewer, Markoff) exist but none has traction or native macOS quality. Every established player (Typora, Obsidian, iA Writer, Bear) is an editor/notes tool first.
-- [x] **Competitive audit: indirect competitors** — VS Code preview, GitHub rendering, pandoc, browser viewers all documented. Most are "good enough" for technical users but inaccessible to non-technical ones.
-- [x] **Competitive positioning map** — Included in report. Emdy's quadrant (simple + reading) has no strong incumbent.
-- [x] **Pricing and business model survey** — Documented per competitor. "Free + tip jar" is uncommon but appropriate for Emdy's scope; requires 10K+ active users for meaningful revenue.
-- [x] **Switching cost analysis** — Included. Biggest risk is Apple adding native Quick Look rendering. Biggest opportunity is becoming the default recommendation developers give colleagues.
-- [x] **Deliverable: Competitive Landscape Report** — Complete at `docs/competitive-landscape.md`.
-- **Decision gate:** If a free, well-designed competitor already occupies the "simple reader" space, Emdy needs a sharper angle — or a different market entry strategy.
-
 #### Research operations
 
 - [ ] **Recruit interview participants** — Build a screener and recruit 10–15 participants across target segments. Mix of non-technical professionals and developers. Prioritize people who have received `.md` files recently.
-- [x] **Build and distribute survey** — Survey instrument designed (`docs/user-research-survey.md`). 9 questions, ~2 min, covering problem validation, audience segmentation, platform behavior, current workarounds, and pain points. Conditional skips for non-Markdown-aware and infrequent users. Google Forms implementation in progress. Target 50+ responses.
 - [ ] **Synthesis workshop** — After data collection, consolidate all findings into a single research debrief. Update the design brief with validated (or invalidated) assumptions. Flag any strategic pivots.
 - [ ] **Update design brief** — Revise `docs/design-brief.md` with research findings. Replace assumptions with evidence. Adjust audience definitions, scope, and positioning as needed.
 
 ### App Features
 - [ ] Register as default macOS handler for `.md` / `.markdown` (UTType in Info.plist + first-launch prompt)
-- [x] File watching — re-render when the open file changes on disk
-- [x] Manual refresh via `Cmd+R`
 - [ ] Drag-and-drop file opening (drop a `.md` file onto the app icon or window)
 - [ ] Anchor link handling — click a heading link to scroll within the document
 - [ ] Remote image loading (fetch and display images referenced by URL)
@@ -82,6 +66,11 @@ The design brief asserts that "every competitor is an editor first." That's the 
 - [ ] File-deleted notice when an open file is removed from disk
 - [ ] License key system — validation, activation, and gating in-app
 - [ ] User-facing help documentation (accessible from Help menu)
+
+### Legal
+- [ ] Draft EULA (End User License Agreement)
+- [ ] Draft Terms of Use
+- [ ] Draft Privacy Policy
 
 ### Licensing & Payments
 - [ ] License key generation service
@@ -109,6 +98,16 @@ The design brief asserts that "every competitor is an editor first." That's the 
 ---
 
 ## Completed
+
+### User Research
+- [x] Desk research: quantify the pain — 25 sources documented in `docs/desk-research.md`
+- [x] Competitive audit: direct competitors — full audit in `docs/competitive-landscape.md`
+- [x] Competitive audit: indirect competitors — VS Code preview, GitHub rendering, pandoc, browser viewers
+- [x] Competitive positioning map — Emdy's quadrant (simple + reading) has no strong incumbent
+- [x] Pricing and business model survey — documented per competitor
+- [x] Switching cost analysis — risks and opportunities documented
+- [x] Competitive Landscape Report deliverable (`docs/competitive-landscape.md`)
+- [x] Survey instrument designed (`docs/user-research-survey.md`) — 9 questions, ~2 min
 
 ### Research & Planning
 - [x] Design brief — product vision, audience, constraints, user research (`docs/design-brief.md`)
