@@ -23,6 +23,9 @@ Package.resolved
 *.swp
 *~
 
+# Profiling
+*.profraw
+
 # Archives
 *.ipa
 *.dSYM.zip
