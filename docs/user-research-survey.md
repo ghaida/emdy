@@ -162,6 +162,53 @@ Thanks for taking the time. Your responses help us understand how people actuall
 | Q9 (desired features) | Feature validation — which capabilities matter most? Surfaces demand for collaboration, sharing, annotation beyond basic reading |
 | Q10 (wish) | Open discovery — surfaces unmet needs we haven't considered (collaboration, commenting, etc.) |
 
+---
+
+## Findings
+
+### Wave 1 — March 6, 2026 (n=6)
+
+**Respondents:** 3 designers, 2 software engineers, 1 designer (non-Markdown user). 5/6 work with Markdown regularly (daily or a few times a week).
+
+**Key findings:**
+
+- **AI tools are a universal source of Markdown.** All 5 active users listed AI tools as a source, alongside project repos and documentation. This confirms the desk research finding that AI-generated Markdown is accelerating the problem.
+- **Pain splits by role.** Designers report real frustrations: raw syntax instead of formatted text, broken tables, missing images. Engineers generally say "it works fine" but still identify unmet feature needs.
+- **"Copy formatted text" is the most-requested feature** (4/5 active users). Emdy already supports this — strong validation of the existing feature set.
+- **"Share a rendered link" appeared 3/5 times** — the strongest signal for a feature outside current scope. Potential basis for a paid tier.
+- **Nobody asked for editing.** The read-only thesis holds across both designers and engineers.
+- **Mobile reading gap surfaced once** ("no good way to read on phone") — worth monitoring but not yet actionable.
+- **Current workarounds are code editors and GitHub.** No one uses a dedicated Markdown reader today. The competitive gap is real.
+
+**Feature demand (among 5 active Markdown users):**
+
+| Feature | Mentions | Status in Emdy |
+|---------|----------|----------------|
+| Copy formatted text into other apps | 4 | Built |
+| Share a rendered link | 3 | Planned (paid) |
+| Auto-refresh when file changes | 2 | Built |
+| Side-by-side view of multiple files | 2 | Not planned |
+| Search within a document | 2 | Built |
+| Dark mode | 1 | Built |
+| Quick Look preview in Finder | 1 | Not planned |
+| Clean formatted view | 1 | Built (core feature) |
+| Comment or annotate | 1 | Not planned |
+| Collaborate in real time | 1 | Not planned |
+
+**Frustrations reported:**
+
+| Frustration | Mentions |
+|-------------|----------|
+| Raw syntax instead of formatted text | 1 |
+| Tables/complex formatting broken | 2 |
+| Images don't display properly | 2 |
+| No good way to read on phone | 1 |
+| No frustrations | 2 |
+
+**Limitations:** n=6 is too small for statistical significance. All respondents are technically literate (designers and engineers). No non-technical users responded. Findings are directional, not conclusive. More responses needed, especially from PMs, marketers, and other non-technical roles.
+
+---
+
 ### Analysis plan
 
 - **Cross-tabulate Q1 × Q4 × Q8** to see which roles experience the problem most frequently and most painfully

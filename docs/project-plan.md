@@ -55,9 +55,17 @@ The current feature set was designed from assumptions about what a "Markdown rea
 - [ ] **Synthesis workshop** — After data collection, consolidate all findings into a single research debrief. Update the design brief with validated (or invalidated) assumptions. Flag any strategic pivots.
 - [ ] **Update design brief** — Revise `docs/design-brief.md` with research findings. Replace assumptions with evidence. Adjust audience definitions, scope, and positioning as needed.
 
-### App Features
+### Emdy Share (paid)
+- [ ] Web sharing — upload a rendered Markdown file and get a shareable URL
+- [ ] Share backend service (hosting, storage, URL generation)
+- [ ] Share UI in the Mac app (share button, link copy, manage shared files)
+- [ ] Free/paid gating — share feature requires paid upgrade
+- [ ] Pricing and purchase flow
+
+### App Features (free)
 - [ ] Register as default macOS handler for `.md` / `.markdown` (UTType in Info.plist + first-launch prompt)
 - [ ] Drag-and-drop file opening (drop a `.md` file onto the app icon or window)
+- [ ] Heading navigator sidebar — list all headings in the document, click to jump to any heading
 - [ ] Anchor link handling — click a heading link to scroll within the document
 - [ ] Remote image loading (fetch and display images referenced by URL)
 - [ ] Image load failure — show alt text or placeholder
@@ -108,6 +116,7 @@ The current feature set was designed from assumptions about what a "Markdown rea
 - [x] Switching cost analysis — risks and opportunities documented
 - [x] Competitive Landscape Report deliverable (`docs/competitive-landscape.md`)
 - [x] Survey instrument designed (`docs/user-research-survey.md`) — 9 questions, ~2 min
+- [x] Survey distributed and initial responses collected (n=6, March 2026) — findings in `docs/user-research-survey.md` § Findings
 
 ### Research & Planning
 - [x] Design brief — product vision, audience, constraints, user research (`docs/design-brief.md`)
