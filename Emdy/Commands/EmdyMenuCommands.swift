@@ -14,6 +14,11 @@ struct EmdyMenuCommands: Commands {
                 NotificationCenter.default.post(name: .refreshDocument, object: nil)
             }
             .keyboardShortcut("r", modifiers: .command)
+
+            Button("Toggle Headings") {
+                NotificationCenter.default.post(name: .toggleHeadingNavigator, object: nil)
+            }
+            .keyboardShortcut("h", modifiers: [.command, .shift])
         }
 
         CommandGroup(after: .textFormatting) {
@@ -74,4 +79,5 @@ extension Notification.Name {
     static let openDirectory = Notification.Name("emdy.openDirectory")
     static let findInPage = Notification.Name("emdy.findInPage")
     static let refreshDocument = Notification.Name("emdy.refreshDocument")
+    static let toggleHeadingNavigator = Notification.Name("emdy.toggleHeadingNavigator")
 }

@@ -1,7 +1,7 @@
 import AppKit
 
 enum LinkHandler {
-    static func handleLink(_ link: Any, fileURL: URL?) -> Bool {
+    static func handleLink(_ link: Any, fileURL: URL?, textView: NSTextView? = nil, headings: [HeadingItem] = []) -> Bool {
         let urlString: String
         if let string = link as? String {
             urlString = string
@@ -13,7 +13,8 @@ enum LinkHandler {
 
         // Anchor links (scroll within document)
         if urlString.hasPrefix("#") {
-            return false
+            let slug = String(urlString.dropFirst())
+            return scrollToHeading(slug: slug, textView: textView, headings: headings)
         }
 
         // Relative .md links — open in Emdy
@@ -48,5 +49,48 @@ enum LinkHandler {
         let cleanPath = path.components(separatedBy: "#").first ?? path
         let resolved = base.appendingPathComponent(cleanPath)
         return FileManager.default.fileExists(atPath: resolved.path) ? resolved : nil
+    }
+
+    /// Scroll to the heading matching the given slug.
+    static func scrollToHeading(slug: String, textView: NSTextView?, headings: [HeadingItem]) -> Bool {
+        guard let textView = textView,
+              let textStorage = textView.textStorage else { return false }
+
+        // Find the heading index that matches this slug
+        guard let headingIndex = headings.firstIndex(where: { $0.slug == slug }) else { return false }
+
+        return scrollToHeadingIndex(headingIndex, in: textView, textStorage: textStorage)
+    }
+
+    /// Scroll to a heading by its index in the document.
+    static func scrollToHeadingIndex(_ index: Int, in textView: NSTextView, textStorage: NSTextStorage) -> Bool {
+        let fullRange = NSRange(location: 0, length: textStorage.length)
+        var targetRange: NSRange?
+
+        textStorage.enumerateAttribute(MarkdownRenderer.headingAnchorAttribute, in: fullRange, options: []) { value, range, stop in
+            if let headingIdx = value as? Int, headingIdx == index {
+                targetRange = range
+                stop.pointee = true
+            }
+        }
+
+        guard let range = targetRange else { return false }
+
+        guard let layoutManager = textView.layoutManager,
+              let textContainer = textView.textContainer else { return false }
+
+        let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
+        let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+
+        let origin = textView.textContainerOrigin
+        let scrollY = rect.minY + origin.y - 20
+
+        if let scrollView = textView.enclosingScrollView {
+            let point = NSPoint(x: 0, y: max(0, scrollY))
+            scrollView.contentView.scroll(to: point)
+            scrollView.reflectScrolledClipView(scrollView.contentView)
+        }
+
+        return true
     }
 }

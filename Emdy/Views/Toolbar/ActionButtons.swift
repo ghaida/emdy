@@ -12,15 +12,35 @@ struct ActionButtonGroup: View {
             Button(action: copyAction) {
                 Label("Copy", systemImage: "doc.on.doc")
             }
+            .help("Copy")
             Button(action: printAction) {
                 Label("Print", systemImage: "printer")
             }
+            .help("Print")
             if let pdfAction {
                 Button(action: pdfAction) {
                     Label("PDF", systemImage: "arrow.down.doc")
                 }
+                .help("Export PDF")
             }
         }
+        .disabled(!isEnabled)
+    }
+}
+
+struct HeadingNavigatorToggle: View {
+    @Bindable var settings: DisplaySettings
+    var isEnabled: Bool
+
+    var body: some View {
+        ControlGroup {
+            Button {
+                settings.showHeadingNavigator.toggle()
+            } label: {
+                Label("Headings", systemImage: "list.bullet")
+            }
+        }
+        .help(settings.showHeadingNavigator ? "Hide Headings" : "Show Headings")
         .disabled(!isEnabled)
     }
 }

@@ -4,9 +4,12 @@ import cmark_gfm_extensions
 
 final class MarkdownRenderer {
 
+    static let headingAnchorAttribute: NSAttributedString.Key = .init("EmdyHeadingAnchor")
+
     let fontProvider: FontProvider
     let imageResolver: ImageResolver
     let palette: ColorPalette
+    private var headingCount = 0
 
     init(fontFamily: FontFamily, zoomLevel: CGFloat, fileURL: URL? = nil, isDark: Bool = false) {
         self.fontProvider = FontProvider(family: fontFamily, zoom: zoomLevel)
@@ -35,6 +38,7 @@ final class MarkdownRenderer {
         }
         defer { cmark_node_free(doc) }
 
+        headingCount = 0
         let result = NSMutableAttributedString()
         renderNode(doc, into: result, context: RenderContext())
         return result
@@ -82,7 +86,11 @@ final class MarkdownRenderer {
             if result.length > 0 {
                 result.append(newline())
             }
+            let headingStart = result.length
             renderChildren(of: node, into: result, context: ctx)
+            let headingRange = NSRange(location: headingStart, length: result.length - headingStart)
+            result.addAttribute(Self.headingAnchorAttribute, value: headingCount, range: headingRange)
+            headingCount += 1
             result.append(newline())
 
         case CMARK_NODE_TEXT:

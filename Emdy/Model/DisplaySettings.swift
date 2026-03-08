@@ -56,6 +56,10 @@ final class DisplaySettings {
         didSet { UserDefaults.standard.set(showMinimap, forKey: "showMinimap") }
     }
 
+    var showHeadingNavigator: Bool {
+        didSet { UserDefaults.standard.set(showHeadingNavigator, forKey: "showHeadingNavigator") }
+    }
+
     static let zoomMin: CGFloat = 0.5
     static let zoomMax: CGFloat = 3.0
     static let zoomStep: CGFloat = 0.1
@@ -82,6 +86,12 @@ final class DisplaySettings {
             self.showMinimap = UserDefaults.standard.bool(forKey: "showMinimap")
         } else {
             self.showMinimap = true
+        }
+
+        if UserDefaults.standard.object(forKey: "showHeadingNavigator") != nil {
+            self.showHeadingNavigator = UserDefaults.standard.bool(forKey: "showHeadingNavigator")
+        } else {
+            self.showHeadingNavigator = false
         }
     }
 

@@ -28,5 +28,6 @@ struct ThemePicker: View {
         } label: {
             Label("Theme", systemImage: icon)
         }
+        .help("Theme")
     }
 }

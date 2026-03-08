@@ -65,8 +65,8 @@ The current feature set was designed from assumptions about what a "Markdown rea
 ### App Features (free)
 - [x] Register as default macOS handler for `.md` / `.markdown` (UTType in Info.plist + first-launch prompt)
 - [x] Drag-and-drop file opening (drop a `.md` file onto the app icon or window)
-- [ ] Heading navigator sidebar — list all headings in the document, click to jump to any heading
-- [ ] Anchor link handling — click a heading link to scroll within the document
+- [x] Heading navigator sidebar — list all headings in the document, click to jump to any heading
+- [x] Anchor link handling — click a heading link to scroll within the document
 - [ ] Remote image loading (fetch and display images referenced by URL)
 - [ ] Image load failure — show alt text or placeholder
 - [ ] Error state when a file can't be read (permissions, missing)

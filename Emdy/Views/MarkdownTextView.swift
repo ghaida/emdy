@@ -8,6 +8,8 @@ struct MarkdownTextView: NSViewRepresentable {
     let fileURL: URL?
     let isDark: Bool
     let showMinimap: Bool
+    let headings: [HeadingItem]
+    var scrollToHeadingIndex: Int? = nil
 
     private static let baseContentWidth: CGFloat = 680
     private static let minPadding: CGFloat = 72
@@ -98,6 +100,7 @@ struct MarkdownTextView: NSViewRepresentable {
         context.coordinator.lastFontFamily = fontFamily
         context.coordinator.lastZoomLevel = zoomLevel
         context.coordinator.lastIsDark = isDark
+        context.coordinator.headings = headings
 
         NotificationCenter.default.addObserver(
             context.coordinator,
@@ -148,6 +151,15 @@ struct MarkdownTextView: NSViewRepresentable {
 
             if let minimap = coord.minimap, showMinimap {
                 minimap.updateContent(withMargin, palette: palette)
+            }
+        }
+
+        coord.headings = headings
+
+        if let index = scrollToHeadingIndex,
+           let textStorage = textView.textStorage {
+            DispatchQueue.main.async {
+                _ = LinkHandler.scrollToHeadingIndex(index, in: textView, textStorage: textStorage)
             }
         }
 
@@ -206,6 +218,7 @@ struct MarkdownTextView: NSViewRepresentable {
         var scrollTrailingToMinimap: NSLayoutConstraint?
         var scrollTrailingToContainer: NSLayoutConstraint?
         var fileURL: URL?
+        var headings: [HeadingItem] = []
 
         // Track rendering inputs to avoid unnecessary re-renders
         var lastMarkdown: String = ""
@@ -215,7 +228,7 @@ struct MarkdownTextView: NSViewRepresentable {
         var initialLayoutDone = false
 
         func textView(_ textView: NSTextView, clickedOnLink link: Any, at charIndex: Int) -> Bool {
-            LinkHandler.handleLink(link, fileURL: fileURL)
+            LinkHandler.handleLink(link, fileURL: fileURL, textView: textView, headings: headings)
         }
 
         @objc func frameDidChange(_ notification: Notification) {

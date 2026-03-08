@@ -32,8 +32,8 @@ struct FontPicker: View {
             Text("Aa")
                 .font(fontForLabel)
                 .frame(width: 24)
-                .help("Font")
         }
+        .help("Font")
         .disabled(!isEnabled)
     }
 }

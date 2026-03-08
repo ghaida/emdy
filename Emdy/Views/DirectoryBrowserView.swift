@@ -5,6 +5,11 @@ struct DirectoryBrowserView: View {
     @State private var settings = DisplaySettings()
     @State private var currentText: String = ""
     @State private var toastMessage: ToastMessage?
+    @State private var scrollToHeading: Int?
+
+    private var headings: [HeadingItem] {
+        HeadingItem.extract(from: currentText)
+    }
 
     private var wordCount: Int {
         var count = 0
@@ -41,14 +46,30 @@ struct DirectoryBrowserView: View {
             VStack(spacing: 0) {
                 Group {
                     if !currentText.isEmpty {
-                        MarkdownTextView(
-                            markdown: currentText,
-                            fontFamily: settings.fontFamily,
-                            zoomLevel: settings.zoomLevel,
-                            fileURL: directory.selectedFile,
-                            isDark: settings.theme.isDark,
-                            showMinimap: settings.showMinimap
-                        )
+                        HStack(spacing: 0) {
+                            if settings.showHeadingNavigator && !headings.isEmpty {
+                                HeadingNavigator(
+                                    headings: headings,
+                                    isDark: settings.theme.isDark
+                                ) { index in
+                                    scrollToHeading = index
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                        scrollToHeading = nil
+                                    }
+                                }
+                                Divider()
+                            }
+                            MarkdownTextView(
+                                markdown: currentText,
+                                fontFamily: settings.fontFamily,
+                                zoomLevel: settings.zoomLevel,
+                                fileURL: directory.selectedFile,
+                                isDark: settings.theme.isDark,
+                                showMinimap: settings.showMinimap,
+                                headings: headings,
+                                scrollToHeadingIndex: scrollToHeading
+                            )
+                        }
                     } else {
                         EmptyStateView()
                     }
@@ -95,6 +116,9 @@ struct DirectoryBrowserView: View {
             ToolbarItem(id: "find", placement: .automatic) {
                 FindButton(isEnabled: !currentText.isEmpty)
             }
+            ToolbarItem(id: "headings", placement: .automatic) {
+                HeadingNavigatorToggle(settings: settings, isEnabled: !currentText.isEmpty && !headings.isEmpty)
+            }
             ToolbarItem(id: "minimap", placement: .automatic) {
                 MinimapToggle(settings: settings)
             }
@@ -135,6 +159,9 @@ struct DirectoryBrowserView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .findInPage)) { _ in
             showFindBar()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleHeadingNavigator)) { _ in
+            settings.showHeadingNavigator.toggle()
         }
     }
 
