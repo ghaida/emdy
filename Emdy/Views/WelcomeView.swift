@@ -92,7 +92,6 @@ struct WelcomeView: View {
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
-        panel.allowedContentTypes = [.plainText]
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
             isPresented = false
