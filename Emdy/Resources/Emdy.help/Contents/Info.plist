@@ -20,8 +20,6 @@
     <string>1</string>
     <key>HPDBookAccessPath</key>
     <string>en.lproj/</string>
-    <key>HPDBookIconPath</key>
-    <string></string>
     <key>HPDBookIndexPath</key>
     <string>search.helpindex</string>
     <key>HPDBookTitle</key>
