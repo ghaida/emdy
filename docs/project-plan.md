@@ -67,8 +67,8 @@ The current feature set was designed from assumptions about what a "Markdown rea
 - [x] Drag-and-drop file opening (drop a `.md` file onto the app icon or window)
 - [x] Heading navigator sidebar — list all headings in the document, click to jump to any heading
 - [x] Anchor link handling — click a heading link to scroll within the document
-- [ ] Remote image loading (fetch and display images referenced by URL)
-- [ ] Image load failure — show alt text or placeholder
+- [x] Remote image loading (fetch and display images referenced by URL)
+- [x] Image load failure — show alt text or placeholder
 - [ ] Error state when a file can't be read (permissions, missing)
 - [ ] Empty state when a directory has no Markdown files
 - [ ] File-deleted notice when an open file is removed from disk
