@@ -102,6 +102,8 @@ struct MarkdownTextView: NSViewRepresentable {
         context.coordinator.lastIsDark = isDark
         context.coordinator.headings = headings
 
+        loadRemoteImages(textView: textView, coordinator: context.coordinator)
+
         NotificationCenter.default.addObserver(
             context.coordinator,
             selector: #selector(Coordinator.frameDidChange(_:)),
@@ -152,6 +154,8 @@ struct MarkdownTextView: NSViewRepresentable {
             if let minimap = coord.minimap, showMinimap {
                 minimap.updateContent(withMargin, palette: palette, isDark: isDark)
             }
+
+            loadRemoteImages(textView: textView, coordinator: coord)
         }
 
         coord.headings = headings
@@ -186,6 +190,21 @@ struct MarkdownTextView: NSViewRepresentable {
             fontFamily: fontFamily, zoomLevel: zoomLevel,
             fileURL: fileURL, isDark: isDark
         ).render(markdown)
+    }
+
+    /// Loads any pending remote images in the text storage asynchronously,
+    /// then refreshes the minimap to reflect the loaded images.
+    private func loadRemoteImages(textView: NSTextView, coordinator: Coordinator) {
+        guard let textStorage = textView.textStorage else { return }
+        let resolver = ImageResolver(baseURL: fileURL, isDark: isDark)
+        let maxWidth = maxContentWidth - (Self.minPadding * 2)
+        resolver.loadPendingImages(in: textStorage, maxWidth: min(maxWidth, 600)) {
+            if let minimap = coordinator.minimap, !minimap.isHidden,
+               let fullText = textView.textStorage {
+                let palette = ColorPalette.current(dark: coordinator.lastIsDark)
+                minimap.updateContent(fullText, palette: palette, isDark: coordinator.lastIsDark)
+            }
+        }
     }
 
     /// Appends a large non-selectable bottom margin to the attributed string.

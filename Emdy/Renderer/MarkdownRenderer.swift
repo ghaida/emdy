@@ -122,7 +122,8 @@ final class MarkdownRenderer {
         case CMARK_NODE_IMAGE:
             if let url = cmark_node_get_url(node) {
                 let urlStr = String(cString: url)
-                let imageAttr = imageResolver.resolveImage(src: urlStr)
+                let altText = extractAltText(from: node)
+                let imageAttr = imageResolver.resolveImage(src: urlStr, altText: altText)
                 result.append(imageAttr)
                 result.append(newline())
             }
@@ -429,6 +430,20 @@ final class MarkdownRenderer {
     private func previousSiblingIsList(_ node: UnsafeMutablePointer<cmark_node>) -> Bool {
         guard let prev = cmark_node_previous(node) else { return false }
         return cmark_node_get_type(prev) == CMARK_NODE_LIST
+    }
+
+    /// Extracts alt text from an image node by concatenating its child text nodes.
+    private func extractAltText(from node: UnsafeMutablePointer<cmark_node>) -> String {
+        var parts: [String] = []
+        var child = cmark_node_first_child(node)
+        while let c = child {
+            if cmark_node_get_type(c) == CMARK_NODE_TEXT,
+               let literal = cmark_node_get_literal(c) {
+                parts.append(String(cString: literal))
+            }
+            child = cmark_node_next(c)
+        }
+        return parts.joined()
     }
 
     private func isInsideTightList(_ node: UnsafeMutablePointer<cmark_node>) -> Bool {
