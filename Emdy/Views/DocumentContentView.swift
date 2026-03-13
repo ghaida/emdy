@@ -8,6 +8,7 @@ struct DocumentContentView: View {
     @State private var currentText: String
     @State private var fileWatcher: FileWatcher?
     @State private var scrollToHeading: Int?
+    @State private var fileDeleted = false
 
     init(document: MarkdownDocument, fileURL: URL? = nil) {
         self.document = document
@@ -16,7 +17,7 @@ struct DocumentContentView: View {
     }
 
     private var hasContent: Bool {
-        !currentText.isEmpty
+        !currentText.isEmpty && !fileDeleted
     }
 
     private var headings: [HeadingItem] {
@@ -78,6 +79,12 @@ struct DocumentContentView: View {
                             scrollToHeadingIndex: scrollToHeading
                         )
                     }
+                } else if fileDeleted {
+                    EmptyStateView(
+                        icon: "trash",
+                        title: "This file has been deleted or moved",
+                        subtitle: fileURL?.lastPathComponent
+                    )
                 } else {
                     EmptyStateView()
                 }
@@ -194,8 +201,13 @@ struct DocumentContentView: View {
     }
 
     private func reloadFromDisk() {
-        guard let url = fileURL,
-              let newText = try? String(contentsOf: url, encoding: .utf8) else { return }
+        guard let url = fileURL else { return }
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            fileDeleted = true
+            return
+        }
+        guard let newText = try? String(contentsOf: url, encoding: .utf8) else { return }
+        fileDeleted = false
         currentText = newText
     }
 
@@ -208,8 +220,13 @@ struct DocumentContentView: View {
 
     private func setupFileWatcher() {
         guard let url = fileURL else { return }
-        fileWatcher = FileWatcher(url: url) { [self] in
-            reloadFromDisk()
+        fileWatcher = FileWatcher(url: url) { event in
+            switch event {
+            case .modified:
+                reloadFromDisk()
+            case .deleted:
+                fileDeleted = true
+            }
         }
     }
 }

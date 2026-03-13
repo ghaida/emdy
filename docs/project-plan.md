@@ -69,9 +69,9 @@ The current feature set was designed from assumptions about what a "Markdown rea
 - [x] Anchor link handling — click a heading link to scroll within the document
 - [x] Remote image loading (fetch and display images referenced by URL)
 - [x] Image load failure — show alt text or placeholder
-- [ ] Error state when a file can't be read (permissions, missing)
-- [ ] Empty state when a directory has no Markdown files
-- [ ] File-deleted notice when an open file is removed from disk
+- [x] Error state when a file can't be read (permissions, missing)
+- [x] Empty state when a directory has no Markdown files
+- [x] File-deleted notice when an open file is removed from disk
 - [ ] License key system — validation, activation, and gating in-app
 - [x] User-facing help documentation (accessible from Help menu)
 

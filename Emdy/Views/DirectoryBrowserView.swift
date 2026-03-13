@@ -6,6 +6,7 @@ struct DirectoryBrowserView: View {
     @State private var currentText: String = ""
     @State private var toastMessage: ToastMessage?
     @State private var scrollToHeading: Int?
+    @State private var fileError: String?
 
     private var headings: [HeadingItem] {
         HeadingItem.extract(from: currentText)
@@ -45,7 +46,13 @@ struct DirectoryBrowserView: View {
         } detail: {
             VStack(spacing: 0) {
                 Group {
-                    if !currentText.isEmpty {
+                    if let fileError {
+                        EmptyStateView(
+                            icon: "exclamationmark.triangle",
+                            title: "This file couldn\u{2019}t be opened",
+                            subtitle: fileError
+                        )
+                    } else if !currentText.isEmpty {
                         HStack(spacing: 0) {
                             if settings.showHeadingNavigator && !headings.isEmpty {
                                 HeadingNavigator(
@@ -70,8 +77,18 @@ struct DirectoryBrowserView: View {
                                 scrollToHeadingIndex: scrollToHeading
                             )
                         }
+                    } else if directory.rootNodes.isEmpty {
+                        EmptyStateView(
+                            icon: "folder",
+                            title: "No Markdown files found",
+                            subtitle: directory.directoryURL.lastPathComponent
+                        )
                     } else {
-                        EmptyStateView()
+                        EmptyStateView(
+                            icon: "doc.text",
+                            title: "Select a file to read",
+                            subtitle: nil
+                        )
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -202,14 +219,25 @@ struct DirectoryBrowserView: View {
     }
 
     private func loadFile(_ url: URL?) {
+        fileError = nil
         guard let url else {
             currentText = ""
             return
         }
         var isDir: ObjCBool = false
-        FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
+        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
         if isDir.boolValue { return }
-        currentText = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+        if !exists {
+            currentText = ""
+            fileError = "The file may have been moved or deleted."
+            return
+        }
+        do {
+            currentText = try String(contentsOf: url, encoding: .utf8)
+        } catch {
+            currentText = ""
+            fileError = "The file couldn\u{2019}t be read. It may require different permissions."
+        }
     }
 }
 

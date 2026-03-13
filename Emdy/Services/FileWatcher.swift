@@ -1,11 +1,16 @@
 import Foundation
 
+enum FileChangeEvent {
+    case modified
+    case deleted
+}
+
 final class FileWatcher {
     private var source: DispatchSourceFileSystemObject?
     private let fileDescriptor: Int32
-    private let onChange: () -> Void
+    private let onChange: (FileChangeEvent) -> Void
 
-    init?(url: URL, onChange: @escaping () -> Void) {
+    init?(url: URL, onChange: @escaping (FileChangeEvent) -> Void) {
         self.onChange = onChange
         let fd = open(url.path, O_EVTONLY)
         guard fd >= 0 else { return nil }
@@ -18,7 +23,13 @@ final class FileWatcher {
         )
 
         source.setEventHandler { [weak self] in
-            self?.onChange()
+            guard let self, let source = self.source else { return }
+            let flags = source.data
+            if flags.contains(.delete) || flags.contains(.rename) {
+                self.onChange(.deleted)
+            } else {
+                self.onChange(.modified)
+            }
         }
 
         source.setCancelHandler {
