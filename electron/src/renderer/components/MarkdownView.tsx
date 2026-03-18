@@ -9,11 +9,12 @@ import type { ColorScale } from '../lib/color-themes';
 interface MarkdownViewProps {
   content: string;
   colors: ColorScale;
+  filePath?: string | null;
   style?: React.CSSProperties;
   contentRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-export function MarkdownView({ content, colors, style, contentRef }: MarkdownViewProps) {
+export function MarkdownView({ content, colors, filePath, style, contentRef }: MarkdownViewProps) {
   const codeTheme = useMemo(() => buildPrismTheme(colors), [colors]);
 
   return (
@@ -58,6 +59,15 @@ export function MarkdownView({ content, colors, style, contentRef }: MarkdownVie
                   {children}
                 </code>
               );
+            },
+            img({ src, alt, ...props }) {
+              let resolvedSrc = src || '';
+              // Resolve relative paths to file:// URLs
+              if (filePath && resolvedSrc && !resolvedSrc.startsWith('http') && !resolvedSrc.startsWith('data:') && !resolvedSrc.startsWith('file:')) {
+                const dir = filePath.replace(/\/[^/]+$/, '');
+                resolvedSrc = `local-file://${dir}/${resolvedSrc}`;
+              }
+              return <img src={resolvedSrc} alt={alt || ''} {...props} />;
             },
             table({ children, ...props }) {
               return (

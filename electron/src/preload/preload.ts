@@ -27,7 +27,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   searchEverything: (query: string) => ipcRenderer.invoke('search:everything', query),
 
   // Export
-  exportPDF: () => ipcRenderer.invoke('export:pdf'),
+  exportPDF: (opts: { html: string; title: string }) => ipcRenderer.invoke('export:pdf', opts),
   print: () => ipcRenderer.invoke('export:print'),
   writeClipboardHTML: (html: string) => ipcRenderer.invoke('clipboard:write-html', html),
 

@@ -1,6 +1,7 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol, net } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 import started from 'electron-squirrel-startup';
 import { registerFileHandlers } from './ipc-handlers';
 import { registerSettingsHandlers } from './settings-store';
@@ -13,6 +14,7 @@ if (started) {
 }
 
 let mainWindow: BrowserWindow | null = null;
+let pendingFilePath: string | null = null;
 
 const createWindow = () => {
   mainWindow = new BrowserWindow({
@@ -37,14 +39,23 @@ const createWindow = () => {
     );
   }
 
-  // Open DevTools in dev mode
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.webContents.openDevTools();
-  }
-
   // Handle drag-and-drop
   mainWindow.webContents.on('will-navigate', (event) => {
     event.preventDefault();
+  });
+
+  // Send pending file from dock drop / double-click during launch
+  mainWindow.webContents.once('did-finish-load', async () => {
+    if (pendingFilePath) {
+      try {
+        const content = await fs.readFile(pendingFilePath, 'utf-8');
+        mainWindow?.webContents.send('file:open', pendingFilePath, content);
+        app.addRecentDocument(pendingFilePath);
+      } catch {
+        // File can't be read
+      }
+      pendingFilePath = null;
+    }
   });
 };
 
@@ -60,7 +71,16 @@ registerSettingsHandlers();
 registerFileWatcher();
 registerExportHandlers();
 
+// Register protocol to serve local files for markdown images
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'local-file', privileges: { bypassCSP: true, supportFetchAPI: true, standard: true } },
+]);
+
 app.on('ready', () => {
+  protocol.handle('local-file', (request) => {
+    const filePath = decodeURIComponent(request.url.replace('local-file://', ''));
+    return net.fetch(pathToFileURL(filePath).href);
+  });
   createWindow();
   buildMenu(sendMenuEvent);
 });
@@ -77,18 +97,21 @@ app.on('activate', () => {
   }
 });
 
-// Handle opening files via OS (double-click, Open Recent, etc.)
+// Handle opening files via OS (double-click, drag to dock, Open Recent)
 app.on('open-file', async (event, filePath) => {
   event.preventDefault();
-  try {
-    const content = await fs.readFile(filePath, 'utf-8');
-    const win = mainWindow || BrowserWindow.getAllWindows()[0];
-    if (win) {
+  const win = mainWindow || BrowserWindow.getAllWindows()[0];
+  if (win && win.webContents && !win.webContents.isLoading()) {
+    try {
+      const content = await fs.readFile(filePath, 'utf-8');
       win.webContents.send('file:open', filePath, content);
       app.addRecentDocument(filePath);
+    } catch {
+      // File can't be read
     }
-  } catch {
-    // File can't be read
+  } else {
+    // App is still launching — queue the file for when the window is ready
+    pendingFilePath = filePath;
   }
 });
 

@@ -36,7 +36,7 @@ export interface ElectronAPI {
   unwatchFile: () => Promise<void>;
   onFileChanged: (callback: (filePath: string) => void) => () => void;
   onFileDeleted: (callback: (filePath: string) => void) => () => void;
-  exportPDF: () => Promise<boolean>;
+  exportPDF: (opts: { html: string; title: string }) => Promise<boolean>;
   print: () => Promise<void>;
   writeClipboardHTML: (html: string) => Promise<void>;
   toggleMaximize: () => Promise<void>;

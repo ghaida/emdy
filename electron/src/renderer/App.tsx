@@ -90,9 +90,27 @@ export function App() {
   }, [addToast]);
 
   const handleExportPDF = useCallback(async () => {
-    const ok = await window.electronAPI.exportPDF();
+    if (!contentRef.current || !filePath) return;
+    const markdownBody = contentRef.current.querySelector('.markdown-body');
+    if (!markdownBody) return;
+
+    // Clone and sanitize for print — strip flex layouts and fixed heights
+    const clone = markdownBody.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('*').forEach((el) => {
+      const s = (el as HTMLElement).style;
+      if (s.display === 'flex' || s.display === 'inline-flex') s.display = 'block';
+      if (s.height) s.height = 'auto';
+      if (s.maxHeight) s.maxHeight = 'none';
+      if (s.overflow === 'hidden') s.overflow = 'visible';
+    });
+    // Remove copy buttons from code blocks
+    clone.querySelectorAll('.code-block-copy').forEach((el) => el.remove());
+
+    const html = clone.innerHTML;
+    const title = filePath.split('/').pop() || 'document';
+    const ok = await window.electronAPI.exportPDF({ html, title });
     if (ok) addToast('PDF exported', 'success');
-  }, [addToast]);
+  }, [addToast, filePath]);
 
   const handleFileContextMenu = useCallback((e: React.MouseEvent, path: string) => {
     e.preventDefault();
@@ -197,6 +215,7 @@ export function App() {
           <MarkdownView
             content={content}
             colors={display.resolvedColors}
+            filePath={filePath}
             style={{
               fontFamily: fontFamilyVar,
               fontSize: `${display.zoom}rem`,
