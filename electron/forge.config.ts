@@ -11,6 +11,17 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     name: 'Emdy',
+    extendInfo: {
+      CFBundleDocumentTypes: [
+        {
+          CFBundleTypeName: 'Markdown Document',
+          CFBundleTypeRole: 'Viewer',
+          LSHandlerRank: 'Alternate',
+          LSItemContentTypes: ['net.daringfireball.markdown', 'public.plain-text'],
+          CFBundleTypeExtensions: ['md', 'markdown', 'txt'],
+        },
+      ],
+    },
   },
   rebuildConfig: {},
   makers: [

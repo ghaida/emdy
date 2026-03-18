@@ -210,24 +210,27 @@ export function App() {
       return <WelcomeView onOpenDir={handleOpenDir} />;
     }
     return (
-      <div className="content-wrapper">
-        <div className={`content-area${minimapVisible ? ' hide-scrollbar' : ''}`} ref={scrollContainerRef}>
-          <MarkdownView
-            content={content}
-            colors={display.resolvedColors}
-            filePath={filePath}
-            style={{
-              fontFamily: fontFamilyVar,
-              fontSize: `${display.zoom}rem`,
-            }}
+      <div className="content-column">
+        <div className="content-wrapper">
+          <div className={`content-area${minimapVisible ? ' hide-scrollbar' : ''}`} ref={scrollContainerRef}>
+            <MarkdownView
+              content={content}
+              colors={display.resolvedColors}
+              filePath={filePath}
+              style={{
+                fontFamily: fontFamilyVar,
+                fontSize: `${display.zoom}rem`,
+              }}
+              contentRef={contentRef}
+            />
+          </div>
+          <Minimap
+            visible={minimapVisible}
             contentRef={contentRef}
+            scrollContainerRef={scrollContainerRef}
           />
         </div>
-        <Minimap
-          visible={minimapVisible}
-          contentRef={contentRef}
-          scrollContainerRef={scrollContainerRef}
-        />
+        <StatusBar filePath={filePath} rootPath={dirPath} content={content} />
       </div>
     );
   };
@@ -254,6 +257,7 @@ export function App() {
             onSearch={() => setSearchVisible((v) => !v)}
             onExportPDF={handleExportPDF}
             onCopyHTML={handleCopyHTML}
+            onOpenSettings={() => setSettingsVisible(true)}
             hasContent={content !== null}
           />
         )}
@@ -285,7 +289,6 @@ export function App() {
         )}
         {renderContent()}
       </div>
-      {showToolbar && <StatusBar filePath={filePath} content={content} onOpenSettings={() => setSettingsVisible(true)} />}
       <ToastNotification toasts={toasts} onDismiss={dismissToast} />
       {contextMenu && (
         <FileContextMenu

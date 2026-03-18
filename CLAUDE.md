@@ -67,18 +67,21 @@ npx tsc --noEmit --skipLibCheck
 ### Design System
 All visual values flow from TypeScript tokens through a theme provider into CSS custom properties:
 
-- **`lib/design-tokens.ts`** — Spacing (4px grid), font sizes, radii, layout dimensions, transitions, shadows
-- **`lib/color-themes.ts`** — Warm and Cool color themes, each with light and dark variants (24 semantic tokens per variant)
-- **`lib/theme-provider.ts`** — `applyTheme()` sets all CSS custom properties on `<html>`. Called once at startup and on every theme change
+- **`lib/design-tokens.ts`** — Spacing (4px grid), font sizes, radii, layout dimensions, transitions, elevation shadows (light + dark variants)
+- **`lib/color-themes.ts`** — Warm and Cool color themes, each with light and dark variants. Includes semantic UI colors, syntax highlighting colors, and minimap colors (distinct hue per element type)
+- **`lib/theme-provider.ts`** — `applyTheme()` sets all CSS custom properties on `<html>`, including appearance-aware shadows. Called once at startup and on every theme change
 - **`lib/prism-theme.ts`** — `buildPrismTheme(colors)` generates Prism syntax theme from the active color scale
 
 ### Key Conventions
 - **Strict 4px grid**: Every spacing, padding, margin, and sizing value is a multiple of 4px. Only exceptions: 1px (borders) and 2px (fine detail)
 - **No hardcoded values in CSS**: All colors, sizes, radii, shadows, and transitions reference CSS custom properties set by the token system
 - **Font size tokens use `--fs-*` prefix** (not `--text-*`) to avoid collision with color tokens like `--text-primary`
-- **Radii**: `--radius-sm` (4px) for buttons, `--radius-md` (8px) for code blocks/images, `--radius-lg` (12px) for modals
+- **Radii**: `--radius-sm` (4px) for buttons, `--radius-md` (8px) for code blocks/images/content area, `--radius-lg` (12px) for modals
+- **Shadows**: 4-level elevation system (`--shadow-sm/md/lg/xl`). Light mode uses 3-layer shadows with subtle opacity. Dark mode adds a white edge ring (1px at 6-8% white) plus higher opacity (3-4x) for visibility against dark backgrounds.
 - **Icons**: All from Lucide React, rendered at `size={16} strokeWidth={1.5}`
-- **Toolbar buttons**: `-webkit-app-region: no-drag` on interactive elements; titlebar background is draggable
+- **Toolbar**: `-webkit-app-region: no-drag` on the toolbar div; center spacer is `drag` for window dragging. Settings gear in toolbar, left of minimap toggle
+- **Content area**: White background in light mode, warm/cool `#222` variants in dark mode. Rounded corners, subtle shadow, separate from sidebar/minimap
+- **Status bar**: Sits inside the content column (aligned with content area, not full window width). Shows relative file path from root folder
 
 ## Project Status
 

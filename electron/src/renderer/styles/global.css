@@ -187,7 +187,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   background: var(--bg-primary);
   border: var(--space-px) solid var(--border);
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-dropdown);
+  box-shadow: var(--shadow-md);
   padding: var(--space-1);
   z-index: 50;
 }
@@ -256,12 +256,13 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  margin-right: var(--space-2);
 }
 
 .sidebar-tree {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-1) 0;
+  padding: var(--space-1);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -269,7 +270,8 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
 .sidebar-tree::-webkit-scrollbar { width: var(--scrollbar-width-narrow); }
 .sidebar-tree::-webkit-scrollbar-track { background: transparent; }
-.sidebar-tree::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius-sm); }
+.sidebar-tree::-webkit-scrollbar-thumb { background: transparent; border-radius: var(--radius-sm); transition: background 0.3s; }
+.sidebar-tree:hover::-webkit-scrollbar-thumb { background: var(--border); }
 
 .sidebar-empty {
   padding: var(--space-4);
@@ -463,11 +465,16 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   display: flex;
   flex-direction: column;
   align-items: center;
+  background: var(--bg-content);
+  border-radius: var(--radius-md);
+  margin: 0 var(--space-2) var(--space-2) 0;
+  box-shadow: var(--shadow-sm);
 }
 
 .content-area::-webkit-scrollbar { width: var(--scrollbar-width); }
 .content-area::-webkit-scrollbar-track { background: transparent; }
-.content-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius-sm); }
+.content-area::-webkit-scrollbar-thumb { background: transparent; border-radius: var(--radius-sm); transition: background 0.3s; }
+.content-area:hover::-webkit-scrollbar-thumb { background: var(--border); }
 .content-area::-webkit-scrollbar-thumb:hover { background: var(--border-subtle); }
 .content-area.hide-scrollbar::-webkit-scrollbar { width: 0; }
 
@@ -495,7 +502,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   background: var(--bg-primary);
   border: var(--space-px) solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-modal);
+  box-shadow: var(--shadow-xl);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -566,6 +573,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
 /* ---- Content wrapper ---- */
 
+.content-column { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .content-wrapper { flex: 1; display: flex; overflow: hidden; }
 
 /* ---- Minimap ---- */
@@ -583,7 +591,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
 .minimap.open {
   width: var(--minimap-width);
-  margin: var(--space-2);
+  margin: 0 var(--space-2) var(--space-2);
   padding: var(--space-2);
   overflow-y: auto;
 }
@@ -617,8 +625,9 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   left: 0;
   right: 0;
   background: var(--accent);
-  opacity: 0.3;
+  opacity: 0.15;
   border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
   pointer-events: none;
   z-index: 1;
 }
@@ -628,42 +637,18 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 .status-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 var(--space-3);
-  height: var(--status-bar-height);
-  background: var(--bg-secondary);
-  border-top: var(--space-px) solid var(--border);
+  padding: 0 var(--space-3) var(--space-2);
   font-size: var(--fs-xs);
   color: var(--text-muted);
   flex-shrink: 0;
 }
 
-.status-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  flex: 1;
-}
-
-.status-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--space-5);
-  height: var(--space-5);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  flex-shrink: 0;
-  padding: 0;
-}
-
-.status-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
 .status-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.status-words { flex-shrink: 0; margin-left: var(--space-4); font-variant-numeric: tabular-nums; }
+.status-right {
+  margin-left: auto;
+}
+
+.status-words { font-variant-numeric: tabular-nums; }
 
 /* ---- Empty states ---- */
 
@@ -764,7 +749,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   background: var(--bg-primary);
   border: var(--space-px) solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-modal);
+  box-shadow: var(--shadow-xl);
   overflow: hidden;
   transform: scale(0.96);
   opacity: 0;
@@ -848,7 +833,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   background: var(--bg-primary);
   border: var(--space-px) solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-dropdown);
+  box-shadow: var(--shadow-lg);
   padding: var(--space-1);
 }
 
@@ -882,8 +867,8 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
 .markdown-view {
   max-width: var(--content-max-width);
-  margin: 0 auto;
-  padding: var(--space-8) var(--space-8) var(--space-16);
+  margin: 72px auto;
+  padding: 0 var(--space-8);
 }
 
 .markdown-body {
@@ -920,6 +905,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
 .markdown-body code {
   background: var(--bg-secondary);
+  color: var(--text-primary);
   padding: var(--space-half) var(--space-2);
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
@@ -956,6 +942,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
   overflow-x: auto;
+  padding: var(--space-4);
 }
 
 .markdown-body pre code { background: none; padding: 0; border-radius: 0; }

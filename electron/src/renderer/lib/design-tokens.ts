@@ -79,9 +79,19 @@ export const transition = {
   slow: '0.2s',
 } as const;
 
-export const shadow = {
-  dropdown: '0 8px 24px rgba(0, 0, 0, 0.15)',
-  modal: '0 16px 48px rgba(0, 0, 0, 0.2)',
+// Shadows are appearance-dependent — defined per light/dark in shadowSets below
+export const shadowLight = {
+  sm: '0 1px 2px 0 rgba(0,0,0,0.04), 0 1px 3px 0 rgba(0,0,0,0.06), 0 2px 4px 0 rgba(0,0,0,0.04)',
+  md: '0 1px 2px 0 rgba(0,0,0,0.04), 0 3px 6px 0 rgba(0,0,0,0.06), 0 6px 12px -2px rgba(0,0,0,0.08)',
+  lg: '0 1px 3px 0 rgba(0,0,0,0.03), 0 6px 12px 0 rgba(0,0,0,0.06), 0 12px 24px -4px rgba(0,0,0,0.10)',
+  xl: '0 2px 4px 0 rgba(0,0,0,0.02), 0 8px 16px 0 rgba(0,0,0,0.06), 0 20px 40px -8px rgba(0,0,0,0.12)',
+} as const;
+
+export const shadowDark = {
+  sm: '0 0 0 1px rgba(255,255,255,0.06), 0 1px 2px 0 rgba(0,0,0,0.20), 0 1px 3px 0 rgba(0,0,0,0.24), 0 2px 4px 0 rgba(0,0,0,0.16)',
+  md: '0 0 0 1px rgba(255,255,255,0.06), 0 1px 2px 0 rgba(0,0,0,0.16), 0 3px 6px 0 rgba(0,0,0,0.24), 0 6px 12px -2px rgba(0,0,0,0.32)',
+  lg: '0 0 0 1px rgba(255,255,255,0.06), 0 1px 3px 0 rgba(0,0,0,0.16), 0 6px 12px 0 rgba(0,0,0,0.28), 0 12px 24px -4px rgba(0,0,0,0.36)',
+  xl: '0 0 0 1px rgba(255,255,255,0.08), 0 2px 4px 0 rgba(0,0,0,0.16), 0 8px 16px 0 rgba(0,0,0,0.32), 0 20px 40px -8px rgba(0,0,0,0.44)',
 } as const;
 
 export const overlay = {

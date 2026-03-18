@@ -2,6 +2,7 @@ export type ColorThemeName = 'warm' | 'cool';
 
 export interface ColorScale {
   bgPrimary: string;
+  bgContent: string;
   bgSecondary: string;
   bgTertiary: string;
   border: string;
@@ -44,6 +45,7 @@ export interface ColorTheme {
 export const warm: ColorTheme = {
   light: {
     bgPrimary: '#F5F3EF',
+    bgContent: '#FFFFFF',
     bgSecondary: '#ECEAE5',
     bgTertiary: '#E2DFD9',
     border: '#C8C4BC',
@@ -78,6 +80,7 @@ export const warm: ColorTheme = {
   },
   dark: {
     bgPrimary: '#1C1A16',
+    bgContent: '#24211C',
     bgSecondary: '#242118',
     bgTertiary: '#2C2920',
     border: '#3A362C',
@@ -116,6 +119,7 @@ export const warm: ColorTheme = {
 export const cool: ColorTheme = {
   light: {
     bgPrimary: '#F5F5F4',
+    bgContent: '#FFFFFF',
     bgSecondary: '#EBEBEA',
     bgTertiary: '#E1E1E0',
     border: '#C6C6C4',
@@ -150,6 +154,7 @@ export const cool: ColorTheme = {
   },
   dark: {
     bgPrimary: '#1A1A19',
+    bgContent: '#222224',
     bgSecondary: '#212120',
     bgTertiary: '#282827',
     border: '#363634',

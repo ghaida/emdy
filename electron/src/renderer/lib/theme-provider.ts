@@ -1,4 +1,4 @@
-import { spacing, fontSize, radii, layout, fontFamily, transition, shadow, overlay } from './design-tokens';
+import { spacing, fontSize, radii, layout, fontFamily, transition, shadowLight, shadowDark, overlay } from './design-tokens';
 import { themes, type ColorThemeName, type ColorScale } from './color-themes';
 
 function camelToKebab(str: string): string {
@@ -9,27 +9,27 @@ export function applyTheme(colorTheme: ColorThemeName, appearance: 'light' | 'da
   const colors: ColorScale = themes[colorTheme][appearance];
   const root = document.documentElement;
 
-  // Colors — keyed as --bg-primary, --text-primary, --accent, etc.
+  // Colors
   for (const [key, value] of Object.entries(colors)) {
     root.style.setProperty(`--${camelToKebab(key)}`, value);
   }
 
-  // Spacing — keyed as --space-1, --space-2, etc.
+  // Spacing
   for (const [key, value] of Object.entries(spacing)) {
     root.style.setProperty(`--space-${key}`, value);
   }
 
-  // Font sizes — keyed as --fs-xs, --fs-sm, etc. (not --text- to avoid color collision)
+  // Font sizes
   for (const [key, value] of Object.entries(fontSize)) {
     root.style.setProperty(`--fs-${key}`, value);
   }
 
-  // Radii — keyed as --radius-sm, --radius-md, etc.
+  // Radii
   for (const [key, value] of Object.entries(radii)) {
     root.style.setProperty(`--radius-${key}`, value);
   }
 
-  // Layout — keyed by kebab-cased name: --titlebar-height, --sidebar-width, etc.
+  // Layout
   for (const [key, value] of Object.entries(layout)) {
     root.style.setProperty(`--${camelToKebab(key)}`, value);
   }
@@ -39,8 +39,9 @@ export function applyTheme(colorTheme: ColorThemeName, appearance: 'light' | 'da
     root.style.setProperty(`--transition-${key}`, value);
   }
 
-  // Shadows
-  for (const [key, value] of Object.entries(shadow)) {
+  // Shadows — appearance-aware (layered, with dark mode ring)
+  const shadows = appearance === 'dark' ? shadowDark : shadowLight;
+  for (const [key, value] of Object.entries(shadows)) {
     root.style.setProperty(`--shadow-${key}`, value);
   }
 

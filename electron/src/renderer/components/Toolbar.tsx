@@ -9,6 +9,7 @@ import {
   FileDown,
   Copy,
   MoreHorizontal,
+  Settings,
 } from 'lucide-react';
 import type { FontFamily } from '../lib/types';
 
@@ -33,6 +34,7 @@ interface ToolbarProps {
   onSearch: () => void;
   onExportPDF: () => void;
   onCopyHTML: () => void;
+  onOpenSettings: () => void;
   hasContent: boolean;
 }
 
@@ -60,6 +62,7 @@ export function Toolbar({
   onSearch,
   onExportPDF,
   onCopyHTML,
+  onOpenSettings,
   hasContent,
 }: ToolbarProps) {
   const [fontMenuOpen, setFontMenuOpen] = useState(false);
@@ -180,6 +183,11 @@ export function Toolbar({
               <FileDown {...ICON} />
             </button>
 
+
+            {/* Settings */}
+            <button className="toolbar-btn" onClick={onOpenSettings} title="Settings">
+              <Settings {...ICON} />
+            </button>
 
             {/* Minimap — rightmost */}
             <button
