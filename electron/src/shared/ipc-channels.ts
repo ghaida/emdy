@@ -1,0 +1,18 @@
+export const IPC = {
+  FILE_OPEN: 'file:open',
+  FILE_READ: 'file:read',
+  FILE_OPEN_DIALOG: 'file:open-dialog',
+  DIR_OPEN_DIALOG: 'dir:open-dialog',
+  DIR_SCAN: 'dir:scan',
+  FILE_WATCH: 'file:watch',
+  FILE_UNWATCH: 'file:unwatch',
+  FILE_CHANGED: 'file:changed',
+  FILE_DELETED: 'file:deleted',
+  SETTINGS_GET: 'settings:get',
+  SETTINGS_SET: 'settings:set',
+  EXPORT_PDF: 'export:pdf',
+  EXPORT_PRINT: 'export:print',
+  CLIPBOARD_WRITE_HTML: 'clipboard:write-html',
+  APP_ADD_RECENT: 'app:add-recent',
+  MENU_EVENT: 'menu:event',
+} as const;
