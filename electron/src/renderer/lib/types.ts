@@ -39,6 +39,7 @@ export interface ElectronAPI {
   exportPDF: () => Promise<boolean>;
   print: () => Promise<void>;
   writeClipboardHTML: (html: string) => Promise<void>;
+  toggleMaximize: () => Promise<void>;
   getSettings: () => Promise<DisplaySettings>;
   setSetting: (key: string, value: unknown) => Promise<void>;
   onMenuEvent: (callback: (event: string) => void) => () => void;

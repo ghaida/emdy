@@ -24,6 +24,14 @@ export interface ColorScale {
   minimapHeading: string;
   minimapText: string;
   minimapCode: string;
+  minimapBlockquote: string;
+  minimapTable: string;
+  minimapTableHeader: string;
+  minimapUl: string;
+  minimapOl: string;
+  minimapImage: string;
+  minimapHr: string;
+  minimapLink: string;
   minimapViewport: string;
 }
 
@@ -55,9 +63,17 @@ export const warm: ColorTheme = {
     codeNumber: '#5A6D7A',
     codePunctuation: '#6B6862',
     codeFunction: '#5F6B2D',      // green for functions
-    minimapHeading: '#5F6B2D',    // green tint
-    minimapText: '#A8ACA0',
-    minimapCode: '#D8DCD2',
+    minimapHeading: '#5F6B2D',
+    minimapText: '#BF7C2A',
+    minimapCode: '#D47418',
+    minimapBlockquote: '#8FA83E',
+    minimapTable: '#5A6D7A',
+    minimapTableHeader: '#3E5060',
+    minimapUl: '#D4A030',
+    minimapOl: '#5F6B2D',
+    minimapImage: '#BF1B1B',
+    minimapHr: '#D47418',
+    minimapLink: '#D47418',
     minimapViewport: '#5F6B2D',
   },
   dark: {
@@ -82,8 +98,16 @@ export const warm: ColorTheme = {
     codePunctuation: '#9C9488',
     codeFunction: '#8FA83E',      // green for functions
     minimapHeading: '#8FA83E',
-    minimapText: '#555E50',
-    minimapCode: '#333830',
+    minimapText: '#D47418',
+    minimapCode: '#BF7C2A',
+    minimapBlockquote: '#8FA83E',
+    minimapTable: '#7A9BAD',
+    minimapTableHeader: '#5A7A90',
+    minimapUl: '#D4A030',
+    minimapOl: '#8FA83E',
+    minimapImage: '#E04545',
+    minimapHr: '#D47418',
+    minimapLink: '#D47418',
     minimapViewport: '#8FA83E',
   },
 };
@@ -111,10 +135,18 @@ export const cool: ColorTheme = {
     codeNumber: '#5A7486',
     codePunctuation: '#646462',
     codeFunction: '#4A7A50',      // green functions
-    minimapHeading: '#4A7196',
-    minimapText: '#A8A8A6',
-    minimapCode: '#D8D8D6',
-    minimapViewport: '#4A7196',
+    minimapHeading: '#3A8A6A',
+    minimapText: '#7A9AAA',
+    minimapCode: '#5A7A9A',
+    minimapBlockquote: '#3A8A6A',
+    minimapTable: '#6A5A8A',
+    minimapTableHeader: '#50407A',
+    minimapUl: '#2A7A8A',
+    minimapOl: '#5A6AAA',
+    minimapImage: '#AA4060',
+    minimapHr: '#5A7A9A',
+    minimapLink: '#2A7A8A',
+    minimapViewport: '#3A8A6A',
   },
   dark: {
     bgPrimary: '#1A1A19',
@@ -137,10 +169,18 @@ export const cool: ColorTheme = {
     codeNumber: '#6A8EA4',
     codePunctuation: '#94948E',
     codeFunction: '#6AAE70',      // green functions
-    minimapHeading: '#6A9EC4',
-    minimapText: '#363634',
-    minimapCode: '#282827',
-    minimapViewport: '#6A9EC4',
+    minimapHeading: '#50C080',
+    minimapText: '#5A8AAA',
+    minimapCode: '#4A7AA0',
+    minimapBlockquote: '#50C080',
+    minimapTable: '#8A70B0',
+    minimapTableHeader: '#6A50A0',
+    minimapUl: '#40A0B0',
+    minimapOl: '#6A80C0',
+    minimapImage: '#C05070',
+    minimapHr: '#5A8AAA',
+    minimapLink: '#40A0B0',
+    minimapViewport: '#50C080',
   },
 };
 

@@ -215,7 +215,7 @@ export function App() {
 
   return (
     <div className="app">
-      <div className={`titlebar${isWelcome ? ' titlebar-compact' : ''}`}>
+      <div className={`titlebar${isWelcome ? ' titlebar-compact' : ''}`} onDoubleClick={() => window.electronAPI.toggleMaximize()}>
         {showToolbar && (
           <Toolbar
             zoom={display.zoom}
@@ -253,14 +253,16 @@ export function App() {
         onColorThemeChange={display.setColorTheme}
       />
       <div className="main-layout">
-        {sidebarVisible && dirEntries && (
-          <DirectoryBrowser
-            entries={dirEntries}
-            activePath={filePath}
-            rootPath={dirPath}
-            onFileSelect={handleFileSelect}
-            onFileContextMenu={handleFileContextMenu}
-          />
+        {dirEntries && (
+          <div className={`sidebar-container${sidebarVisible ? ' open' : ''}`}>
+            <DirectoryBrowser
+              entries={dirEntries}
+              activePath={filePath}
+              rootPath={dirPath}
+              onFileSelect={handleFileSelect}
+              onFileContextMenu={handleFileContextMenu}
+            />
+          </div>
         )}
         {renderContent()}
       </div>

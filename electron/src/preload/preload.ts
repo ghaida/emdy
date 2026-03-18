@@ -35,6 +35,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setSetting: (key: string, value: unknown) => ipcRenderer.invoke('settings:set', key, value),
 
+  // Window
+  toggleMaximize: () => ipcRenderer.invoke('window:toggle-maximize'),
+
   // Menu events from main process
   onMenuEvent: (callback: (event: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, menuEvent: string) => callback(menuEvent);
