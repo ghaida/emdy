@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTransition } from '../hooks/useTransition';
 
 interface SearchResult {
   filePath: string;
@@ -20,6 +21,7 @@ export function CommandPalette({ visible, onClose, onFileSelect }: CommandPalett
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [searching, setSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { mounted, active } = useTransition(visible);
 
   useEffect(() => {
     if (visible && inputRef.current) {
@@ -71,11 +73,11 @@ export function CommandPalette({ visible, onClose, onFileSelect }: CommandPalett
     }
   };
 
-  if (!visible) return null;
+  if (!mounted) return null;
 
   return (
-    <div className="command-palette-overlay" onClick={onClose}>
-      <div className="command-palette" onClick={(e) => e.stopPropagation()}>
+    <div className={`command-palette-overlay${active ? ' active' : ''}`} onClick={onClose}>
+      <div className={`command-palette${active ? ' active' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="command-palette-input-wrapper">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="command-palette-icon">
             <circle cx="6.5" cy="6.5" r="4" />

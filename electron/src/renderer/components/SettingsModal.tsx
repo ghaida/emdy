@@ -1,5 +1,6 @@
 import React from 'react';
 import type { AppTheme, ColorThemeName } from '../lib/types';
+import { useTransition } from '../hooks/useTransition';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -29,11 +30,13 @@ export function SettingsModal({
   onThemeChange,
   onColorThemeChange,
 }: SettingsModalProps) {
-  if (!visible) return null;
+  const { mounted, active } = useTransition(visible);
+
+  if (!mounted) return null;
 
   return (
-    <div className="settings-overlay" onClick={onClose}>
-      <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
+    <div className={`settings-overlay${active ? ' active' : ''}`} onClick={onClose}>
+      <div className={`settings-modal${active ? ' active' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="settings-header">
           <span className="settings-title">Settings</span>
           <button className="settings-close" onClick={onClose}>

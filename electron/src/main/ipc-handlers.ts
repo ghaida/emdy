@@ -76,12 +76,17 @@ export function registerFileHandlers() {
   });
 }
 
+const IGNORED_DIRS = new Set([
+  'node_modules', 'dist', 'build', 'out', '.vite', '__pycache__',
+  'vendor', '.git', '.svn', 'coverage', '.next', '.nuxt',
+]);
+
 async function scanDirectory(dirPath: string): Promise<FileEntry[]> {
   const entries: FileEntry[] = [];
   try {
     const items = await fs.readdir(dirPath, { withFileTypes: true });
     for (const item of items) {
-      if (item.name.startsWith('.')) continue;
+      if (item.name.startsWith('.') || IGNORED_DIRS.has(item.name)) continue;
       const fullPath = path.join(dirPath, item.name);
       if (item.isDirectory()) {
         const children = await scanDirectory(fullPath);
@@ -161,7 +166,7 @@ async function collectAllFiles(dirPath: string): Promise<string[]> {
   try {
     const items = await fs.readdir(dirPath, { withFileTypes: true });
     for (const item of items) {
-      if (item.name.startsWith('.')) continue;
+      if (item.name.startsWith('.') || IGNORED_DIRS.has(item.name)) continue;
       const fullPath = path.join(dirPath, item.name);
       if (item.isDirectory()) {
         files.push(...await collectAllFiles(fullPath));

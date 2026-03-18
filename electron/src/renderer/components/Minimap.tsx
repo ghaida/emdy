@@ -84,6 +84,24 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
         ctx.globalAlpha = 0.35;
         ctx.fillRect(14, y, width - 28, h);
         ctx.globalAlpha = 1;
+      } else if (tag === 'table') {
+        // Draw table as dense rows — header + striped body
+        const rows = htmlEl.querySelectorAll('tr');
+        const rowCount = rows.length || 1;
+        const tableTop = y;
+        // Use actual scaled height but draw rows densely within it
+        const rowH = Math.max(h / rowCount, 1);
+        // Header
+        ctx.fillStyle = headingColor;
+        ctx.globalAlpha = 0.5;
+        ctx.fillRect(10, tableTop, width - 20, rowH);
+        // Body rows — fill the full table area
+        ctx.fillStyle = textColor;
+        for (let i = 1; i < rowCount; i++) {
+          ctx.globalAlpha = i % 2 === 0 ? 0.12 : 0.2;
+          ctx.fillRect(10, tableTop + i * rowH, width - 20, rowH);
+        }
+        ctx.globalAlpha = 1;
       } else if (tag === 'hr') {
         ctx.fillStyle = textColor;
         ctx.globalAlpha = 0.3;
@@ -159,10 +177,16 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     window.addEventListener('mouseup', onMouseUp);
   }, [scrollToY]);
 
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    container.scrollTop += e.deltaY;
+  }, [scrollContainerRef]);
+
   if (!visible) return null;
 
   return (
-    <div className="minimap" ref={containerRef} onMouseDown={handleMouseDown}>
+    <div className="minimap" ref={containerRef} onMouseDown={handleMouseDown} onWheel={handleWheel}>
       <canvas ref={canvasRef} />
       <div
         className="minimap-viewport"

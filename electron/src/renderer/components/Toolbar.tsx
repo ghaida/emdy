@@ -100,7 +100,7 @@ export function Toolbar({
       <div className="toolbar-left">
         {hasSidebar && (
           <button
-            className={`toolbar-btn${sidebarVisible ? ' active' : ''}`}
+            className="toolbar-btn"
             onClick={onToggleSidebar}
             title="Toggle sidebar"
           >
@@ -183,7 +183,7 @@ export function Toolbar({
 
             {/* Minimap — rightmost */}
             <button
-              className={`toolbar-btn${minimapVisible ? ' active' : ''}`}
+              className="toolbar-btn"
               onClick={onToggleMinimap}
               title="Toggle minimap"
             >
@@ -239,7 +239,7 @@ export function Toolbar({
 
             {/* Minimap — rightmost even in collapsed */}
             <button
-              className={`toolbar-btn${minimapVisible ? ' active' : ''}`}
+              className="toolbar-btn"
               onClick={onToggleMinimap}
               title="Toggle minimap"
             >
