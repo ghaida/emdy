@@ -105,7 +105,7 @@ export function Toolbar({
           <button
             className="toolbar-btn"
             onClick={onToggleSidebar}
-            title="Toggle sidebar"
+            data-tooltip="Toggle sidebar"
           >
             <PanelLeft {...ICON} />
           </button>
@@ -130,20 +130,20 @@ export function Toolbar({
           <>
             {/* Zoom */}
             <div className="toolbar-zoom-group">
-              <button className="toolbar-btn" onClick={onZoomOut} title="Zoom out (Cmd-)">
+              <button className="toolbar-btn" onClick={onZoomOut} data-tooltip="Zoom out">
                 <Minus {...ICON} />
               </button>
-              <button className="toolbar-btn zoom-label" onClick={onZoomReset} title="Reset zoom">
+              <button className="toolbar-btn zoom-label" onClick={onZoomReset} data-tooltip="Reset zoom">
                 {pct}%
               </button>
-              <button className="toolbar-btn" onClick={onZoomIn} title="Zoom in (Cmd+)">
+              <button className="toolbar-btn" onClick={onZoomIn} data-tooltip="Zoom in">
                 <Plus {...ICON} />
               </button>
             </div>
 
             {/* Search */}
             {hasSidebar && (
-              <button className="toolbar-btn" onClick={onSearch} title="Search (Cmd+F)">
+              <button className="toolbar-btn" onClick={onSearch} data-tooltip="Search">
                 <Search {...ICON} />
               </button>
             )}
@@ -153,7 +153,7 @@ export function Toolbar({
               <button
                 className={`toolbar-btn${fontMenuOpen ? ' active' : ''}`}
                 onClick={() => setFontMenuOpen((v) => !v)}
-                title="Font"
+                data-tooltip="Font"
               >
                 <Type {...ICON} />
               </button>
@@ -174,18 +174,18 @@ export function Toolbar({
             </div>
 
             {/* Copy */}
-            <button className="toolbar-btn" onClick={onCopyHTML} title="Copy as formatted text">
+            <button className="toolbar-btn" onClick={onCopyHTML} data-tooltip="Copy formatted">
               <Copy {...ICON} />
             </button>
 
             {/* Export PDF */}
-            <button className="toolbar-btn" onClick={onExportPDF} title="Export PDF">
+            <button className="toolbar-btn" onClick={onExportPDF} data-tooltip="Export PDF">
               <FileDown {...ICON} />
             </button>
 
 
             {/* Settings */}
-            <button className="toolbar-btn" onClick={onOpenSettings} title="Settings">
+            <button className="toolbar-btn" onClick={onOpenSettings} data-tooltip="Settings">
               <Settings {...ICON} />
             </button>
 
@@ -193,7 +193,7 @@ export function Toolbar({
             <button
               className="toolbar-btn"
               onClick={onToggleMinimap}
-              title="Toggle minimap"
+              data-tooltip="Toggle minimap"
             >
               <PanelRight {...ICON} />
             </button>
@@ -202,7 +202,7 @@ export function Toolbar({
 
         {/* Search when no content but sidebar open */}
         {!hasContent && hasSidebar && (
-          <button className="toolbar-btn" onClick={onSearch} title="Search (Cmd+F)">
+          <button className="toolbar-btn" onClick={onSearch} data-tooltip="Search">
             <Search {...ICON} />
           </button>
         )}
@@ -214,7 +214,7 @@ export function Toolbar({
               <button
                 className={`toolbar-btn${overflowOpen ? ' active' : ''}`}
                 onClick={() => setOverflowOpen((v) => !v)}
-                title="More actions"
+                data-tooltip="More actions"
               >
                 <MoreHorizontal {...ICON} />
               </button>
@@ -249,7 +249,7 @@ export function Toolbar({
             <button
               className="toolbar-btn"
               onClick={onToggleMinimap}
-              title="Toggle minimap"
+              data-tooltip="Toggle minimap"
             >
               <PanelRight {...ICON} />
             </button>

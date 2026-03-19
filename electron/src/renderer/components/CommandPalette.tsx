@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTransition } from '../hooks/useTransition';
 
 interface SearchResult {
@@ -59,21 +59,63 @@ export function CommandPalette({ visible, onClose, onFileSelect }: CommandPalett
     onClose();
   }, [onFileSelect, onClose]);
 
+  // Group results by type and build a flat list with group headers
+  const { flatItems, resultIndices } = useMemo(() => {
+    const fileResults = results.filter((r) => r.type === 'file');
+    const contentResults = results.filter((r) => r.type === 'content');
+
+    const flatItems: ({ kind: 'header'; label: string } | { kind: 'result'; result: SearchResult })[] = [];
+    const resultIndices: number[] = []; // maps flat index to results array index
+
+    let resultIdx = 0;
+    if (fileResults.length > 0) {
+      flatItems.push({ kind: 'header', label: 'Files' });
+      for (const r of fileResults) {
+        flatItems.push({ kind: 'result', result: r });
+        resultIndices.push(results.indexOf(r));
+      }
+    }
+    if (contentResults.length > 0) {
+      flatItems.push({ kind: 'header', label: 'Content' });
+      for (const r of contentResults) {
+        flatItems.push({ kind: 'result', result: r });
+        resultIndices.push(results.indexOf(r));
+      }
+    }
+
+    return { flatItems, resultIndices };
+  }, [results]);
+
+  // Map selectedIndex (over all results) to the flat item for keyboard nav
+  const selectableResults = flatItems.filter((item) => item.kind === 'result');
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       onClose();
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex((i) => Math.min(i + 1, results.length - 1));
+      setSelectedIndex((i) => Math.min(i + 1, selectableResults.length - 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedIndex((i) => Math.max(i - 1, 0));
-    } else if (e.key === 'Enter' && results[selectedIndex]) {
-      handleSelect(results[selectedIndex]);
+    } else if (e.key === 'Enter' && selectableResults[selectedIndex]) {
+      const item = selectableResults[selectedIndex];
+      if (item.kind === 'result') handleSelect(item.result);
     }
   };
 
   if (!mounted) return null;
+
+  // Precompute a selectable index for each flat item
+  const selectableIndexMap = useMemo(() => {
+    const map: number[] = [];
+    let idx = -1;
+    for (const item of flatItems) {
+      if (item.kind === 'result') idx++;
+      map.push(idx);
+    }
+    return map;
+  }, [flatItems]);
 
   return (
     <div className={`command-palette-overlay${active ? ' active' : ''}`} onClick={onClose}>
@@ -94,24 +136,35 @@ export function CommandPalette({ visible, onClose, onFileSelect }: CommandPalett
           />
           {searching && <span className="command-palette-spinner" />}
         </div>
-        {results.length > 0 && (
+        {flatItems.length > 0 && (
           <div className="command-palette-results">
-            {results.map((result, i) => (
-              <button
-                key={`${result.filePath}:${result.lineNumber ?? 'file'}`}
-                className={`command-palette-result${i === selectedIndex ? ' selected' : ''}`}
-                onClick={() => handleSelect(result)}
-                onMouseEnter={() => setSelectedIndex(i)}
-              >
-                <span className="command-palette-result-file">{result.fileName}</span>
-                {result.matchLine && (
-                  <span className="command-palette-result-line">
-                    {result.lineNumber && <span className="command-palette-result-lineno">:{result.lineNumber}</span>}
-                    {' '}{result.matchLine.trim()}
-                  </span>
-                )}
-              </button>
-            ))}
+            {flatItems.map((item, i) => {
+              if (item.kind === 'header') {
+                return (
+                  <div key={`header-${item.label}`} className="command-palette-group-header">
+                    {item.label}
+                  </div>
+                );
+              }
+              const idx = selectableIndexMap[i];
+              const isSelected = idx === selectedIndex;
+              return (
+                <button
+                  key={`${item.result.filePath}:${item.result.lineNumber ?? 'file'}`}
+                  className={`command-palette-result${isSelected ? ' selected' : ''}`}
+                  onClick={() => handleSelect(item.result)}
+                  onMouseEnter={() => setSelectedIndex(idx)}
+                >
+                  <span className="command-palette-result-file">{item.result.fileName}</span>
+                  {item.result.matchLine && (
+                    <span className="command-palette-result-line">
+                      {item.result.lineNumber && <span className="command-palette-result-lineno">:{item.result.lineNumber}</span>}
+                      {' '}{item.result.matchLine.trim()}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
         {query && !searching && results.length === 0 && (

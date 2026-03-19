@@ -4,7 +4,7 @@ interface ShortcutHandlers {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onZoomReset: () => void;
-  onOpenFile: () => void;
+  onOpen: () => void;
   onFind?: () => void;
 }
 
@@ -24,7 +24,7 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
         handlers.onZoomReset();
       } else if (meta && e.key === 'o' && !e.shiftKey) {
         e.preventDefault();
-        handlers.onOpenFile();
+        handlers.onOpen();
       } else if (meta && e.key === 'f' && handlers.onFind) {
         e.preventDefault();
         handlers.onFind();

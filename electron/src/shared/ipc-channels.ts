@@ -1,4 +1,5 @@
 export const IPC = {
+  OPEN_DIALOG: 'open:dialog',
   FILE_OPEN: 'file:open',
   FILE_READ: 'file:read',
   FILE_OPEN_DIALOG: 'file:open-dialog',

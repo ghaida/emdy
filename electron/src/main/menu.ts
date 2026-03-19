@@ -24,14 +24,9 @@ export function buildMenu(sendEvent: MenuCallback) {
       label: 'File',
       submenu: [
         {
-          label: 'Open File...',
+          label: 'Open...',
           accelerator: 'CmdOrCtrl+O',
-          click: () => sendEvent('open-file'),
-        },
-        {
-          label: 'Open Folder...',
-          accelerator: 'CmdOrCtrl+Shift+O',
-          click: () => sendEvent('open-dir'),
+          click: () => sendEvent('open'),
         },
         { type: 'separator' },
         {

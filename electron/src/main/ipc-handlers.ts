@@ -6,6 +6,26 @@ import type { FileEntry } from '../renderer/lib/types';
 let currentDirPath: string | null = null;
 
 export function registerFileHandlers() {
+  // Combined open dialog — allows selecting either a file or a directory
+  ipcMain.handle('open:dialog', async (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return null;
+    const result = await dialog.showOpenDialog(win, {
+      properties: ['openFile', 'openDirectory'],
+      filters: [{ name: 'Markdown', extensions: ['md', 'markdown', 'txt'] }],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    const selected = result.filePaths[0];
+    const stat = await fs.stat(selected);
+    if (stat.isDirectory()) {
+      currentDirPath = selected;
+      return { type: 'directory' as const, dirPath: selected, entries: await scanDirectory(selected) };
+    }
+    const content = await fs.readFile(selected, 'utf-8');
+    app.addRecentDocument(selected);
+    return { type: 'file' as const, filePath: selected, content };
+  });
+
   ipcMain.handle('file:open-dialog', async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return null;

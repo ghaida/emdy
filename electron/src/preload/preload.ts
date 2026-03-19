@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // File operations
+  openDialog: () => ipcRenderer.invoke('open:dialog'),
   openFileDialog: () => ipcRenderer.invoke('file:open-dialog'),
   openDirDialog: () => ipcRenderer.invoke('dir:open-dialog'),
   readFile: (filePath: string) => ipcRenderer.invoke('file:read', filePath),

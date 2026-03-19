@@ -45,25 +45,16 @@ export function App() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const handleOpenFile = useCallback(async () => {
+  const handleOpen = useCallback(async () => {
     try {
-      const result = await window.electronAPI.openFileDialog();
-      if (result) {
+      const result = await window.electronAPI.openDialog();
+      if (!result) return;
+      if (result.type === 'file') {
         setContent(result.content);
         setFilePath(result.filePath);
         setFileDeleted(false);
         setFileError(null);
-      }
-    } catch {
-      setFileError('Could not open file.');
-      addToast('Failed to open file', 'error');
-    }
-  }, [addToast]);
-
-  const handleOpenDir = useCallback(async () => {
-    try {
-      const result = await window.electronAPI.openDirDialog();
-      if (result) {
+      } else {
         setDirEntries(result.entries);
         setDirPath(result.dirPath);
         setSidebarVisible(true);
@@ -72,7 +63,7 @@ export function App() {
         }
       }
     } catch {
-      addToast('Failed to open directory', 'error');
+      addToast('Failed to open', 'error');
     }
   }, [addToast]);
 
@@ -144,7 +135,7 @@ export function App() {
     onZoomIn: display.zoomIn,
     onZoomOut: display.zoomOut,
     onZoomReset: display.resetZoom,
-    onOpenFile: handleOpenFile,
+    onOpen: handleOpen,
     onFind: () => setSearchVisible((v) => !v),
   });
 
@@ -152,8 +143,7 @@ export function App() {
   useEffect(() => {
     const removeMenu = window.electronAPI.onMenuEvent((event) => {
       switch (event) {
-        case 'open-file': handleOpenFile(); break;
-        case 'open-dir': handleOpenDir(); break;
+        case 'open': handleOpen(); break;
         case 'export-pdf': handleExportPDF(); break;
         case 'print': window.electronAPI.print(); break;
         case 'find': setSearchVisible((v) => !v); break;
@@ -181,7 +171,7 @@ export function App() {
     });
 
     return () => { removeMenu(); removeFileOpen(); };
-  }, [handleOpenFile, handleOpenDir, handleExportPDF, display, addToast]);
+  }, [handleOpen, handleExportPDF, display, addToast]);
 
   // Welcome = nothing loaded at all. Once a folder or file is open, show toolbar.
   const isWelcome = content === null && dirEntries === null;
@@ -194,10 +184,10 @@ export function App() {
 
   const renderContent = () => {
     if (fileDeleted) {
-      return <EmptyState type="file-deleted" onAction={handleOpenFile} actionLabel="Open Another File" />;
+      return <EmptyState type="file-deleted" onAction={handleOpen} actionLabel="Open Another File" />;
     }
     if (fileError) {
-      return <EmptyState type="error" message={fileError} onAction={handleOpenFile} actionLabel="Open Another File" />;
+      return <EmptyState type="error" message={fileError} onAction={handleOpen} actionLabel="Open Another File" />;
     }
     if (content === null && dirEntries !== null) {
       return (
@@ -207,7 +197,7 @@ export function App() {
       );
     }
     if (content === null) {
-      return <WelcomeView onOpenDir={handleOpenDir} />;
+      return <WelcomeView onOpen={handleOpen} />;
     }
     return (
       <div className="content-column">
@@ -220,6 +210,7 @@ export function App() {
               style={{
                 fontFamily: fontFamilyVar,
                 fontSize: `${display.zoom}rem`,
+                maxWidth: `min(${680 * display.zoom}px, 100%)`,
               }}
               contentRef={contentRef}
             />
@@ -237,7 +228,10 @@ export function App() {
 
   return (
     <div className="app">
-      <div className={`titlebar${isWelcome ? ' titlebar-compact' : ''}`} onDoubleClick={() => window.electronAPI.toggleMaximize()}>
+      <div className={`titlebar${isWelcome ? ' titlebar-compact' : ''}`} onDoubleClick={(e) => {
+        if ((e.target as HTMLElement).closest('button, .toolbar-btn, .toolbar-dropdown-wrapper, .toolbar-filename, .toolbar-zoom-group')) return;
+        window.electronAPI.toggleMaximize();
+      }}>
         {showToolbar && (
           <Toolbar
             zoom={display.zoom}

@@ -24,7 +24,13 @@ export interface SearchResult {
   type: 'file' | 'content';
 }
 
+export type OpenDialogResult =
+  | { type: 'file'; filePath: string; content: string }
+  | { type: 'directory'; dirPath: string; entries: FileEntry[] }
+  | null;
+
 export interface ElectronAPI {
+  openDialog: () => Promise<OpenDialogResult>;
   openFileDialog: () => Promise<{ filePath: string; content: string } | null>;
   openDirDialog: () => Promise<{ dirPath: string; entries: FileEntry[] } | null>;
   readFile: (filePath: string) => Promise<string>;

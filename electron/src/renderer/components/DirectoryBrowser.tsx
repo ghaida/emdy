@@ -25,6 +25,7 @@ export function DirectoryBrowser({ entries, activePath, onFileSelect, onFileCont
 
   return (
     <div className="sidebar">
+      <div className="sidebar-heading">Files</div>
       <div className="sidebar-tree">
         {rootFiles.map((file) => (
           <FileItem
