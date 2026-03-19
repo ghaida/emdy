@@ -104,8 +104,6 @@ export function CommandPalette({ visible, onClose, onFileSelect }: CommandPalett
     }
   };
 
-  if (!mounted) return null;
-
   // Precompute a selectable index for each flat item
   const selectableIndexMap = useMemo(() => {
     const map: number[] = [];
@@ -116,6 +114,8 @@ export function CommandPalette({ visible, onClose, onFileSelect }: CommandPalett
     }
     return map;
   }, [flatItems]);
+
+  if (!mounted) return null;
 
   return (
     <div className={`command-palette-overlay${active ? ' active' : ''}`} onClick={onClose}>

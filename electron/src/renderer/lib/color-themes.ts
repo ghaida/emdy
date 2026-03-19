@@ -1,4 +1,4 @@
-export type ColorThemeName = 'warm' | 'cool';
+export type ColorThemeName = 'warm' | 'cool' | 'fresh' | 'neon';
 
 export interface ColorScale {
   bgPrimary: string;
@@ -194,4 +194,156 @@ export const cool: ColorTheme = {
   },
 };
 
-export const themes: Record<ColorThemeName, ColorTheme> = { warm, cool };
+// Fresh: Playful Precision — bright orange accent, electric blue, cream/navy backgrounds
+export const fresh: ColorTheme = {
+  light: {
+    bgPrimary: '#FFFBF0',
+    bgContent: '#FFFFFF',
+    bgCode: '#FFF3E0',
+    bgSecondary: '#FFF0D6',
+    bgTertiary: '#FFE4B8',
+    border: '#E8D8C0',
+    borderSubtle: '#D8C8B0',
+    textMuted: '#887860',
+    textSecondary: '#5C4E38',
+    textPrimary: '#1A1A1A',
+    textHeading: '#0A1628',
+    accent: '#FF6B00',
+    accentHover: '#E05E00',
+    success: '#3A8A4A',
+    info: '#2B5CE6',
+    error: '#D42B2B',
+    codeKeyword: '#2B5CE6',       // electric blue for keywords
+    codeString: '#FF6B00',        // bright orange for strings
+    codeComment: '#8A8478',
+    codeNumber: '#9B5DE5',        // purple for numbers
+    codePunctuation: '#5C564A',
+    codeFunction: '#3A8A4A',      // green for functions
+    minimapHeading: '#FF6B00',
+    minimapText: '#2B5CE6',
+    minimapCode: '#9B5DE5',
+    minimapBlockquote: '#FFD23F',
+    minimapTable: '#3A8A4A',
+    minimapTableHeader: '#2A6A3A',
+    minimapUl: '#FF6B00',
+    minimapOl: '#2B5CE6',
+    minimapImage: '#D42B2B',
+    minimapHr: '#D4CFC4',
+    minimapLink: '#2B5CE6',
+    minimapViewport: '#FF6B00',
+  },
+  dark: {
+    bgPrimary: '#0A1628',
+    bgContent: '#111E32',
+    bgCode: '#081020',
+    bgSecondary: '#0E1A2E',
+    bgTertiary: '#162438',
+    border: '#1E3050',
+    borderSubtle: '#2A3E5E',
+    textMuted: '#6A7A94',
+    textSecondary: '#8A9AB4',
+    textPrimary: '#D8DDE8',
+    textHeading: '#F5F2EB',
+    accent: '#FF6B00',
+    accentHover: '#FF8530',
+    success: '#5ABE6A',
+    info: '#5A8EFF',
+    error: '#F05050',
+    codeKeyword: '#5A8EFF',       // bright blue for keywords
+    codeString: '#FF6B00',        // bright orange for strings
+    codeComment: '#6A7A94',
+    codeNumber: '#B47EFF',        // brighter purple for numbers
+    codePunctuation: '#8A9AB4',
+    codeFunction: '#5ABE6A',      // green for functions
+    minimapHeading: '#FF6B00',
+    minimapText: '#5A8EFF',
+    minimapCode: '#B47EFF',
+    minimapBlockquote: '#FFD23F',
+    minimapTable: '#5ABE6A',
+    minimapTableHeader: '#3A9A4A',
+    minimapUl: '#FF8530',
+    minimapOl: '#5A8EFF',
+    minimapImage: '#F05050',
+    minimapHr: '#2A3E5E',
+    minimapLink: '#5A8EFF',
+    minimapViewport: '#FF6B00',
+  },
+};
+
+// Neon: cyberpunk/neon — hot pink accent, electric cyan, deep purple-black darks
+export const neon: ColorTheme = {
+  light: {
+    bgPrimary: '#F5F5F4',
+    bgContent: '#FFFFFF',
+    bgCode: '#EDEDEC',
+    bgSecondary: '#EDEDEC',
+    bgTertiary: '#E3E3E2',
+    border: '#CCCCC8',
+    borderSubtle: '#B8B8B4',
+    textMuted: '#848480',
+    textSecondary: '#585854',
+    textPrimary: '#222220',
+    textHeading: '#141414',
+    accent: '#00B8D4',             // electric cyan
+    accentHover: '#009AB0',
+    success: '#00CC66',            // neon green
+    info: '#00C8E0',               // electric cyan
+    error: '#FF2D55',              // neon red
+    codeKeyword: '#00B8D4',        // cyan keywords
+    codeString: '#D428A0',         // pink strings
+    codeComment: '#848480',
+    codeNumber: '#8030C0',         // purple
+    codePunctuation: '#585854',
+    codeFunction: '#00A050',       // neon green functions
+    minimapHeading: '#00B8D4',
+    minimapText: '#D428A0',
+    minimapCode: '#8030C0',
+    minimapBlockquote: '#00CC66',
+    minimapTable: '#E06000',
+    minimapTableHeader: '#C05000',
+    minimapUl: '#D428A0',
+    minimapOl: '#00B8D4',
+    minimapImage: '#FF2D55',
+    minimapHr: '#00C8E0',
+    minimapLink: '#00B8D4',
+    minimapViewport: '#D428A0',
+  },
+  dark: {
+    bgPrimary: '#0D0A14',
+    bgContent: '#1A1724',
+    bgCode: '#100C1A',
+    bgSecondary: '#161220',
+    bgTertiary: '#201C2C',
+    border: '#2E2840',
+    borderSubtle: '#3C3454',
+    textMuted: '#7A6E94',
+    textSecondary: '#A098B8',
+    textPrimary: '#D8D0E8',
+    textHeading: '#F2E8FA',
+    accent: '#FF36B0',             // bright neon pink
+    accentHover: '#FF60C4',
+    success: '#30F080',            // bright neon green
+    info: '#20E0FF',               // bright electric cyan
+    error: '#FF4070',              // bright neon red
+    codeKeyword: '#FF36B0',        // neon pink keywords
+    codeString: '#20E0FF',         // cyan strings
+    codeComment: '#7A6E94',
+    codeNumber: '#B060FF',         // bright purple
+    codePunctuation: '#A098B8',
+    codeFunction: '#A050FF',       // vivid purple functions
+    minimapHeading: '#FF36B0',
+    minimapText: '#A080E0',
+    minimapCode: '#20E0FF',
+    minimapBlockquote: '#30F080',
+    minimapTable: '#B060FF',
+    minimapTableHeader: '#8840E0',
+    minimapUl: '#FF8030',
+    minimapOl: '#FF36B0',
+    minimapImage: '#FF4070',
+    minimapHr: '#20E0FF',
+    minimapLink: '#FF36B0',
+    minimapViewport: '#A050FF',
+  },
+};
+
+export const themes: Record<ColorThemeName, ColorTheme> = { warm, cool, fresh, neon };

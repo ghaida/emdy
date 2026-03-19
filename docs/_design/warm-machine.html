@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emdy — A Markdown Reader</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Serif:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ─── Reset & Base ─── */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --braun-orange: #ED8008;
+      --braun-orange-hover: #D97207;
+      --warm-white: #F5F2ED;
+      --deep-charcoal: #2B2622;
+      --slate-blue: #5A6D7A;
+      --editor-cream: #EDEAE4;
+      --muted-gray: #9C9488;
+      --olive-green: #5F6B2D;
+      --off-white: #FAF8F5;
+      --border-warm: rgba(43, 38, 34, 0.08);
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      color: var(--deep-charcoal);
+      background-color: var(--warm-white);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ─── Utility ─── */
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+
+    /* ─── Fade-in Animation ─── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .fade-in-delay-1 { transition-delay: 0.1s; }
+    .fade-in-delay-2 { transition-delay: 0.2s; }
+    .fade-in-delay-3 { transition-delay: 0.3s; }
+    .fade-in-delay-4 { transition-delay: 0.35s; }
+
+    /* ─── Navigation ─── */
+    nav {
+      padding: 28px 0;
+      position: relative;
+      z-index: 10;
+    }
+
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: 'IBM Plex Serif', serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--deep-charcoal);
+      letter-spacing: -0.01em;
+    }
+
+    .logo span {
+      color: var(--braun-orange);
+    }
+
+    .nav-link {
+      font-size: 0.875rem;
+      color: var(--muted-gray);
+      text-decoration: none;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      transition: color 0.25s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--deep-charcoal);
+    }
+
+    /* ─── Hero ─── */
+    .hero {
+      padding: 80px 0 100px;
+      text-align: center;
+    }
+
+    .hero-label {
+      display: inline-block;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--braun-orange);
+      margin-bottom: 28px;
+    }
+
+    .hero h1 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2.75rem, 5.5vw, 4.25rem);
+      font-weight: 400;
+      line-height: 1.12;
+      color: var(--deep-charcoal);
+      max-width: 720px;
+      margin: 0 auto 28px;
+      letter-spacing: -0.02em;
+      font-optical-sizing: auto;
+    }
+
+    .hero p {
+      font-size: 1.1875rem;
+      color: var(--muted-gray);
+      max-width: 520px;
+      margin: 0 auto 44px;
+      line-height: 1.65;
+      font-weight: 400;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--braun-orange);
+      color: #fff;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      padding: 14px 32px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+      box-shadow: 0 2px 8px rgba(237, 128, 8, 0.18);
+    }
+
+    .btn-primary:hover {
+      background: var(--braun-orange-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(237, 128, 8, 0.25);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ─── Product Mockup ─── */
+    .product-mockup {
+      max-width: 880px;
+      margin: 56px auto 0;
+      position: relative;
+    }
+
+    .mockup-window {
+      background: var(--off-white);
+      border-radius: 12px;
+      border: 1px solid var(--border-warm);
+      box-shadow:
+        0 1px 2px rgba(43, 38, 34, 0.04),
+        0 4px 16px rgba(43, 38, 34, 0.06),
+        0 16px 48px rgba(43, 38, 34, 0.08);
+      overflow: hidden;
+    }
+
+    .mockup-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 18px;
+      background: var(--editor-cream);
+      border-bottom: 1px solid var(--border-warm);
+    }
+
+    .mockup-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(43, 38, 34, 0.12);
+    }
+
+    .mockup-dot:nth-child(1) { background: #EF6B5E; }
+    .mockup-dot:nth-child(2) { background: #F5BD4F; }
+    .mockup-dot:nth-child(3) { background: #61C454; }
+
+    .mockup-body {
+      display: flex;
+      min-height: 380px;
+    }
+
+    .mockup-sidebar {
+      width: 200px;
+      background: var(--editor-cream);
+      border-right: 1px solid var(--border-warm);
+      padding: 16px 0;
+      flex-shrink: 0;
+    }
+
+    .mockup-sidebar-item {
+      padding: 7px 18px;
+      font-size: 0.8125rem;
+      color: var(--muted-gray);
+      font-family: 'IBM Plex Sans', sans-serif;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mockup-sidebar-item.active {
+      background: rgba(237, 128, 8, 0.08);
+      color: var(--deep-charcoal);
+      font-weight: 500;
+    }
+
+    .mockup-content {
+      flex: 1;
+      padding: 36px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .mockup-line {
+      height: 10px;
+      background: rgba(43, 38, 34, 0.06);
+      border-radius: 4px;
+    }
+
+    .mockup-line.heading {
+      height: 16px;
+      width: 55%;
+      background: rgba(43, 38, 34, 0.12);
+      border-radius: 4px;
+      margin-bottom: 6px;
+    }
+
+    .mockup-line.short { width: 38%; }
+    .mockup-line.medium { width: 72%; }
+    .mockup-line.long { width: 92%; }
+    .mockup-line.full { width: 100%; }
+
+    .mockup-code-block {
+      background: var(--editor-cream);
+      border-radius: 6px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 4px 0;
+    }
+
+    .mockup-code-line {
+      height: 8px;
+      border-radius: 3px;
+    }
+
+    .mockup-code-line:nth-child(1) { width: 45%; background: rgba(95, 107, 45, 0.18); }
+    .mockup-code-line:nth-child(2) { width: 68%; background: rgba(90, 109, 122, 0.15); }
+    .mockup-code-line:nth-child(3) { width: 52%; background: rgba(237, 128, 8, 0.12); }
+
+    .mockup-label {
+      position: absolute;
+      bottom: -32px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8125rem;
+      color: var(--muted-gray);
+      font-style: italic;
+      font-family: 'IBM Plex Serif', serif;
+    }
+
+    /* ─── Problem Section ─── */
+    .problem {
+      padding: 120px 0 100px;
+    }
+
+    .problem-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--slate-blue);
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .problem h2 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+      font-weight: 400;
+      line-height: 1.2;
+      color: var(--deep-charcoal);
+      margin-bottom: 24px;
+      letter-spacing: -0.015em;
+    }
+
+    .problem p {
+      font-size: 1.0625rem;
+      color: var(--muted-gray);
+      line-height: 1.7;
+    }
+
+    .problem p + p {
+      margin-top: 16px;
+    }
+
+    .divider {
+      width: 48px;
+      height: 2px;
+      background: var(--braun-orange);
+      margin: 0 auto 28px;
+      border-radius: 1px;
+      opacity: 0.5;
+    }
+
+    /* ─── Features ─── */
+    .features {
+      padding: 80px 0 100px;
+      background: var(--off-white);
+      border-top: 1px solid var(--border-warm);
+      border-bottom: 1px solid var(--border-warm);
+    }
+
+    .features-header {
+      text-align: center;
+      margin-bottom: 72px;
+    }
+
+    .features-header h2 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+      font-weight: 400;
+      line-height: 1.2;
+      color: var(--deep-charcoal);
+      letter-spacing: -0.015em;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 48px 64px;
+    }
+
+    .feature-card {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: var(--editor-cream);
+      border: 1px solid var(--border-warm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--braun-orange);
+    }
+
+    .feature-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 1.5;
+    }
+
+    .feature-card h3 {
+      font-family: 'IBM Plex Serif', serif;
+      font-size: 1.0625rem;
+      font-weight: 500;
+      color: var(--deep-charcoal);
+      margin-bottom: 6px;
+    }
+
+    .feature-card p {
+      font-size: 0.9375rem;
+      color: var(--muted-gray);
+      line-height: 1.6;
+    }
+
+    /* ─── Philosophy ─── */
+    .philosophy {
+      padding: 120px 0;
+    }
+
+    .philosophy-inner {
+      max-width: 620px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .philosophy blockquote {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(1.5rem, 2.8vw, 2rem);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--deep-charcoal);
+      line-height: 1.4;
+      margin-bottom: 28px;
+      letter-spacing: -0.01em;
+    }
+
+    .philosophy .attribution {
+      font-size: 0.875rem;
+      color: var(--muted-gray);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+
+    .philosophy-text {
+      margin-top: 56px;
+      padding-top: 48px;
+      border-top: 1px solid var(--border-warm);
+    }
+
+    .philosophy-text p {
+      font-size: 1.0625rem;
+      color: var(--muted-gray);
+      line-height: 1.7;
+    }
+
+    .philosophy-text p + p {
+      margin-top: 16px;
+    }
+
+    /* ─── CTA Footer ─── */
+    .cta-footer {
+      padding: 80px 0;
+      background: var(--deep-charcoal);
+      text-align: center;
+    }
+
+    .cta-footer h2 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+      font-weight: 400;
+      color: var(--warm-white);
+      margin-bottom: 16px;
+      letter-spacing: -0.015em;
+    }
+
+    .cta-footer p {
+      font-size: 1.0625rem;
+      color: var(--muted-gray);
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    .btn-primary-light {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--braun-orange);
+      color: #fff;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      padding: 14px 32px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+      box-shadow: 0 2px 12px rgba(237, 128, 8, 0.3);
+    }
+
+    .btn-primary-light:hover {
+      background: var(--braun-orange-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(237, 128, 8, 0.4);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--muted-gray);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 400;
+      padding: 14px 24px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.25s ease;
+    }
+
+    .btn-secondary:hover {
+      color: var(--warm-white);
+    }
+
+    .cta-buttons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* ─── Footer ─── */
+    footer {
+      padding: 32px 0;
+      background: var(--deep-charcoal);
+      border-top: 1px solid rgba(245, 242, 237, 0.06);
+    }
+
+    footer .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    footer .logo {
+      color: var(--muted-gray);
+      font-size: 1rem;
+    }
+
+    footer .logo span {
+      color: var(--braun-orange);
+      opacity: 0.7;
+    }
+
+    .footer-text {
+      font-size: 0.8125rem;
+      color: rgba(156, 148, 136, 0.5);
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1024px) {
+      .container {
+        padding: 0 32px;
+      }
+
+      .features-grid {
+        gap: 40px 48px;
+      }
+
+      .mockup-body {
+        min-height: 300px;
+      }
+
+      .mockup-sidebar {
+        width: 170px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 24px;
+      }
+
+      .hero {
+        padding: 56px 0 80px;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+        gap: 36px;
+      }
+
+      .mockup-sidebar {
+        display: none;
+      }
+
+      .mockup-content {
+        padding: 28px 32px;
+      }
+
+      .product-mockup {
+        margin-top: 40px;
+      }
+
+      .problem {
+        padding: 80px 0 72px;
+      }
+
+      .features {
+        padding: 64px 0 80px;
+      }
+
+      .philosophy {
+        padding: 80px 0;
+      }
+
+      .cta-footer {
+        padding: 64px 0;
+      }
+
+      footer .container {
+        flex-direction: column;
+        gap: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="container">
+      <div class="logo">emdy<span>.</span></div>
+      <a href="#features" class="nav-link">Features</a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <div class="fade-in">
+          <span class="hero-label">A Markdown Reader</span>
+        </div>
+        <h1 class="fade-in fade-in-delay-1">Reading deserves<br>the same care as writing</h1>
+        <p class="fade-in fade-in-delay-2">Emdy renders Markdown files beautifully so you can focus on what matters: the content. Built for designers, PMs, and anyone who reads more than they write.</p>
+        <div class="fade-in fade-in-delay-3">
+          <a href="#download" class="btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download for macOS
+          </a>
+        </div>
+
+        <!-- Product Mockup -->
+        <div class="product-mockup fade-in fade-in-delay-4">
+          <div class="mockup-window">
+            <div class="mockup-titlebar">
+              <div class="mockup-dot"></div>
+              <div class="mockup-dot"></div>
+              <div class="mockup-dot"></div>
+            </div>
+            <div class="mockup-body">
+              <div class="mockup-sidebar">
+                <div class="mockup-sidebar-item">README.md</div>
+                <div class="mockup-sidebar-item active">project-plan.md</div>
+                <div class="mockup-sidebar-item">design-brief.md</div>
+                <div class="mockup-sidebar-item">user-journeys.md</div>
+                <div class="mockup-sidebar-item">api-reference.md</div>
+                <div class="mockup-sidebar-item">changelog.md</div>
+              </div>
+              <div class="mockup-content">
+                <div class="mockup-line heading"></div>
+                <div class="mockup-line full"></div>
+                <div class="mockup-line long"></div>
+                <div class="mockup-line medium"></div>
+                <div class="mockup-code-block">
+                  <div class="mockup-code-line"></div>
+                  <div class="mockup-code-line"></div>
+                  <div class="mockup-code-line"></div>
+                </div>
+                <div class="mockup-line full"></div>
+                <div class="mockup-line long"></div>
+                <div class="mockup-line short"></div>
+              </div>
+            </div>
+          </div>
+          <span class="mockup-label">Product Screenshot</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Problem -->
+    <section class="problem">
+      <div class="container">
+        <div class="problem-inner">
+          <span class="section-label fade-in">The Reading Problem</span>
+          <div class="divider fade-in"></div>
+          <h2 class="fade-in">Markdown is everywhere now. A good reader isn't.</h2>
+          <p class="fade-in">AI tools generate Markdown constantly: project plans, documentation, research summaries, meeting notes. You're reading more Markdown than ever, but every app you have wants you to write it.</p>
+          <p class="fade-in">Emdy is different. It's a reader, not an editor. Open a folder, browse your files, and read them rendered the way they were meant to look. That's it.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+      <div class="container">
+        <div class="features-header">
+          <span class="section-label fade-in">What it does well</span>
+          <h2 class="fade-in">Four things, done right</h2>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card fade-in">
+            <div class="feature-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="8" y1="9" x2="10" y2="9"/></svg>
+            </div>
+            <div>
+              <h3>Beautiful rendering</h3>
+              <p>Full GFM support with syntax-highlighted code blocks, tables, task lists, and footnotes. Typography that does the content justice.</p>
+            </div>
+          </div>
+          <div class="feature-card fade-in">
+            <div class="feature-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><line x1="14" y1="7" x2="21" y2="7"/><line x1="14" y1="11" x2="21" y2="11"/><line x1="14" y1="15" x2="19" y2="15"/></svg>
+            </div>
+            <div>
+              <h3>Sidebar navigation</h3>
+              <p>Open any folder and browse all its Markdown files. Command palette search across filenames and content. Find what you need fast.</p>
+            </div>
+          </div>
+          <div class="feature-card fade-in">
+            <div class="feature-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </div>
+            <div>
+              <h3>Zoom and fonts</h3>
+              <p>Three font families to choose from: sans, serif, and mono. Zoom in and out freely. Make the reading experience yours.</p>
+            </div>
+          </div>
+          <div class="feature-card fade-in">
+            <div class="feature-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div>
+              <h3>Export and share</h3>
+              <p>Copy as formatted HTML for pasting into any app. Export to PDF for sharing. Print with proper page breaks. Get content where it needs to go.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Philosophy -->
+    <section class="philosophy">
+      <div class="container">
+        <div class="philosophy-inner">
+          <span class="section-label fade-in">Philosophy</span>
+          <blockquote class="fade-in">"Less, but better."</blockquote>
+          <span class="attribution fade-in">Dieter Rams</span>
+          <div class="philosophy-text">
+            <p class="fade-in">Most software tries to do everything. Emdy does one thing: it reads Markdown files, and it does that well. There is no editor, no plugins, no configuration maze. Just a calm, well-crafted reading experience.</p>
+            <p class="fade-in">We believe that reading deserves the same thoughtfulness as writing. The typefaces are carefully chosen. The spacing is deliberate. The interface stays out of your way so you can stay with the words.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Footer -->
+    <section class="cta-footer" id="download">
+      <div class="container">
+        <h2 class="fade-in">Start reading better</h2>
+        <p class="fade-in">Free and open source. Built for macOS.</p>
+        <div class="cta-buttons fade-in">
+          <a href="#" class="btn-primary-light">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download for macOS
+          </a>
+          <a href="https://github.com/ghaida/emdy" class="btn-secondary">View on GitHub</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="logo">emdy<span>.</span></div>
+      <span class="footer-text">A Markdown reader, nothing more.</span>
+    </div>
+  </footer>
+
+  <!-- Intersection Observer for fade-ins -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+      );
+
+      document.querySelectorAll('.fade-in').forEach((el) => {
+        observer.observe(el);
+      });
+    });
+  </script>
+
+</body>
+</html>

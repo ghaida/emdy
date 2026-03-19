@@ -7,7 +7,7 @@ export interface FileEntry {
 
 export type FontFamily = 'sans' | 'serif' | 'mono';
 export type AppTheme = 'light' | 'dark' | 'system';
-export type ColorThemeName = 'warm' | 'cool';
+export type ColorThemeName = 'warm' | 'cool' | 'fresh' | 'neon';
 
 export interface DisplaySettings {
   fontFamily: FontFamily;

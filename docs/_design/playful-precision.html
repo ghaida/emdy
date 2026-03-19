@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emdy — A Markdown Reader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;800&family=DM+Sans:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ========================================
+     RESET & BASE
+     ======================================== */
+  *, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --orange: #FF6B00;
+    --black: #1A1A1A;
+    --cream: #FFFBF0;
+    --blue: #2B5CE6;
+    --gray: #E8E8E8;
+    --yellow: #FFD23F;
+    --navy: #0A1628;
+    --font-display: 'Plus Jakarta Sans', sans-serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: var(--font-body); /* unused, kept for reference */
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --black: #F0EDE8;
+      --cream: #111111;
+      --gray: #2A2A2A;
+      --navy: #0A1628;
+      --blue: #5B8AF2;
+      --yellow: #FFD23F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --black: #F0EDE8;
+    --cream: #111111;
+    --gray: #2A2A2A;
+    --navy: #0A1628;
+    --blue: #5B8AF2;
+    --yellow: #FFD23F;
+  }
+
+  html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--black);
+    background: var(--cream);
+    overflow-x: hidden;
+    line-height: 1.6;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  ::selection {
+    background: var(--orange);
+    color: white;
+  }
+
+  /* ========================================
+     GRID OVERLAY (decorative)
+     ======================================== */
+  .grid-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.04;
+    background-image:
+      linear-gradient(to right, var(--black) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--black) 1px, transparent 1px);
+    background-size: 80px 80px;
+  }
+
+  /* ========================================
+     LAYOUT
+     ======================================== */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  section {
+    position: relative;
+  }
+
+  /* ========================================
+     TOP NAV
+     ======================================== */
+  .topnav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(255, 251, 240, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--gray);
+  }
+
+  .topnav .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+
+  .topnav-logo {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.125rem;
+    letter-spacing: -0.02em;
+    color: var(--black);
+    text-decoration: none;
+  }
+
+  .topnav-logo span {
+    color: var(--orange);
+  }
+
+  .topnav-links {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .topnav-links a {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--black);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .topnav-links a:hover {
+    color: var(--orange);
+  }
+
+  .btn-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    background: var(--black);
+    color: white !important;
+    border-radius: 6px;
+    font-family: var(--font-body) !important;
+    font-size: 0.75rem !important;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none !important;
+    transition: background 0.2s, transform 0.15s;
+  }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--gray);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--black);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--orange);
+    color: var(--orange);
+  }
+
+  .theme-toggle .icon-moon { display: none; }
+
+  :root[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .icon-sun { display: none; }
+    :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: block; }
+  }
+
+  .btn-nav:hover {
+    background: var(--orange);
+    color: white !important;
+    transform: translateY(-1px);
+  }
+
+  /* ========================================
+     SECTION LABELS
+     ======================================== */
+  .section-label {
+    font-family: var(--font-body);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 20px;
+    height: 1px;
+    background: var(--orange);
+  }
+
+  /* ========================================
+     HERO
+     ======================================== */
+  .hero {
+    padding: 160px 0 100px;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+  }
+
+  .hero .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .hero-content {
+    max-width: 560px;
+  }
+
+  .hero h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2.75rem, 5vw, 4rem);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    color: var(--black);
+    margin-bottom: 24px;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--orange);
+  }
+
+  .hero-sub {
+    font-family: var(--font-body);
+    font-size: 1.125rem;
+    line-height: 1.7;
+    color: #555;
+    margin-bottom: 40px;
+    max-width: 440px;
+  }
+
+  .hero-cta-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 36px;
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    text-decoration: none;
+    box-shadow: 0 2px 0 0 #cc5500;
+  }
+
+  .btn-primary:hover {
+    background: #e86000;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 0 #cc5500;
+  }
+
+  .btn-primary:active {
+    transform: translateY(0px);
+    box-shadow: 0 1px 0 0 #cc5500;
+  }
+
+  .btn-primary svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s;
+  }
+
+  .btn-primary:hover svg {
+    transform: translateX(3px);
+  }
+
+  .hero-meta {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    color: #999;
+    letter-spacing: 0.02em;
+  }
+
+  /* App Window Mockup */
+  .hero-visual {
+    position: relative;
+    perspective: 1000px;
+  }
+
+  .app-window {
+    width: 100%;
+    max-width: 520px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--gray);
+    box-shadow:
+      0 4px 6px rgba(0,0,0,0.04),
+      0 20px 40px rgba(0,0,0,0.08),
+      0 40px 80px rgba(0,0,0,0.06);
+    transform: rotateY(-4deg) rotateX(2deg) rotateZ(-1deg);
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    overflow: hidden;
+    animation: windowFloat 6s ease-in-out infinite;
+  }
+
+  .app-window:hover {
+    transform: rotateY(-1deg) rotateX(1deg) rotateZ(0deg);
+  }
+
+  @keyframes windowFloat {
+    0%, 100% { transform: rotateY(-4deg) rotateX(2deg) rotateZ(-1deg) translateY(0); }
+    50% { transform: rotateY(-4deg) rotateX(2deg) rotateZ(-1deg) translateY(-8px); }
+  }
+
+  .window-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    background: #fafafa;
+    border-bottom: 1px solid var(--gray);
+  }
+
+  .window-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .window-dot.red { background: #FF5F57; }
+  .window-dot.yellow { background: #FEBC2E; }
+  .window-dot.green { background: #28C840; }
+
+  .window-title {
+    flex: 1;
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: 0.6875rem;
+    color: #999;
+    letter-spacing: 0.02em;
+  }
+
+  .window-body {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    min-height: 320px;
+  }
+
+  .window-sidebar {
+    background: #f7f5f0;
+    border-right: 1px solid var(--gray);
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sidebar-item {
+    font-family: var(--font-body);
+    font-size: 0.6875rem;
+    padding: 6px 8px;
+    border-radius: 4px;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-item.active {
+    background: var(--orange);
+    color: white;
+    font-weight: 500;
+  }
+
+  .window-content {
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mock-h1 {
+    height: 20px;
+    width: 70%;
+    background: var(--black);
+    border-radius: 3px;
+    opacity: 0.8;
+  }
+
+  .mock-text {
+    height: 8px;
+    background: var(--black);
+    border-radius: 2px;
+    opacity: 0.12;
+  }
+
+  .mock-text.w80 { width: 80%; }
+  .mock-text.w95 { width: 95%; }
+  .mock-text.w60 { width: 60%; }
+  .mock-text.w90 { width: 90%; }
+  .mock-text.w75 { width: 75%; }
+  .mock-text.w50 { width: 50%; }
+
+  .mock-code {
+    background: #f5f3ee;
+    border-radius: 6px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .mock-code-line {
+    height: 6px;
+    border-radius: 2px;
+    opacity: 0.5;
+  }
+
+  .mock-code-line.orange { background: var(--orange); width: 60%; }
+  .mock-code-line.blue { background: var(--blue); width: 45%; }
+  .mock-code-line.muted { background: #999; width: 75%; }
+
+  /* ========================================
+     PROBLEM
+     ======================================== */
+  .problem {
+    padding: 100px 0;
+    border-top: 1px solid var(--gray);
+  }
+
+  .problem .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+
+  .problem-statement {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    color: var(--black);
+  }
+
+  .problem-statement em {
+    font-style: normal;
+    color: var(--orange);
+  }
+
+  .problem-detail {
+    padding-top: 8px;
+  }
+
+  .problem-detail p {
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    color: #555;
+    margin-bottom: 20px;
+  }
+
+  .problem-detail p:last-child {
+    margin-bottom: 0;
+  }
+
+  .problem-stats {
+    display: flex;
+    gap: 40px;
+    margin-top: 32px;
+    padding-top: 32px;
+    border-top: 1px solid var(--gray);
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stat-number {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: -0.03em;
+    color: var(--orange);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-family: var(--font-body);
+    font-size: 0.6875rem;
+    color: #999;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  /* ========================================
+     FEATURES
+     ======================================== */
+  .features {
+    padding: 100px 0;
+    background: var(--navy);
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .features::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    opacity: 0.06;
+    background-image:
+      linear-gradient(to right, white 1px, transparent 1px),
+      linear-gradient(to bottom, white 1px, transparent 1px);
+    background-size: 80px 80px;
+  }
+
+  .features .section-label {
+    color: var(--yellow);
+  }
+
+  .features .section-label::before {
+    background: var(--yellow);
+  }
+
+  .features-heading {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    letter-spacing: -0.03em;
+    margin-bottom: 56px;
+    max-width: 480px;
+    line-height: 1.15;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .feature-card {
+    background: var(--navy);
+    padding: 40px 36px;
+    transition: background 0.3s;
+    position: relative;
+  }
+
+  .feature-card:hover {
+    background: #0d1d38;
+  }
+
+  .feature-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: rgba(255, 107, 0, 0.12);
+    border: 1px solid rgba(255, 107, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    color: var(--orange);
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  .feature-card:hover .feature-icon {
+    background: rgba(255, 107, 0, 0.2);
+    border-color: rgba(255, 107, 0, 0.4);
+  }
+
+  .feature-number {
+    font-family: var(--font-body);
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.06em;
+    position: absolute;
+    top: 20px;
+    right: 24px;
+  }
+
+  .feature-card h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+
+  .feature-card p {
+    font-family: var(--font-body);
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.55);
+  }
+
+  /* ========================================
+     HOW IT WORKS
+     ======================================== */
+  .how-it-works {
+    padding: 100px 0;
+    border-top: 1px solid var(--gray);
+  }
+
+  .how-heading {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    letter-spacing: -0.03em;
+    margin-bottom: 64px;
+    max-width: 400px;
+    line-height: 1.15;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background: var(--gray);
+    border: 1px solid var(--gray);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .step {
+    background: var(--cream);
+    padding: 44px 36px;
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .step:hover {
+    background: white;
+  }
+
+  .step-number {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 3.5rem;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--orange);
+    opacity: 0.2;
+    margin-bottom: 20px;
+    transition: opacity 0.3s;
+  }
+
+  .step:hover .step-number {
+    opacity: 0.4;
+  }
+
+  .step h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.375rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+    color: var(--black);
+  }
+
+  .step p {
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: #777;
+  }
+
+  .step-tag {
+    font-family: var(--font-body);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--blue);
+    background: rgba(43, 92, 230, 0.08);
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 16px;
+  }
+
+  /* ========================================
+     CTA FOOTER
+     ======================================== */
+  .cta-footer {
+    padding: 120px 0;
+    background: var(--black);
+    color: white;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-footer::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255, 107, 0, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-eyebrow {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 20px;
+  }
+
+  .cta-heading {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2rem, 4vw, 3rem);
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .cta-sub {
+    font-size: 1.0625rem;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 40px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+
+  .btn-cta-large {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 48px;
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    text-decoration: none;
+    box-shadow: 0 3px 0 0 #cc5500;
+  }
+
+  .btn-cta-large:hover {
+    background: #e86000;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 0 #cc5500;
+  }
+
+  .btn-cta-large:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 0 0 #cc5500;
+  }
+
+  /* ========================================
+     FOOTER
+     ======================================== */
+  footer {
+    padding: 32px 0;
+    background: var(--black);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.3);
+  }
+
+  footer .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-brand {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.875rem;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .footer-brand span {
+    color: var(--orange);
+  }
+
+  .footer-note {
+    font-family: var(--font-body);
+    font-size: 0.6875rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* ========================================
+     SCROLL ANIMATIONS
+     ======================================== */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+
+  /* ========================================
+     RESPONSIVE
+     ======================================== */
+  @media (max-width: 1024px) {
+    .hero .container {
+      grid-template-columns: 1fr;
+      gap: 60px;
+    }
+
+    .hero-visual {
+      max-width: 480px;
+    }
+
+    .problem .container {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .feature-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 24px;
+    }
+
+    .hero {
+      padding: 120px 0 80px;
+      min-height: auto;
+    }
+
+    .topnav-links a:not(.btn-nav) {
+      display: none;
+    }
+
+    .feature-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .steps {
+      grid-template-columns: 1fr;
+    }
+
+    .problem-stats {
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .hero-cta-group {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .cta-footer {
+      padding: 80px 0;
+    }
+
+    .app-window {
+      transform: none;
+      animation: none;
+    }
+
+    .app-window:hover {
+      transform: none;
+    }
+
+    .window-body {
+      grid-template-columns: 1fr;
+    }
+
+    .window-sidebar {
+      display: none;
+    }
+
+    footer .container {
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Decorative grid -->
+<div class="grid-overlay" aria-hidden="true"></div>
+
+<!-- Navigation -->
+<nav class="topnav">
+  <div class="container">
+    <a href="#" class="topnav-logo">emdy<span>.</span></a>
+    <div class="topnav-links">
+      <a href="#features">Features</a>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="#download" class="btn-nav">Buy &mdash; $5</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-content">
+      <div class="section-label reveal">Markdown Reader</div>
+      <h1 class="reveal reveal-delay-1">Your AI writes it.<br>Emdy makes it <em>beautiful</em>.</h1>
+      <p class="hero-sub reveal reveal-delay-2">AI writes your docs, specs, and notes in markdown. Emdy makes them beautiful, browsable, and easy to read.</p>
+      <div class="hero-cta-group reveal reveal-delay-3">
+        <a href="#download" class="btn-primary">
+          Buy for Mac &mdash; $5
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+        <span class="hero-meta">$5 &middot; macOS 13+</span>
+      </div>
+    </div>
+    <div class="hero-visual reveal reveal-delay-2">
+      <div class="app-window">
+        <div class="window-titlebar">
+          <div class="window-dot red"></div>
+          <div class="window-dot yellow"></div>
+          <div class="window-dot green"></div>
+          <div class="window-title">project-brief.md</div>
+          <div style="width: 36px;"></div>
+        </div>
+        <div class="window-body">
+          <div class="window-sidebar">
+            <div class="sidebar-item">README.md</div>
+            <div class="sidebar-item active">project-brief.md</div>
+            <div class="sidebar-item">changelog.md</div>
+            <div class="sidebar-item">api-docs.md</div>
+            <div class="sidebar-item">roadmap.md</div>
+            <div class="sidebar-item">meeting-notes.md</div>
+          </div>
+          <div class="window-content">
+            <div class="mock-h1"></div>
+            <div style="height: 8px;"></div>
+            <div class="mock-text w95"></div>
+            <div class="mock-text w80"></div>
+            <div class="mock-text w90"></div>
+            <div class="mock-text w60"></div>
+            <div style="height: 4px;"></div>
+            <div class="mock-code">
+              <div class="mock-code-line orange"></div>
+              <div class="mock-code-line blue"></div>
+              <div class="mock-code-line muted"></div>
+              <div class="mock-code-line orange" style="width: 40%;"></div>
+            </div>
+            <div style="height: 4px;"></div>
+            <div class="mock-text w75"></div>
+            <div class="mock-text w90"></div>
+            <div class="mock-text w50"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Problem Statement -->
+<section class="problem" id="problem">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">The Problem</div>
+      <h2 class="problem-statement">You use AI to <em>write</em>.<br>You need something<br>to <em>read</em>.</h2>
+    </div>
+    <div class="problem-detail reveal reveal-delay-1">
+      <p>Every markdown app is built for writing. They give you an editor, a cursor, a split pane. But you're not writing anymore. Claude, ChatGPT, and Copilot are generating your docs, your specs, your changelogs, your meeting notes.</p>
+      <p>What you actually need is a great reading experience. Clean typography, easy navigation, and a way to browse a folder full of markdown files without opening VS Code.</p>
+      <p>That's Emdy. A markdown reader, purpose-built for people who read more than they write.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-label reveal">Capabilities</div>
+    <h2 class="features-heading reveal reveal-delay-1">Everything you need to read. Nothing you don't.</h2>
+    <div class="feature-grid">
+      <div class="feature-card reveal reveal-delay-1">
+        <span class="feature-number">01</span>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+        </div>
+        <h3>Beautiful rendering</h3>
+        <p>Full GFM support with syntax highlighting, tables, task lists, and clean typography tuned for long-form reading.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <span class="feature-number">02</span>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><rect x="14" y="3" width="8" height="8" rx="1" opacity="0.5"/><line x1="6" y1="8" x2="10" y2="8"/><line x1="6" y1="12" x2="12" y2="12"/><line x1="6" y1="16" x2="10" y2="16"/></svg>
+        </div>
+        <h3>Canvas minimap</h3>
+        <p>See your entire document at a glance with a live minimap. Click or drag to navigate instantly — no more endless scrolling.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <span class="feature-number">03</span>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
+        </div>
+        <h3>Zoom & fonts</h3>
+        <p>Adjust text size with Cmd+/-, switch between sans, serif, and mono typefaces. Two color themes, light and dark.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-4">
+        <span class="feature-number">04</span>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+        </div>
+        <h3>Export & share</h3>
+        <p>Copy formatted HTML to clipboard, export as PDF, or print. Share rendered markdown without the raw source.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- CTA Footer -->
+<section class="cta-footer" id="download">
+  <div class="container">
+    <div class="cta-eyebrow reveal">$5 &middot; One-time purchase</div>
+    <h2 class="cta-heading reveal reveal-delay-1">Start reading.</h2>
+    <p class="cta-sub reveal reveal-delay-2">Beautiful markdown reading for $5. No subscription, no nonsense.</p>
+    <div class="reveal reveal-delay-3">
+      <a href="#" class="btn-cta-large">
+        Buy for Mac &mdash; $5
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="footer-brand">emdy<span>.</span></div>
+    <div class="footer-note">A markdown reader. That's it.</div>
+  </div>
+</footer>
+
+<script>
+  // Theme toggle
+  function toggleTheme() {
+    const root = document.documentElement;
+    const current = root.getAttribute('data-theme');
+    const isDarkSystem = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (current === 'dark') {
+      root.setAttribute('data-theme', 'light');
+    } else if (current === 'light') {
+      root.setAttribute('data-theme', 'dark');
+    } else {
+      // No explicit theme set — toggle away from system default
+      root.setAttribute('data-theme', isDarkSystem ? 'light' : 'dark');
+    }
+  }
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, {
+    threshold: 0.15,
+    rootMargin: '0px 0px -40px 0px'
+  });
+
+  reveals.forEach(el => observer.observe(el));
+
+  // Parallax on hero visual
+  const heroVisual = document.querySelector('.hero-visual');
+  let ticking = false;
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        if (heroVisual && scrollY < window.innerHeight) {
+          heroVisual.style.transform = `translateY(${scrollY * 0.08}px)`;
+        }
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  // Smooth anchor scrolling
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

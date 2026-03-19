@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emdy — A Markdown Reader</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --forest: #2C3E2E;
+      --ivory: #F6F1E7;
+      --terracotta: #C4704A;
+      --gold: #B89B5E;
+      --charcoal: #333333;
+      --sage: #8BA888;
+      --parchment: #EDE6D8;
+
+      --serif: 'IBM Plex Serif', 'Georgia', serif;
+      --sans: 'Space Grotesk', 'Helvetica Neue', sans-serif;
+    }
+
+    html {
+      font-size: 18px;
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      background-color: var(--ivory);
+      color: var(--charcoal);
+      font-family: var(--sans);
+      line-height: 1.75;
+      overflow-x: hidden;
+    }
+
+    /* ——— Fade-in animations ——— */
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.9s cubic-bezier(0.25, 0.1, 0.25, 1),
+                  transform 0.9s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .fade-in-slow {
+      transition-duration: 1.3s;
+    }
+
+    .fade-in-delay-1 { transition-delay: 0.15s; }
+    .fade-in-delay-2 { transition-delay: 0.3s; }
+    .fade-in-delay-3 { transition-delay: 0.45s; }
+
+    /* ——— Navigation ——— */
+
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 28px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, var(--ivory) 60%, transparent);
+      pointer-events: none;
+    }
+
+    nav > * {
+      pointer-events: auto;
+    }
+
+    .wordmark {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 1.1rem;
+      color: var(--forest);
+      letter-spacing: 0.02em;
+      text-decoration: none;
+    }
+
+    .nav-link {
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--forest);
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      padding: 10px 28px;
+      border: 1.5px solid var(--forest);
+      border-radius: 100px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .nav-link:hover {
+      background-color: var(--forest);
+      color: var(--ivory);
+    }
+
+    /* ——— Hero ——— */
+
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      padding: 140px 48px 80px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .hero-text {
+      max-width: 620px;
+    }
+
+    .hero-headline {
+      font-family: var(--serif);
+      font-weight: 700;
+      font-style: italic;
+      font-size: clamp(2.8rem, 5vw, 4.2rem);
+      line-height: 1.15;
+      color: var(--forest);
+      letter-spacing: -0.01em;
+      margin-bottom: 36px;
+    }
+
+    .hero-subtitle {
+      font-family: var(--sans);
+      font-size: 1.05rem;
+      font-weight: 400;
+      color: var(--charcoal);
+      line-height: 1.8;
+      max-width: 48ch;
+      margin-bottom: 48px;
+      opacity: 0.85;
+    }
+
+    .hero-cta {
+      display: inline-block;
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--ivory);
+      background-color: var(--terracotta);
+      padding: 16px 44px;
+      border-radius: 100px;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .hero-cta:hover {
+      background-color: #b3603a;
+      transform: translateY(-1px);
+    }
+
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .product-frame {
+      width: 100%;
+      max-width: 520px;
+      aspect-ratio: 3 / 4;
+      background-color: #FDFBF6;
+      border: 1px solid var(--parchment);
+      border-radius: 4px;
+      box-shadow:
+        0 4px 6px rgba(44, 62, 46, 0.04),
+        0 24px 48px rgba(44, 62, 46, 0.08),
+        0 48px 80px rgba(44, 62, 46, 0.05);
+      display: flex;
+      flex-direction: column;
+      padding: 48px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .product-frame::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 48px;
+      right: 48px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+      opacity: 0.4;
+    }
+
+    .frame-sidebar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 44px;
+      background-color: var(--parchment);
+      border-right: 1px solid rgba(44, 62, 46, 0.08);
+    }
+
+    .frame-sidebar-item {
+      width: 24px;
+      height: 3px;
+      background-color: var(--sage);
+      opacity: 0.4;
+      border-radius: 2px;
+      margin: 12px auto 0;
+    }
+
+    .frame-sidebar-item:first-child {
+      margin-top: 56px;
+    }
+
+    .frame-sidebar-item.active {
+      opacity: 0.8;
+      background-color: var(--terracotta);
+    }
+
+    .frame-content {
+      margin-left: 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .frame-title {
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--forest);
+      line-height: 1.3;
+    }
+
+    .frame-line {
+      height: 3px;
+      background-color: var(--charcoal);
+      opacity: 0.1;
+      border-radius: 2px;
+    }
+
+    .frame-line:nth-child(2) { width: 95%; }
+    .frame-line:nth-child(3) { width: 88%; }
+    .frame-line:nth-child(4) { width: 92%; }
+    .frame-line:nth-child(5) { width: 70%; }
+    .frame-line:nth-child(6) { width: 0; height: 8px; }
+    .frame-line:nth-child(7) { width: 90%; }
+    .frame-line:nth-child(8) { width: 96%; }
+    .frame-line:nth-child(9) { width: 84%; }
+    .frame-line:nth-child(10) { width: 60%; }
+    .frame-line:nth-child(11) { width: 0; height: 8px; }
+    .frame-line:nth-child(12) { width: 88%; }
+    .frame-line:nth-child(13) { width: 93%; }
+    .frame-line:nth-child(14) { width: 78%; }
+
+    .frame-code-block {
+      background-color: var(--parchment);
+      border-radius: 4px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .frame-code-line {
+      height: 2.5px;
+      border-radius: 1px;
+      opacity: 0.5;
+    }
+
+    .frame-code-line:nth-child(1) { width: 65%; background-color: var(--terracotta); }
+    .frame-code-line:nth-child(2) { width: 80%; background-color: var(--sage); }
+    .frame-code-line:nth-child(3) { width: 50%; background-color: var(--gold); }
+    .frame-code-line:nth-child(4) { width: 72%; background-color: var(--sage); }
+
+    .frame-label {
+      font-family: var(--sans);
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.6;
+      text-align: center;
+      margin-top: auto;
+      padding-top: 12px;
+    }
+
+    /* ——— Editorial Intro ——— */
+
+    .editorial {
+      padding: 120px 48px 140px;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 80px;
+      align-items: start;
+    }
+
+    .editorial-label {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--terracotta);
+      padding-top: 8px;
+    }
+
+    .editorial-body {
+      max-width: 58ch;
+    }
+
+    .editorial-body p {
+      font-family: var(--sans);
+      font-size: 1.15rem;
+      line-height: 1.85;
+      color: var(--charcoal);
+      margin-bottom: 28px;
+    }
+
+    .editorial-body p:first-child::first-letter {
+      font-family: var(--serif);
+      font-size: 3.6rem;
+      font-weight: 700;
+      float: left;
+      line-height: 0.85;
+      margin-right: 8px;
+      margin-top: 6px;
+      color: var(--forest);
+    }
+
+    .editorial-rule {
+      width: 48px;
+      height: 1.5px;
+      background-color: var(--terracotta);
+      border: none;
+      margin-top: 8px;
+      opacity: 0.6;
+    }
+
+    /* ——— Features ——— */
+
+    .features {
+      background-color: var(--parchment);
+      padding: 140px 48px;
+    }
+
+    .features-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .features-header {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 80px;
+      margin-bottom: 100px;
+    }
+
+    .features-label {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--terracotta);
+      padding-top: 4px;
+    }
+
+    .features-intro {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 1.8rem;
+      line-height: 1.5;
+      color: var(--forest);
+      max-width: 50ch;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px 120px;
+    }
+
+    .feature {
+      max-width: 480px;
+    }
+
+    .feature-number {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 0.88rem;
+      color: var(--gold);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .feature h3 {
+      font-family: var(--serif);
+      font-weight: 600;
+      font-size: 1.35rem;
+      color: var(--forest);
+      margin-bottom: 16px;
+      line-height: 1.35;
+    }
+
+    .feature p {
+      font-family: var(--sans);
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--charcoal);
+      opacity: 0.85;
+    }
+
+    /* ——— Pull Quote ——— */
+
+    .pullquote-section {
+      padding: 160px 48px;
+      max-width: 1000px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .pullquote-rule {
+      width: 64px;
+      height: 1px;
+      background-color: var(--gold);
+      border: none;
+      margin: 0 auto 56px;
+      opacity: 0.5;
+    }
+
+    .pullquote-section blockquote {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      line-height: 1.4;
+      color: var(--forest);
+      max-width: 20ch;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .pullquote-section blockquote::before {
+      content: '\201C';
+      font-family: var(--serif);
+      font-size: 5rem;
+      color: var(--terracotta);
+      opacity: 0.25;
+      position: absolute;
+      top: -36px;
+      left: -40px;
+      line-height: 1;
+    }
+
+    .pullquote-rule-bottom {
+      width: 64px;
+      height: 1px;
+      background-color: var(--gold);
+      border: none;
+      margin: 56px auto 0;
+      opacity: 0.5;
+    }
+
+    .pullquote-attrib {
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 32px;
+    }
+
+    /* ——— CTA Footer ——— */
+
+    .cta-footer {
+      background-color: var(--forest);
+      padding: 140px 48px;
+      text-align: center;
+    }
+
+    .cta-footer-inner {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .cta-headline {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 700;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.25;
+      color: var(--ivory);
+      margin-bottom: 24px;
+    }
+
+    .cta-subtitle {
+      font-family: var(--sans);
+      font-size: 1rem;
+      line-height: 1.75;
+      color: var(--sage);
+      margin-bottom: 48px;
+      max-width: 44ch;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta-button {
+      display: inline-block;
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--forest);
+      background-color: var(--ivory);
+      padding: 18px 52px;
+      border-radius: 100px;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .cta-button:hover {
+      background-color: #fff;
+      transform: translateY(-1px);
+    }
+
+    /* ——— Footer ——— */
+
+    footer {
+      background-color: var(--forest);
+      border-top: 1px solid rgba(246, 241, 231, 0.08);
+      padding: 36px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-wordmark {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: var(--ivory);
+      opacity: 0.5;
+    }
+
+    .footer-note {
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      color: var(--ivory);
+      opacity: 0.3;
+      letter-spacing: 0.02em;
+    }
+
+    /* ——— Responsive ——— */
+
+    @media (max-width: 1024px) {
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 56px;
+        padding-top: 120px;
+        min-height: auto;
+      }
+
+      .hero-visual {
+        order: -1;
+      }
+
+      .product-frame {
+        max-width: 400px;
+        aspect-ratio: 4 / 3.5;
+      }
+
+      .editorial {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 100px 48px 120px;
+      }
+
+      .features-header {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        margin-bottom: 72px;
+      }
+
+      .features-grid {
+        gap: 56px 80px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      html {
+        font-size: 16px;
+      }
+
+      nav {
+        padding: 20px 28px;
+      }
+
+      .hero {
+        padding: 100px 28px 60px;
+      }
+
+      .hero-headline {
+        font-size: 2.4rem;
+      }
+
+      .product-frame {
+        max-width: 320px;
+        padding: 32px 28px;
+      }
+
+      .editorial {
+        padding: 80px 28px 100px;
+      }
+
+      .features {
+        padding: 100px 28px;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+        gap: 48px;
+      }
+
+      .pullquote-section {
+        padding: 100px 28px;
+      }
+
+      .pullquote-section blockquote::before {
+        left: -16px;
+        top: -28px;
+        font-size: 3.5rem;
+      }
+
+      .cta-footer {
+        padding: 100px 28px;
+      }
+
+      footer {
+        flex-direction: column;
+        gap: 12px;
+        padding: 28px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="#" class="wordmark">Emdy</a>
+    <a href="#download" class="nav-link">Download</a>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-text">
+      <h1 class="hero-headline fade-in">The quiet pleasure of a well-set page</h1>
+      <p class="hero-subtitle fade-in fade-in-delay-1">Emdy is a Markdown reader for people who care about reading. Not writing, not editing&thinsp;&mdash;&thinsp;just the simple act of reading something beautifully rendered.</p>
+      <a href="#download" class="hero-cta fade-in fade-in-delay-2">Start reading</a>
+    </div>
+    <div class="hero-visual fade-in fade-in-slow fade-in-delay-1">
+      <div class="product-frame">
+        <div class="frame-sidebar">
+          <div class="frame-sidebar-item"></div>
+          <div class="frame-sidebar-item active"></div>
+          <div class="frame-sidebar-item"></div>
+          <div class="frame-sidebar-item"></div>
+          <div class="frame-sidebar-item"></div>
+        </div>
+        <div class="frame-content">
+          <div class="frame-title">On the Craft of Reading</div>
+          <div class="frame-line"></div>
+          <div class="frame-line"></div>
+          <div class="frame-line"></div>
+          <div class="frame-line"></div>
+          <div class="frame-line"></div>
+          <div class="frame-line"></div>
+          <div class="frame-line"></div>
+          <div class="frame-line"></div>
+          <div class="frame-line"></div>
+          <div class="frame-line"></div>
+          <div class="frame-code-block">
+            <div class="frame-code-line"></div>
+            <div class="frame-code-line"></div>
+            <div class="frame-code-line"></div>
+            <div class="frame-code-line"></div>
+          </div>
+          <div class="frame-line"></div>
+          <div class="frame-line"></div>
+          <div class="frame-line"></div>
+          <div class="frame-label">Product Screenshot</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Editorial Intro -->
+    <section class="editorial">
+      <div>
+        <span class="editorial-label fade-in">On reading</span>
+        <hr class="editorial-rule fade-in fade-in-delay-1">
+      </div>
+      <div class="editorial-body fade-in fade-in-delay-1">
+        <p>Every day, more of what we read arrives as Markdown. Design specs, product briefs, technical documentation, meeting notes generated by AI&thinsp;&mdash;&thinsp;all of it written in a format designed for machines to parse, not for people to enjoy.</p>
+        <p>We built Emdy because reading deserves the same care we give to writing. A well-rendered page with considered typography, proper spacing, and beautiful syntax highlighting transforms a wall of markup into something you actually want to spend time with. The way a good book makes you slow down and pay attention.</p>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+      <div class="features-inner">
+        <div class="features-header">
+          <span class="features-label fade-in">What Emdy does</span>
+          <p class="features-intro fade-in fade-in-delay-1">A reader that treats every Markdown file with the care of a printed page&thinsp;&mdash;&thinsp;because the way something looks changes how it feels to read.</p>
+        </div>
+        <div class="features-grid">
+          <article class="feature fade-in">
+            <span class="feature-number">i.</span>
+            <h3>Beautiful rendering</h3>
+            <p>Full GitHub Flavored Markdown with syntax-highlighted code blocks, properly styled tables, and typography that follows a strict 4px grid. Three font families&thinsp;&mdash;&thinsp;sans, serif, and mono&thinsp;&mdash;&thinsp;all from the IBM Plex family, all beautifully set.</p>
+          </article>
+          <article class="feature fade-in fade-in-delay-1">
+            <span class="feature-number">ii.</span>
+            <h3>Navigate with ease</h3>
+            <p>Open a folder and browse every Markdown file from a clean sidebar. A canvas-based minimap gives you the shape of the whole document at a glance. Command palette search finds anything across file names and content.</p>
+          </article>
+          <article class="feature fade-in fade-in-delay-2">
+            <span class="feature-number">iii.</span>
+            <h3>Your fonts, your&nbsp;way</h3>
+            <p>Switch between sans, serif, and monospaced typefaces. Zoom in and out with familiar shortcuts. Choose between two color themes&thinsp;&mdash;&thinsp;a warm palette inspired by Dieter Rams and a cool slate blue&thinsp;&mdash;&thinsp;each with light, dark, and system-matched appearances.</p>
+          </article>
+          <article class="feature fade-in fade-in-delay-3">
+            <span class="feature-number">iv.</span>
+            <h3>Share what you read</h3>
+            <p>Export to PDF, copy as beautifully formatted HTML, or print directly. When someone else updates the file, Emdy notices and refreshes the view. The document you see is always the document that exists.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pull Quote -->
+    <section class="pullquote-section">
+      <hr class="pullquote-rule fade-in">
+      <blockquote class="fade-in fade-in-delay-1">
+        Every markdown file deserves to be read beautifully.
+      </blockquote>
+      <hr class="pullquote-rule-bottom fade-in fade-in-delay-2">
+      <p class="pullquote-attrib fade-in fade-in-delay-2">The Emdy principle</p>
+    </section>
+
+    <!-- CTA Footer -->
+    <section class="cta-footer" id="download">
+      <div class="cta-footer-inner">
+        <h2 class="cta-headline fade-in">Reading, reconsidered</h2>
+        <p class="cta-subtitle fade-in fade-in-delay-1">A free, minimal Markdown reader for macOS. No accounts, no subscriptions, no complexity&thinsp;&mdash;&thinsp;just a beautiful window for your&nbsp;documents.</p>
+        <a href="#" class="cta-button fade-in fade-in-delay-2">Download for Mac</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <span class="footer-wordmark">Emdy</span>
+    <span class="footer-note">A Markdown reader. Nothing more.</span>
+  </footer>
+
+  <script>
+    // Intersection Observer for fade-in animations
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.15,
+        rootMargin: '0px 0px -40px 0px',
+      }
+    );
+
+    document.querySelectorAll('.fade-in').forEach((el) => {
+      observer.observe(el);
+    });
+  </script>
+
+</body>
+</html>
