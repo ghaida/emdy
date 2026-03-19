@@ -755,7 +755,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
 .toast-container {
   position: fixed;
-  bottom: var(--toast-bottom);
+  bottom: var(--space-4);
   right: var(--space-4);
   display: flex;
   flex-direction: column-reverse;
