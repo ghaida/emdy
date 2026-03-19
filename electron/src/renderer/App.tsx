@@ -17,6 +17,17 @@ import type { FileEntry } from './lib/types';
 
 let toastId = 0;
 
+function findFirstFile(entries: FileEntry[]): string | null {
+  for (const entry of entries) {
+    if (!entry.isDirectory) return entry.path;
+    if (entry.children) {
+      const found = findFirstFile(entry.children);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 export function App() {
   const [content, setContent] = useState<string | null>(null);
   const [filePath, setFilePath] = useState<string | null>(null);
@@ -60,6 +71,15 @@ export function App() {
         setSidebarVisible(true);
         if (result.entries.length === 0) {
           addToast('No Markdown files found in this directory', 'info');
+        } else {
+          const first = findFirstFile(result.entries);
+          if (first) {
+            const fileContent = await window.electronAPI.readFile(first);
+            setContent(fileContent);
+            setFilePath(first);
+            setFileDeleted(false);
+            setFileError(null);
+          }
         }
       }
     } catch {

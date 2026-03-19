@@ -52,6 +52,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   display: flex;
   align-items: center;
   background: var(--bg-primary);
+  border-top: 1px solid var(--bg-primary);
 }
 
 .titlebar-compact {
@@ -157,8 +158,8 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   left: 50%;
   transform: translateX(-50%);
   padding: var(--space-1) var(--space-2);
-  background: var(--text-heading);
-  color: var(--bg-primary);
+  background: #1A1A1A;
+  color: #F0F0F0;
   font-family: var(--font-sans);
   font-size: var(--fs-xs);
   white-space: nowrap;
@@ -941,10 +942,12 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   max-width: var(--content-max-width);
   margin: 72px auto;
   padding: 0 var(--space-8);
+  overflow-x: hidden;
 }
 
 .markdown-body {
   width: 100%;
+  min-width: 0;
   line-height: 1.7;
   font-size: inherit;
   color: var(--text-primary);
@@ -1066,7 +1069,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 .markdown-body img { max-width: 100%; border-radius: var(--radius-md); }
 
 .markdown-body .table-wrapper {
-  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   margin-bottom: 1em;
 }

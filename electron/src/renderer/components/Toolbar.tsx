@@ -105,7 +105,7 @@ export function Toolbar({
           <button
             className="toolbar-btn"
             onClick={onToggleSidebar}
-            data-tooltip="Toggle sidebar"
+            data-tooltip="Toggle sidebar  ⌘B"
           >
             <PanelLeft {...ICON} />
           </button>
@@ -130,20 +130,20 @@ export function Toolbar({
           <>
             {/* Zoom */}
             <div className="toolbar-zoom-group">
-              <button className="toolbar-btn" onClick={onZoomOut} data-tooltip="Zoom out">
+              <button className="toolbar-btn" onClick={onZoomOut} data-tooltip="Zoom out  ⌘−">
                 <Minus {...ICON} />
               </button>
-              <button className="toolbar-btn zoom-label" onClick={onZoomReset} data-tooltip="Reset zoom">
+              <button className="toolbar-btn zoom-label" onClick={onZoomReset} data-tooltip="Reset zoom  ⌘0">
                 {pct}%
               </button>
-              <button className="toolbar-btn" onClick={onZoomIn} data-tooltip="Zoom in">
+              <button className="toolbar-btn" onClick={onZoomIn} data-tooltip="Zoom in  ⌘+">
                 <Plus {...ICON} />
               </button>
             </div>
 
             {/* Search */}
             {hasSidebar && (
-              <button className="toolbar-btn" onClick={onSearch} data-tooltip="Search">
+              <button className="toolbar-btn" onClick={onSearch} data-tooltip="Search  ⌘F">
                 <Search {...ICON} />
               </button>
             )}
@@ -179,7 +179,7 @@ export function Toolbar({
             </button>
 
             {/* Export PDF */}
-            <button className="toolbar-btn" onClick={onExportPDF} data-tooltip="Export PDF">
+            <button className="toolbar-btn" onClick={onExportPDF} data-tooltip="Export PDF  ⌘⇧E">
               <FileDown {...ICON} />
             </button>
 
@@ -193,7 +193,7 @@ export function Toolbar({
             <button
               className="toolbar-btn"
               onClick={onToggleMinimap}
-              data-tooltip="Toggle minimap"
+              data-tooltip="Toggle minimap  ⌘M"
             >
               <PanelRight {...ICON} />
             </button>
@@ -202,7 +202,7 @@ export function Toolbar({
 
         {/* Search when no content but sidebar open */}
         {!hasContent && hasSidebar && (
-          <button className="toolbar-btn" onClick={onSearch} data-tooltip="Search">
+          <button className="toolbar-btn" onClick={onSearch} data-tooltip="Search  ⌘F">
             <Search {...ICON} />
           </button>
         )}
@@ -249,7 +249,7 @@ export function Toolbar({
             <button
               className="toolbar-btn"
               onClick={onToggleMinimap}
-              data-tooltip="Toggle minimap"
+              data-tooltip="Toggle minimap  ⌘M"
             >
               <PanelRight {...ICON} />
             </button>
