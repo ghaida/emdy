@@ -35,6 +35,7 @@ export interface ColorScale {
   minimapHr: string;
   minimapLink: string;
   minimapViewport: string;
+  glowColor: string;
 }
 
 export interface ColorTheme {
@@ -79,6 +80,7 @@ export const warm: ColorTheme = {
     minimapHr: '#D47418',
     minimapLink: '#D47418',
     minimapViewport: '#5F6B2D',
+    glowColor: 'transparent',
   },
   dark: {
     bgPrimary: '#1C1A16',
@@ -115,6 +117,7 @@ export const warm: ColorTheme = {
     minimapHr: '#D47418',
     minimapLink: '#D47418',
     minimapViewport: '#8FA83E',
+    glowColor: 'transparent',
   },
 };
 
@@ -155,6 +158,7 @@ export const cool: ColorTheme = {
     minimapHr: '#5A7A9A',
     minimapLink: '#2A7A8A',
     minimapViewport: '#3A8A6A',
+    glowColor: 'transparent',
   },
   dark: {
     bgPrimary: '#1A1A19',
@@ -191,6 +195,7 @@ export const cool: ColorTheme = {
     minimapHr: '#5A8AAA',
     minimapLink: '#40A0B0',
     minimapViewport: '#50C080',
+    glowColor: 'transparent',
   },
 };
 
@@ -231,6 +236,7 @@ export const fresh: ColorTheme = {
     minimapHr: '#D4CFC4',
     minimapLink: '#2B5CE6',
     minimapViewport: '#FF6B00',
+    glowColor: 'transparent',
   },
   dark: {
     bgPrimary: '#0A1628',
@@ -267,82 +273,85 @@ export const fresh: ColorTheme = {
     minimapHr: '#2A3E5E',
     minimapLink: '#5A8EFF',
     minimapViewport: '#FF6B00',
+    glowColor: 'transparent',
   },
 };
 
 // Neon: cyberpunk/neon — hot pink accent, electric cyan, deep purple-black darks
 export const neon: ColorTheme = {
   light: {
-    bgPrimary: '#F5F5F4',
+    bgPrimary: '#F4F2F8',
     bgContent: '#FFFFFF',
-    bgCode: '#EDEDEC',
-    bgSecondary: '#EDEDEC',
-    bgTertiary: '#E3E3E2',
-    border: '#CCCCC8',
-    borderSubtle: '#B8B8B4',
-    textMuted: '#848480',
-    textSecondary: '#585854',
-    textPrimary: '#222220',
-    textHeading: '#141414',
-    accent: '#00B8D4',             // electric cyan
-    accentHover: '#009AB0',
-    success: '#00CC66',            // neon green
-    info: '#00C8E0',               // electric cyan
-    error: '#FF2D55',              // neon red
-    codeKeyword: '#00B8D4',        // cyan keywords
-    codeString: '#D428A0',         // pink strings
-    codeComment: '#848480',
-    codeNumber: '#8030C0',         // purple
-    codePunctuation: '#585854',
-    codeFunction: '#00A050',       // neon green functions
-    minimapHeading: '#00B8D4',
-    minimapText: '#D428A0',
-    minimapCode: '#8030C0',
-    minimapBlockquote: '#00CC66',
-    minimapTable: '#E06000',
-    minimapTableHeader: '#C05000',
-    minimapUl: '#D428A0',
-    minimapOl: '#00B8D4',
-    minimapImage: '#FF2D55',
-    minimapHr: '#00C8E0',
-    minimapLink: '#00B8D4',
-    minimapViewport: '#D428A0',
+    bgCode: '#EDE8F4',
+    bgSecondary: '#EAE6F2',
+    bgTertiary: '#DDD8EC',
+    border: '#B020E040',
+    borderSubtle: '#0099CC30',
+    textMuted: '#7A6E98',
+    textSecondary: '#4E4470',
+    textPrimary: '#1C1434',
+    textHeading: '#0E0820',
+    accent: '#B020E0',             // vivid purple
+    accentHover: '#9818C0',
+    success: '#00AA55',            // neon green (toned for light bg)
+    info: '#0099CC',               // cyan
+    error: '#E8204A',              // neon red
+    codeKeyword: '#B020E0',        // purple
+    codeString: '#0099CC',         // cyan
+    codeComment: '#7A6E98',
+    codeNumber: '#E06000',         // orange
+    codePunctuation: '#4E4470',
+    codeFunction: '#00AA55',       // green
+    minimapHeading: '#B020E0',
+    minimapText: '#0099CC',
+    minimapCode: '#E06000',
+    minimapBlockquote: '#00AA55',
+    minimapTable: '#CC1488',
+    minimapTableHeader: '#A01070',
+    minimapUl: '#B020E0',
+    minimapOl: '#0099CC',
+    minimapImage: '#E8204A',
+    minimapHr: '#0099CC',
+    minimapLink: '#B020E0',
+    minimapViewport: '#CC1488',
+    glowColor: 'transparent',
   },
   dark: {
-    bgPrimary: '#0D0A14',
-    bgContent: '#1A1724',
-    bgCode: '#100C1A',
-    bgSecondary: '#161220',
-    bgTertiary: '#201C2C',
-    border: '#2E2840',
-    borderSubtle: '#3C3454',
-    textMuted: '#7A6E94',
-    textSecondary: '#A098B8',
-    textPrimary: '#D8D0E8',
-    textHeading: '#F2E8FA',
-    accent: '#FF36B0',             // bright neon pink
-    accentHover: '#FF60C4',
-    success: '#30F080',            // bright neon green
-    info: '#20E0FF',               // bright electric cyan
-    error: '#FF4070',              // bright neon red
-    codeKeyword: '#FF36B0',        // neon pink keywords
-    codeString: '#20E0FF',         // cyan strings
-    codeComment: '#7A6E94',
-    codeNumber: '#B060FF',         // bright purple
-    codePunctuation: '#A098B8',
-    codeFunction: '#A050FF',       // vivid purple functions
-    minimapHeading: '#FF36B0',
-    minimapText: '#A080E0',
-    minimapCode: '#20E0FF',
-    minimapBlockquote: '#30F080',
-    minimapTable: '#B060FF',
-    minimapTableHeader: '#8840E0',
-    minimapUl: '#FF8030',
-    minimapOl: '#FF36B0',
-    minimapImage: '#FF4070',
-    minimapHr: '#20E0FF',
-    minimapLink: '#FF36B0',
-    minimapViewport: '#A050FF',
+    bgPrimary: '#050510',
+    bgContent: '#0A0A1A',
+    bgCode: '#06060E',
+    bgSecondary: '#0E0E20',
+    bgTertiary: '#16142C',
+    border: '#FF2BD240',
+    borderSubtle: '#00E5FF30',
+    textMuted: '#686090',
+    textSecondary: '#9890C0',
+    textPrimary: '#D8D0F0',
+    textHeading: '#F0E8FF',
+    accent: '#FF2BD2',             // hot neon pink
+    accentHover: '#FF60E0',
+    success: '#39FF14',            // neon green
+    info: '#00E5FF',               // electric cyan
+    error: '#FF003C',              // neon red
+    codeKeyword: '#FF2BD2',        // neon pink
+    codeString: '#00FFCC',         // neon mint
+    codeComment: '#686090',
+    codeNumber: '#FFD000',         // neon yellow
+    codePunctuation: '#9890C0',
+    codeFunction: '#00E5FF',       // cyan
+    minimapHeading: '#FF2BD2',
+    minimapText: '#B060FF',
+    minimapCode: '#00FFCC',
+    minimapBlockquote: '#39FF14',
+    minimapTable: '#FFD000',
+    minimapTableHeader: '#FFAA00',
+    minimapUl: '#FF6600',
+    minimapOl: '#FF2BD2',
+    minimapImage: '#FF003C',
+    minimapHr: '#00E5FF',
+    minimapLink: '#00FFCC',
+    minimapViewport: '#FF2BD2',
+    glowColor: 'transparent',
   },
 };
 
