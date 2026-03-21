@@ -32,6 +32,19 @@ export function CommandPalette({ visible, onClose, onFileSelect }: CommandPalett
     }
   }, [visible]);
 
+  // Close on Escape even if input doesn't have focus
+  useEffect(() => {
+    if (!visible) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [visible, onClose]);
+
   const search = useCallback(async (q: string) => {
     if (!q.trim()) {
       setResults([]);

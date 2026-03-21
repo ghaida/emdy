@@ -20,10 +20,6 @@ let toastId = 0;
 function findFirstFile(entries: FileEntry[]): string | null {
   for (const entry of entries) {
     if (!entry.isDirectory) return entry.path;
-    if (entry.children) {
-      const found = findFirstFile(entry.children);
-      if (found) return found;
-    }
   }
   return null;
 }
