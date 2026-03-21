@@ -32,7 +32,7 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     const cloned = markdownBody.cloneNode(true) as HTMLElement;
     clone.appendChild(cloned);
 
-    // Set wrapper height to the scaled height so scrolling works
+    // Set wrapper height to the scaled content height
     const sourceHeight = content.scrollHeight;
     wrapper.style.height = `${sourceHeight * SCALE}px`;
   }, [contentRef]);
@@ -40,14 +40,23 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
   // Sync viewport indicator and minimap scroll position
   const syncViewport = useCallback(() => {
     const container = scrollContainerRef.current;
+    const content = contentRef.current;
     const minimap = containerRef.current;
-    if (!container || !minimap) return;
+    const wrapper = cloneWrapperRef.current;
+    if (!container || !content || !minimap || !wrapper) return;
 
-    const visibleHeight = container.clientHeight;
+    const scrollHeight = container.scrollHeight;
+    const clientHeight = container.clientHeight;
     const scrollTop = container.scrollTop;
+    const minimapContentHeight = wrapper.offsetHeight; // content.scrollHeight * SCALE
 
-    const vpTop = scrollTop * SCALE;
-    const vpHeight = visibleHeight * SCALE;
+    // Map viewport proportionally: the minimap represents the full scrollable area
+    const vpHeight = (clientHeight / scrollHeight) * minimapContentHeight;
+    const scrollRange = scrollHeight - clientHeight;
+    const vpTop = scrollRange > 0
+      ? (scrollTop / scrollRange) * (minimapContentHeight - vpHeight)
+      : 0;
+
     setViewportTop(vpTop);
     setViewportHeight(vpHeight);
 
@@ -56,7 +65,7 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     const vpCenter = vpTop + vpHeight / 2;
     const targetScroll = vpCenter - minimapVisibleHeight / 2;
     minimap.scrollTop = Math.max(0, targetScroll);
-  }, [scrollContainerRef]);
+  }, [scrollContainerRef, contentRef]);
 
   // Sync content on mount and when DOM changes
   useEffect(() => {
@@ -100,12 +109,18 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
   const scrollToY = useCallback((clientY: number) => {
     const container = scrollContainerRef.current;
     const minimap = containerRef.current;
-    if (!container || !minimap) return;
+    const wrapper = cloneWrapperRef.current;
+    if (!container || !minimap || !wrapper) return;
 
     const rect = minimap.getBoundingClientRect();
     const y = clientY - rect.top + minimap.scrollTop;
-    const docY = y / SCALE;
-    container.scrollTop = docY - container.clientHeight / 2;
+    const minimapContentHeight = wrapper.offsetHeight;
+    if (minimapContentHeight <= 0) return;
+
+    // Map click position proportionally to scroll position
+    const clickFraction = y / minimapContentHeight;
+    const scrollRange = container.scrollHeight - container.clientHeight;
+    container.scrollTop = clickFraction * scrollRange;
   }, [scrollContainerRef]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
