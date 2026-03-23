@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   PanelLeft,
   PanelRight,
@@ -68,8 +68,10 @@ export function Toolbar({
   const [fontMenuOpen, setFontMenuOpen] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [rovingIndex, setRovingIndex] = useState(0);
   const fontMenuRef = useRef<HTMLDivElement>(null);
   const overflowRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
 
   // Close menus on outside click
   useEffect(() => {
@@ -94,11 +96,37 @@ export function Toolbar({
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  const getToolbarButtons = useCallback((): HTMLButtonElement[] => {
+    if (!toolbarRef.current) return [];
+    return Array.from(
+      toolbarRef.current.querySelectorAll<HTMLButtonElement>('[data-toolbar-btn]')
+    );
+  }, []);
+
+  const handleToolbarKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const buttons = getToolbarButtons();
+    if (buttons.length === 0) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const direction = e.key === 'ArrowRight' ? 1 : -1;
+      const next = (rovingIndex + direction + buttons.length) % buttons.length;
+      setRovingIndex(next);
+      buttons[next]?.focus();
+    }
+  }, [rovingIndex, getToolbarButtons]);
+
+  useEffect(() => {
+    const buttons = getToolbarButtons();
+    buttons.forEach((btn, i) => {
+      btn.tabIndex = i === rovingIndex ? 0 : -1;
+    });
+  }, [rovingIndex, getToolbarButtons, fontMenuOpen, overflowOpen, collapsed, hasContent]);
+
   const pct = Math.round(zoom * 100);
   const currentFont = fonts.find((f) => f.value === fontFamily) || fonts[0];
 
   return (
-    <div className="toolbar" role="toolbar" aria-label="Document tools">
+    <div className="toolbar" role="toolbar" aria-label="Document tools" ref={toolbarRef} onKeyDown={handleToolbarKeyDown}>
       {/* Left: sidebar toggle + filename */}
       <div className="toolbar-left">
         {hasSidebar && (
@@ -108,6 +136,7 @@ export function Toolbar({
             data-tooltip="Toggle sidebar  ⌘B"
             aria-label="Toggle sidebar"
             aria-expanded={sidebarVisible}
+            data-toolbar-btn
           >
             <PanelLeft {...ICON} />
           </button>
@@ -132,20 +161,20 @@ export function Toolbar({
           <>
             {/* Zoom */}
             <div className="toolbar-zoom-group">
-              <button className="toolbar-btn" onClick={onZoomOut} data-tooltip="Zoom out  ⌘−" aria-label="Zoom out">
+              <button className="toolbar-btn" onClick={onZoomOut} data-tooltip="Zoom out  ⌘−" aria-label="Zoom out" data-toolbar-btn>
                 <Minus {...ICON} />
               </button>
-              <button className="toolbar-btn zoom-label" onClick={onZoomReset} data-tooltip="Reset zoom  ⌘0" aria-label={`Zoom reset, currently ${pct}%`}>
+              <button className="toolbar-btn zoom-label" onClick={onZoomReset} data-tooltip="Reset zoom  ⌘0" aria-label={`Zoom reset, currently ${pct}%`} data-toolbar-btn>
                 {pct}%
               </button>
-              <button className="toolbar-btn" onClick={onZoomIn} data-tooltip="Zoom in  ⌘+" aria-label="Zoom in">
+              <button className="toolbar-btn" onClick={onZoomIn} data-tooltip="Zoom in  ⌘+" aria-label="Zoom in" data-toolbar-btn>
                 <Plus {...ICON} />
               </button>
             </div>
 
             {/* Search */}
             {hasSidebar && (
-              <button className="toolbar-btn" onClick={onSearch} data-tooltip="Search  ⌘F" aria-label="Search files">
+              <button className="toolbar-btn" onClick={onSearch} data-tooltip="Search  ⌘F" aria-label="Search files" data-toolbar-btn>
                 <Search {...ICON} />
               </button>
             )}
@@ -159,6 +188,7 @@ export function Toolbar({
                 aria-label="Font"
                 aria-haspopup="true"
                 aria-expanded={fontMenuOpen}
+                data-toolbar-btn
               >
                 <Type {...ICON} />
               </button>
@@ -180,18 +210,18 @@ export function Toolbar({
             </div>
 
             {/* Copy */}
-            <button className="toolbar-btn" onClick={onCopyHTML} data-tooltip="Copy formatted" aria-label="Copy to clipboard">
+            <button className="toolbar-btn" onClick={onCopyHTML} data-tooltip="Copy formatted" aria-label="Copy to clipboard" data-toolbar-btn>
               <Copy {...ICON} />
             </button>
 
             {/* Export PDF */}
-            <button className="toolbar-btn" onClick={onExportPDF} data-tooltip="Export PDF  ⌘⇧E" aria-label="Export as PDF">
+            <button className="toolbar-btn" onClick={onExportPDF} data-tooltip="Export PDF  ⌘⇧E" aria-label="Export as PDF" data-toolbar-btn>
               <FileDown {...ICON} />
             </button>
 
 
             {/* Settings */}
-            <button className="toolbar-btn" onClick={onOpenSettings} data-tooltip="Settings" aria-label="Settings">
+            <button className="toolbar-btn" onClick={onOpenSettings} data-tooltip="Settings" aria-label="Settings" data-toolbar-btn>
               <Settings {...ICON} />
             </button>
 
@@ -202,6 +232,7 @@ export function Toolbar({
               data-tooltip="Toggle minimap  ⌘M"
               aria-label="Toggle minimap"
               aria-expanded={minimapVisible}
+              data-toolbar-btn
             >
               <PanelRight {...ICON} />
             </button>
@@ -210,7 +241,7 @@ export function Toolbar({
 
         {/* Search when no content but sidebar open */}
         {!hasContent && hasSidebar && (
-          <button className="toolbar-btn" onClick={onSearch} data-tooltip="Search  ⌘F" aria-label="Search files">
+          <button className="toolbar-btn" onClick={onSearch} data-tooltip="Search  ⌘F" aria-label="Search files" data-toolbar-btn>
             <Search {...ICON} />
           </button>
         )}
@@ -226,6 +257,7 @@ export function Toolbar({
                 aria-label="More actions"
                 aria-haspopup="true"
                 aria-expanded={overflowOpen}
+                data-toolbar-btn
               >
                 <MoreHorizontal {...ICON} />
               </button>
@@ -264,6 +296,7 @@ export function Toolbar({
               data-tooltip="Toggle minimap  ⌘M"
               aria-label="Toggle minimap"
               aria-expanded={minimapVisible}
+              data-toolbar-btn
             >
               <PanelRight {...ICON} />
             </button>
