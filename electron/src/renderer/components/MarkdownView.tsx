@@ -14,7 +14,7 @@ interface MarkdownViewProps {
   contentRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-export function MarkdownView({ content, colors, filePath, style, contentRef }: MarkdownViewProps) {
+export const MarkdownView = React.memo(function MarkdownView({ content, colors, filePath, style, contentRef }: MarkdownViewProps) {
   const codeTheme = useMemo(() => buildPrismTheme(colors), [colors]);
 
   return (
@@ -83,7 +83,7 @@ export function MarkdownView({ content, colors, filePath, style, contentRef }: M
       </article>
     </div>
   );
-}
+});
 
 function CodeBlock({ language, codeTheme, children }: {
   language: string;
