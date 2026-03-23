@@ -73,26 +73,6 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     }
   }, [scrollContainerRef, contentRef]);
 
-  // Throttled sync — avoids cloning more than once per 500ms
-  const syncPendingRef = useRef(false);
-  const lastSyncRef = useRef(0);
-  const throttledSyncContent = useCallback(() => {
-    const now = Date.now();
-    if (now - lastSyncRef.current < 500) {
-      if (!syncPendingRef.current) {
-        syncPendingRef.current = true;
-        setTimeout(() => {
-          syncPendingRef.current = false;
-          lastSyncRef.current = Date.now();
-          syncContent();
-        }, 500 - (now - lastSyncRef.current));
-      }
-      return;
-    }
-    lastSyncRef.current = now;
-    syncContent();
-  }, [syncContent]);
-
   // Sync content on mount and when DOM changes
   useEffect(() => {
     if (!visible) return;
@@ -101,7 +81,7 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     const content = contentRef.current;
     if (!content) return;
 
-    const observer = new MutationObserver(throttledSyncContent);
+    const observer = new MutationObserver(syncContent);
     observer.observe(content, { childList: true, subtree: true, characterData: true });
     return () => observer.disconnect();
   }, [visible, syncContent, throttledSyncContent, contentRef]);
