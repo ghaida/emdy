@@ -107,8 +107,15 @@ export function App() {
     try {
       perfMark('file-load-start');
       const fileContent = await window.electronAPI.readFile(path);
-      setContent(fileContent);
       perfMeasure('file-load', 'file-load-start');
+      perfMark('render-start');
+      setContent(fileContent);
+      // Measure render on next frame (after React commits the DOM)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          perfMeasure('render', 'render-start');
+        });
+      });
       setFilePath(path);
       setFileDeleted(false);
       setFileError(null);

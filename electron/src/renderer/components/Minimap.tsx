@@ -73,18 +73,42 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     }
   }, [scrollContainerRef, contentRef]);
 
+  // Throttled sync — avoids cloning more than once per 500ms
+  const syncPendingRef = useRef(false);
+  const lastSyncRef = useRef(0);
+  const throttledSyncContent = useCallback(() => {
+    const now = Date.now();
+    if (now - lastSyncRef.current < 500) {
+      if (!syncPendingRef.current) {
+        syncPendingRef.current = true;
+        setTimeout(() => {
+          syncPendingRef.current = false;
+          lastSyncRef.current = Date.now();
+          syncContent();
+        }, 500 - (now - lastSyncRef.current));
+      }
+      return;
+    }
+    lastSyncRef.current = now;
+    syncContent();
+  }, [syncContent]);
+
   // Sync content on mount and when DOM changes
   useEffect(() => {
     if (!visible) return;
-    syncContent();
+    // Defer initial sync so it doesn't block the main render
+    const id = requestIdleCallback(() => syncContent());
 
     const content = contentRef.current;
-    if (!content) return;
+    if (!content) return () => cancelIdleCallback(id);
 
-    const observer = new MutationObserver(syncContent);
+    const observer = new MutationObserver(throttledSyncContent);
     observer.observe(content, { childList: true, subtree: true, characterData: true });
-    return () => observer.disconnect();
-  }, [visible, syncContent, contentRef]);
+    return () => {
+      cancelIdleCallback(id);
+      observer.disconnect();
+    };
+  }, [visible, syncContent, throttledSyncContent, contentRef]);
 
   // Sync viewport on scroll/resize
   useEffect(() => {
@@ -163,7 +187,6 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     <div
       className={`minimap${visible ? ' open' : ''}`}
       aria-hidden="true"
-      tabIndex={-1}
       ref={containerRef}
       onMouseDown={handleMouseDown}
       onWheel={handleWheel}
