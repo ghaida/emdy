@@ -29,21 +29,21 @@ export function FileContextMenu({ x, y, filePath, onClose, onCopyHTML, onExportP
   }, [onClose]);
 
   return (
-    <div className="context-menu" ref={ref} style={{ top: y, left: x }}>
-      <button className="context-menu-item" onClick={() => { onCopyHTML(); onClose(); }}>
+    <div className="context-menu" ref={ref} style={{ top: y, left: x }} role="menu">
+      <button className="context-menu-item" role="menuitem" onClick={() => { onCopyHTML(); onClose(); }}>
         <Clipboard size={14} strokeWidth={1.5} />
         Copy to Clipboard
       </button>
-      <button className="context-menu-item" onClick={() => { onExportPDF(); onClose(); }}>
+      <button className="context-menu-item" role="menuitem" onClick={() => { onExportPDF(); onClose(); }}>
         <FileDown size={14} strokeWidth={1.5} />
         Download as PDF
       </button>
       <div className="context-menu-separator" />
-      <button className="context-menu-item" onClick={() => { window.electronAPI.showItemInFolder(filePath); onClose(); }}>
+      <button className="context-menu-item" role="menuitem" onClick={() => { window.electronAPI.showItemInFolder(filePath); onClose(); }}>
         <FolderOpen size={14} strokeWidth={1.5} />
         Show in Finder
       </button>
-      <button className="context-menu-item" onClick={() => { window.electronAPI.openInNewWindow(filePath); onClose(); }}>
+      <button className="context-menu-item" role="menuitem" onClick={() => { window.electronAPI.openInNewWindow(filePath); onClose(); }}>
         <ExternalLink size={14} strokeWidth={1.5} />
         Open in New Window
       </button>

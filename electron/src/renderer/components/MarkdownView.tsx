@@ -100,7 +100,7 @@ function CodeBlock({ language, codeTheme, children }: {
 
   return (
     <div className="code-block-wrapper">
-      <button className="code-block-copy" onClick={handleCopy} title="Copy code">
+      <button className="code-block-copy" onClick={handleCopy} title="Copy code" aria-label="Copy code">
         {copied ? <Check size={14} strokeWidth={1.5} /> : <Copy size={14} strokeWidth={1.5} />}
       </button>
       <SyntaxHighlighter

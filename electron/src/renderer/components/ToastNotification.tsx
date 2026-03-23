@@ -13,7 +13,7 @@ interface ToastNotificationProps {
 
 export function ToastNotification({ toasts, onDismiss }: ToastNotificationProps) {
   return (
-    <div className="toast-container">
+    <div className="toast-container" role="status" aria-live="polite">
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
       ))}
@@ -36,7 +36,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
   return (
     <div className={`toast toast-${toast.type}${visible ? ' toast-visible' : ''}`}>
       <span>{toast.message}</span>
-      <button className="toast-close" onClick={() => onDismiss(toast.id)}>
+      <button className="toast-close" onClick={() => onDismiss(toast.id)} aria-label="Close">
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M2 2l6 6M8 2l-6 6" />
         </svg>
