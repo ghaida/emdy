@@ -11,6 +11,7 @@ import { WelcomeView } from './components/WelcomeView';
 import { SkipLink } from './components/SkipLink';
 import { ToastNotification, type Toast } from './components/ToastNotification';
 import { FileContextMenu } from './components/FileContextMenu';
+import { AnnounceProvider } from './hooks/useAnnounce';
 import { useDisplaySettings } from './hooks/useDisplaySettings';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useFileWatcher } from './hooks/useFileWatcher';
@@ -256,6 +257,7 @@ export function App() {
   };
 
   return (
+    <AnnounceProvider>
     <div className="app">
       <SkipLink />
       <div className={`titlebar${isWelcome ? ' titlebar-compact' : ''}`} onDoubleClick={(e) => {
@@ -325,5 +327,6 @@ export function App() {
         />
       )}
     </div>
+    </AnnounceProvider>
   );
 }
