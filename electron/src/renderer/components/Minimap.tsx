@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
+import { perfMark, perfMeasure } from '../lib/perf';
 
 const SCALE = 0.12;
 
@@ -18,6 +19,7 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
 
   // Clone the markdown body content into the minimap
   const syncContent = useCallback(() => {
+    perfMark('minimap-sync-start');
     const content = contentRef.current;
     const clone = cloneRef.current;
     const wrapper = cloneWrapperRef.current;
@@ -35,6 +37,7 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     // Set wrapper height to the scaled content height
     const sourceHeight = content.scrollHeight;
     wrapper.style.height = `${sourceHeight * SCALE}px`;
+    perfMeasure('minimap-sync', 'minimap-sync-start');
   }, [contentRef]);
 
   // Sync viewport indicator and minimap scroll position

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { MarkdownView } from './components/MarkdownView';
 import { DirectoryBrowser } from './components/DirectoryBrowser';
 import { Toolbar } from './components/Toolbar';
@@ -16,6 +16,7 @@ import { useDisplaySettings } from './hooks/useDisplaySettings';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useFileWatcher } from './hooks/useFileWatcher';
 import type { FileEntry } from './lib/types';
+import { perfMark, perfMeasure } from './lib/perf';
 
 let toastId = 0;
 
@@ -104,8 +105,10 @@ export function App() {
 
   const handleFileSelect = useCallback(async (path: string) => {
     try {
+      perfMark('file-load-start');
       const fileContent = await window.electronAPI.readFile(path);
       setContent(fileContent);
+      perfMeasure('file-load', 'file-load-start');
       setFilePath(path);
       setFileDeleted(false);
       setFileError(null);
@@ -219,6 +222,12 @@ export function App() {
     display.fontFamily === 'serif' ? 'var(--font-serif)' :
     'var(--font-mono)';
 
+  const markdownStyle = useMemo(() => ({
+    fontFamily: fontFamilyVar,
+    fontSize: `${display.zoom}rem`,
+    maxWidth: `min(${680 * display.zoom}px, 100%)`,
+  }), [fontFamilyVar, display.zoom]);
+
   const renderContent = () => {
     if (fileDeleted) {
       return (
@@ -256,11 +265,7 @@ export function App() {
               content={content}
               colors={display.resolvedColors}
               filePath={filePath}
-              style={{
-                fontFamily: fontFamilyVar,
-                fontSize: `${display.zoom}rem`,
-                maxWidth: `min(${680 * display.zoom}px, 100%)`,
-              }}
+              style={markdownStyle}
               contentRef={contentRef}
             />
           </div>

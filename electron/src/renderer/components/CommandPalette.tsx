@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { perfMark, perfMeasure } from '../lib/perf';
 import { useTransition } from '../hooks/useTransition';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useAnnounce } from '../hooks/useAnnounce';
@@ -57,7 +58,9 @@ export function CommandPalette({ visible, onClose, onFileSelect }: CommandPalett
     }
     setSearching(true);
     try {
+      perfMark('search-start');
       const searchResults = await window.electronAPI.searchEverything(q);
+      perfMeasure('search', 'search-start');
       setResults(searchResults);
       setSelectedIndex(0);
     } catch {
