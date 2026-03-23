@@ -105,7 +105,7 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     };
   }, [visible, syncViewport, syncContent, scrollContainerRef, contentRef]);
 
-  // Click/drag to navigate
+  // Click/drag to navigate — centers the viewport on the click position
   const scrollToY = useCallback((clientY: number) => {
     const container = scrollContainerRef.current;
     const minimap = containerRef.current;
@@ -117,10 +117,15 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     const minimapContentHeight = wrapper.offsetHeight;
     if (minimapContentHeight <= 0) return;
 
-    // Map click position proportionally to scroll position
-    const clickFraction = y / minimapContentHeight;
+    // Viewport height in minimap coordinates
+    const vpHeight = (container.clientHeight / container.scrollHeight) * minimapContentHeight;
+    // Center viewport on click, then map to scroll position (inverse of syncViewport)
+    const adjustedY = y - vpHeight / 2;
+    const usableHeight = minimapContentHeight - vpHeight;
     const scrollRange = container.scrollHeight - container.clientHeight;
-    container.scrollTop = clickFraction * scrollRange;
+    if (usableHeight <= 0) return;
+    const fraction = Math.max(0, Math.min(1, adjustedY / usableHeight));
+    container.scrollTop = fraction * scrollRange;
   }, [scrollContainerRef]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
