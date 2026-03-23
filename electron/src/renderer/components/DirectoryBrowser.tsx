@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { FileEntry } from '../lib/types';
 
@@ -11,6 +11,39 @@ interface DirectoryBrowserProps {
 }
 
 export function DirectoryBrowser({ entries, activePath, onFileSelect, onFileContextMenu }: DirectoryBrowserProps) {
+  const handleTreeKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const tree = e.currentTarget;
+    const items = Array.from(tree.querySelectorAll<HTMLElement>('button.tree-item, button.tree-folder'));
+    const currentIndex = items.indexOf(document.activeElement as HTMLElement);
+    const currentButton = items[currentIndex];
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const next = Math.min(currentIndex + 1, items.length - 1);
+      items[next]?.focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prev = Math.max(currentIndex - 1, 0);
+      items[prev]?.focus();
+    } else if (e.key === 'ArrowRight') {
+      if (currentButton?.classList.contains('tree-folder')) {
+        const li = currentButton.closest('li');
+        if (li?.getAttribute('aria-expanded') === 'false') {
+          e.preventDefault();
+          currentButton.click();
+        }
+      }
+    } else if (e.key === 'ArrowLeft') {
+      if (currentButton?.classList.contains('tree-folder')) {
+        const li = currentButton.closest('li');
+        if (li?.getAttribute('aria-expanded') === 'true') {
+          e.preventDefault();
+          currentButton.click();
+        }
+      }
+    }
+  }, []);
+
   const { rootFiles, folders } = useMemo(() => {
     const rootFiles: FileEntry[] = [];
     const folders: FileEntry[] = [];
@@ -26,7 +59,7 @@ export function DirectoryBrowser({ entries, activePath, onFileSelect, onFileCont
   return (
     <div className="sidebar">
       <div className="sidebar-heading">Files</div>
-      <ul className="sidebar-tree" role="tree">
+      <ul className="sidebar-tree" role="tree" onKeyDown={handleTreeKeyDown}>
         {rootFiles.map((file) => (
           <FileItem
             key={file.path}
