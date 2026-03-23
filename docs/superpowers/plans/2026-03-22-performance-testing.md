@@ -395,7 +395,7 @@ git commit -m "perf: add baseline performance measurements"
 
 **Files:** Depends on profiling results from Task 4
 
-This task is conditional — only apply fixes for operations that exceeded their targets in Task 4. The specific fixes depend on what profiling reveals. Guidance for each likely bottleneck:
+This task is conditional — only apply fixes for operations that exceeded their targets in Task 4. Each fix below is independent: apply only the ones profiling shows are needed, commit each separately. If a fix isn't needed, skip it entirely.
 
 - [ ] **Step 1: Review baseline results**
 
@@ -496,12 +496,9 @@ contain: layout style;
 
 Repeat the measurements from Task 4 with fixes applied. Update the "After-Fix Measurements" section of the performance report.
 
-- [ ] **Step 7: Commit fixes and updated report**
+- [ ] **Step 7: Update report with after-fix measurements**
 
-```bash
-git add <all modified files>
-git commit -m "perf: fix bottlenecks identified during profiling"
-```
+Update the "After-Fix Measurements" and "Fixes Applied" sections of the performance report with the new numbers.
 
 - [ ] **Step 8: Remove perf instrumentation (or keep behind flag)**
 
