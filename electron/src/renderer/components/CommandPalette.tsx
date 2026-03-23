@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTransition } from '../hooks/useTransition';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useAnnounce } from '../hooks/useAnnounce';
 
 interface SearchResult {
   filePath: string;
@@ -25,6 +26,7 @@ export function CommandPalette({ visible, onClose, onFileSelect }: CommandPalett
   const modalRef = useRef<HTMLDivElement>(null);
   const { mounted, active } = useTransition(visible);
   useFocusTrap(modalRef, visible);
+  const { announce } = useAnnounce();
 
   useEffect(() => {
     if (visible && inputRef.current) {
@@ -69,6 +71,17 @@ export function CommandPalette({ visible, onClose, onFileSelect }: CommandPalett
     const timeout = setTimeout(() => search(query), 200);
     return () => clearTimeout(timeout);
   }, [query, search]);
+
+  useEffect(() => {
+    if (!visible) return;
+    if (query.length === 0) return;
+    const count = results.length;
+    if (count > 0) {
+      announce(`${count} result${count === 1 ? '' : 's'}`);
+    } else if (!searching) {
+      announce('No results');
+    }
+  }, [results, searching, visible, query, announce]);
 
   const handleSelect = useCallback((result: SearchResult) => {
     onFileSelect(result.filePath);
