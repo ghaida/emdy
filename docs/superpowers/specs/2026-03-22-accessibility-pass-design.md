@@ -27,7 +27,7 @@ The foundation for VoiceOver landmark navigation. Without landmarks, the app is 
 **App.tsx:**
 - Sidebar wrapper becomes `<nav aria-label="Files">`
 - Content area becomes `<main>`
-- Status bar becomes `<footer>` — rendered inside the content column (not at app root), which is valid HTML. VoiceOver will surface it as a `contentinfo` landmark within `<main>`.
+- Status bar: keep as a `<div>` inside the content column. A `<footer>` nested inside `<main>` loses its implicit `contentinfo` landmark role per the HTML spec, so wrapping it in `<footer>` would add no assistive technology value. The status bar's word count and file path are presentational — screen reader users don't need to navigate to them as a landmark. Add `role="status"` so dynamic content (word count updates) is announced.
 
 **Toolbar.tsx:**
 - Add `role="toolbar"` and `aria-label="Document tools"` to the toolbar container
@@ -63,12 +63,12 @@ Every button with only an icon gets an `aria-label`:
 | Zoom in | "Zoom in" |
 | Zoom out | "Zoom out" |
 | Search | "Search files" |
-| Sidebar toggle | "Toggle sidebar" |
-| Minimap toggle | "Toggle minimap" |
-| Copy code | "Copy code" |
+| Sidebar toggle | "Toggle sidebar" with `aria-expanded="true|false"` reflecting current state |
+| Minimap toggle | "Toggle minimap" with `aria-expanded="true|false"` reflecting current state |
+| Copy code | "Copy code" (replace existing `title` attr; `aria-label` takes precedence, keep `title` for sighted tooltip) |
 | Export PDF | "Export as PDF" |
-| Print | "Print" |
 | Settings gear | "Settings" |
+| Overflow menu | "More actions" |
 | Close (modals/toasts) | "Close" |
 
 ### Modal dialogs
@@ -87,10 +87,13 @@ Font selector and overflow menu are custom dropdown menus built with divs and bu
 - Dropdown container: `role="menu"`
 - Each option: `role="menuitem"`
 
-### Command palette results
+### Command palette search input + results
 
-- Results container: `role="listbox"`
-- Each result: `role="option"`
+The input and results form a combobox pattern:
+
+- Input: `role="combobox"`, `aria-expanded="true|false"` (true when results visible), `aria-controls` pointing to the results listbox id, `aria-activedescendant` pointing to the currently highlighted option's id
+- Results container: `role="listbox"`, with a stable `id`
+- Each result: `role="option"`, with a unique `id`
 - Highlighted result: `aria-selected="true"`
 - Group headers ("Files", "Content"): `role="presentation"` to avoid confusing list semantics
 
@@ -111,7 +114,7 @@ Font selector and overflow menu are custom dropdown menus built with divs and bu
 
 ### Settings modal controls
 
-- Color swatch buttons: `aria-label` with theme name (e.g., "Warm theme", "Cool theme", "Fresh theme", "Neon theme")
+- Color scheme buttons: wrap in `role="radiogroup"` with `aria-label="Color scheme"`, each button gets `role="radio"` with `aria-checked="true|false"` and `aria-label` (e.g., "Warm theme", "Cool theme", "Fresh theme", "Neon theme")
 - Appearance options (Light/Dark/System): wrap in `role="radiogroup"` with `aria-label="Appearance"`, each option gets `role="radio"` with `aria-checked="true|false"`
 
 ---
