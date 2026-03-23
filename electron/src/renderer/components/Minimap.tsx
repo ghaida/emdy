@@ -93,28 +93,17 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     syncContent();
   }, [syncContent]);
 
-  // Sync content after React finishes rendering, then watch for changes
+  // Sync content on mount and when DOM changes
   useEffect(() => {
     if (!visible) return;
+    syncContent();
 
     const content = contentRef.current;
     if (!content) return;
 
-    // Wait for React to finish rendering before cloning
-    let rafId = requestAnimationFrame(() => {
-      rafId = requestAnimationFrame(() => {
-        syncContent();
-      });
-    });
-
-    // Watch for subsequent DOM changes (file watcher updates, etc.)
     const observer = new MutationObserver(throttledSyncContent);
     observer.observe(content, { childList: true, subtree: true, characterData: true });
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, [visible, syncContent, throttledSyncContent, contentRef]);
 
   // Sync viewport on scroll/resize
