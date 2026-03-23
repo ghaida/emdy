@@ -36,16 +36,16 @@ Generate Markdown files at three sizes to exercise different bottlenecks. Save t
 
 ## Fix Strategy
 
-Fix only bottlenecks that exceed the targets. No speculative optimization. Likely candidates:
+Fix only bottlenecks that exceed the targets. No speculative optimization. The candidates below are hypotheses to investigate — profiling determines which (if any) actually need fixing.
 
-- **react-markdown re-renders**: `MarkdownView` may re-render on unrelated state changes (e.g., toast, sidebar toggle). Fix with `React.memo` and stable prop references.
-- **Minimap DOM cloning**: `syncContent()` clones the entire `.markdown-body` DOM tree. For large documents, this is expensive. Fix by throttling clone frequency or using `requestIdleCallback`.
-- **Prism syntax highlighting**: Large code blocks (500+ lines) may block the main thread during initial render. Fix by capping highlighted lines or deferring off-screen blocks.
-- **Command palette content search**: Full-text search across large file content. Already debounced at 200ms on the renderer side. If still slow, move search to the main process or a Web Worker.
+- **react-markdown re-renders**: `MarkdownView` may re-render on unrelated state changes (e.g., toast, sidebar toggle). Fix with `React.memo` — but memo only helps if props are stable. The `style` object and `colors` prop in App.tsx are recreated each render, so those would need `useMemo` in App.tsx first.
+- **Minimap DOM cloning**: `syncContent()` clones the entire `.markdown-body` DOM tree. May or may not be a bottleneck — profiling will show. If slow, throttle or use `requestIdleCallback`.
+- **Prism syntax highlighting**: Large code blocks (500+ lines) may block the main thread during initial render. If slow, limit highlighting to a maximum line count per block with a "show all" toggle.
+- **Command palette content search**: Full-text search across large file content. Already debounced at 200ms. If still slow, simplest fix first (limit result count, early termination) before considering a Worker.
 
 ## Deliverable
 
-A profiling report committed alongside this spec documenting:
+A Markdown profiling report saved to `docs/superpowers/specs/2026-03-22-performance-report.md` documenting:
 - File sizes tested
 - Measurements per operation (before and after fixes)
 - Bottlenecks identified
