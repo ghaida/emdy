@@ -1,8 +1,6 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { perfMark, perfMeasure } from '../lib/perf';
 
-const SCALE = 0.12;
-
 interface MinimapProps {
   visible: boolean;
   contentRef: React.RefObject<HTMLDivElement | null>;
@@ -16,29 +14,51 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
   const [viewportTop, setViewportTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
   const isDragging = useRef(false);
+  // Dynamic scale: derived from minimap width / original content width
+  const scaleRef = useRef(0.12);
 
   // Clone the markdown body content into the minimap
   const syncContent = useCallback(() => {
     perfMark('minimap-sync-start');
     const content = contentRef.current;
+    const container = scrollContainerRef.current;
     const clone = cloneRef.current;
     const wrapper = cloneWrapperRef.current;
-    if (!content || !clone || !wrapper) return;
+    const minimap = containerRef.current;
+    if (!content || !container || !clone || !wrapper || !minimap) return;
 
     // Find the .markdown-body inside the content ref
-    const markdownBody = content.querySelector('.markdown-body');
+    const markdownBody = content.querySelector('.markdown-body') as HTMLElement | null;
     if (!markdownBody) return;
+
+    // Measure original content width to derive scale
+    const originalWidth = markdownBody.offsetWidth;
+    // Minimap inner width = minimap content box minus padding
+    const minimapStyle = getComputedStyle(minimap);
+    const minimapInnerWidth = minimap.clientWidth
+      - parseFloat(minimapStyle.paddingLeft)
+      - parseFloat(minimapStyle.paddingRight);
+
+    if (originalWidth <= 0 || minimapInnerWidth <= 0) return;
+
+    const scale = minimapInnerWidth / originalWidth;
+    scaleRef.current = scale;
+
+    // Set clone width to match original so text wraps identically
+    clone.style.transform = `scale(${scale})`;
+    clone.style.transformOrigin = 'top left';
+    clone.style.width = `${originalWidth}px`;
 
     // Clone via DOM methods (safe — this is our own rendered content)
     while (clone.firstChild) clone.removeChild(clone.firstChild);
     const cloned = markdownBody.cloneNode(true) as HTMLElement;
     clone.appendChild(cloned);
 
-    // Set wrapper height to the scaled content height
-    const sourceHeight = content.scrollHeight;
-    wrapper.style.height = `${sourceHeight * SCALE}px`;
+    // Set wrapper height based on scroll container height at the derived scale
+    const sourceHeight = container.scrollHeight;
+    wrapper.style.height = `${sourceHeight * scale}px`;
     perfMeasure('minimap-sync', 'minimap-sync-start');
-  }, [contentRef]);
+  }, [contentRef, scrollContainerRef]);
 
   // Sync viewport indicator and minimap scroll position
   const syncViewport = useCallback(() => {
@@ -51,7 +71,7 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     const scrollHeight = container.scrollHeight;
     const clientHeight = container.clientHeight;
     const scrollTop = container.scrollTop;
-    const minimapContentHeight = wrapper.offsetHeight; // content.scrollHeight * SCALE
+    const minimapContentHeight = wrapper.offsetHeight;
 
     // Map viewport proportionally: the minimap represents the full scrollable area
     const vpHeight = (clientHeight / scrollHeight) * minimapContentHeight;
@@ -171,11 +191,6 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
         <div
           className="minimap-content"
           ref={cloneRef}
-          style={{
-            transform: `scale(${SCALE})`,
-            transformOrigin: 'top left',
-            width: `${1 / SCALE * 100}%`,
-          }}
         />
       </div>
       <div
