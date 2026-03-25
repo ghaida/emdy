@@ -1,5 +1,5 @@
 {
-  "version": "2.8",
+  "version": "2.9",
   "children": [
     {
       "type": "frame",
@@ -3139,7 +3139,8 @@
           "content": "Emdy as a Braun product — honest materials, no decoration, everything in service of function. The app is a reading instrument, not a reading environment. The website reflects this: technical confidence, restrained palette, information delivered with the density and clarity of a product spec sheet. The icon is a geometric mark — reduced, precise, immediately recognizable at 16px.",
           "lineHeight": 1.6,
           "fontFamily": "IBM Plex Sans",
-          "fontSize": 15
+          "fontSize": 15,
+          "fontWeight": "normal"
         },
         {
           "type": "line",
@@ -3397,7 +3398,8 @@
                   "content": "The quick brown fox jumps over the lazy dog. Clean geometric forms with humanist proportions — neutral but never cold.",
                   "lineHeight": 1.6,
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -3429,7 +3431,8 @@
                   "content": "Technical precision. Code blocks, metadata, labels. The monospace voice of the system — used for UI chrome and secondary information.",
                   "lineHeight": 1.6,
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -3683,7 +3686,8 @@
               "content": "Geometric monogram — single letterform in Plex Mono, centered on a rounded square. No gradients, no depth, no embellishment. The mark works at every scale because it has nothing to lose.",
               "lineHeight": 1.6,
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -3719,7 +3723,8 @@
           "content": "Single-page product site. Hero: app screenshot on #F0F2F5, one headline in Plex Sans Semibold, one subline. Feature grid below — 3×2, each cell is an icon + label + one sentence. No animations, no parallax, no testimonials. Footer: download link, version number, GitHub. The page loads fast and says everything in the viewport.",
           "lineHeight": 1.6,
           "fontFamily": "IBM Plex Sans",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "frame",
@@ -3807,7 +3812,8 @@
           "content": "A space for reading, not an app for files.",
           "lineHeight": 1.2,
           "fontFamily": "IBM Plex Serif",
-          "fontSize": 36
+          "fontSize": 36,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -3819,7 +3825,8 @@
           "content": "Emdy as a room rather than a tool. Warm wood, diffused light, a book left open on a table. The website invites you in with generous whitespace and unhurried typography. The aesthetic is closer to a publisher's imprint than a tech product. The icon evokes a page or a reading mark — something you'd want to see on your dock every day.",
           "lineHeight": 1.7,
           "fontFamily": "IBM Plex Serif",
-          "fontSize": 15
+          "fontSize": 15,
+          "fontWeight": "normal"
         },
         {
           "type": "line",
@@ -4050,7 +4057,8 @@
                   "fill": "#2C2C2C",
                   "content": "IBM Plex Serif",
                   "fontFamily": "IBM Plex Serif",
-                  "fontSize": 28
+                  "fontSize": 28,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -4062,7 +4070,8 @@
                   "content": "Serif as the primary voice — literary, warm, timeless. Headlines and body both in Plex Serif, distinguished by weight and size rather than typeface switching.",
                   "lineHeight": 1.7,
                   "fontFamily": "IBM Plex Serif",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -4353,7 +4362,8 @@
               "content": "A reading mark or folded page corner — something that suggests bookmarks and quiet attention. Soft radius, warm tones. The mark should feel like an object you'd find on a bedside table, not in a dock full of productivity apps.",
               "lineHeight": 1.7,
               "fontFamily": "IBM Plex Serif",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -4389,7 +4399,8 @@
           "content": "Editorial single-page. Generous vertical rhythm — 80px+ between sections. Large serif headline, a single paragraph of body copy, then an app screenshot floating on warm white. Features presented as short prose paragraphs rather than a grid. Feels like the About page of a small press. Download button is understated — a text link with an arrow, not a shouting CTA.",
           "lineHeight": 1.7,
           "fontFamily": "IBM Plex Serif",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "frame",
@@ -4490,7 +4501,8 @@
           "content": "Emdy through the lens of typographic craft — the app as a compositor's proof, the website as a specimen sheet. High contrast, sharp details, the confidence of ink on good paper. This direction leans into the typography itself as the design element. The icon is a ligature or typographic detail that signals expertise and care.",
           "lineHeight": 1.6,
           "fontFamily": "IBM Plex Sans",
-          "fontSize": 15
+          "fontSize": 15,
+          "fontWeight": "normal"
         },
         {
           "type": "line",
@@ -4734,7 +4746,8 @@
                   "content": "High-contrast serif for headlines — commanding presence, editorial authority. The weight of a broadsheet masthead. Display sizes only; body text stays at regular weight.",
                   "lineHeight": 1.6,
                   "fontFamily": "IBM Plex Serif",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -4753,7 +4766,8 @@
                   "fill": "#1A1A1A",
                   "content": "IBM Plex Sans",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 28
+                  "fontSize": 28,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -4765,7 +4779,8 @@
                   "content": "Sans-serif for body and UI — clean counterpoint to the serif headlines. The pairing creates the classic editorial tension between display and text type.",
                   "lineHeight": 1.6,
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -5047,7 +5062,8 @@
               "content": "A typographic ligature — 'Em' in bold serif, a nod to the em dash and the typographic unit. The red variant adds the editor's mark energy. At small sizes it reads as a confident letterform; at large sizes it reveals the craft of the serif details.",
               "lineHeight": 1.6,
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -5083,7 +5099,8 @@
           "content": "Type specimen meets product page. The hero is a massive serif headline — 'Emdy' set at 120px+ — with a single sentence underneath. The app screenshot sits in a high-contrast frame (dark mode on white, or light mode on black). Feature descriptions use the serif/sans pairing to create editorial rhythm. A thin red rule separates sections. The footer feels like a colophon: version, typefaces used, build date.",
           "lineHeight": 1.6,
           "fontFamily": "IBM Plex Sans",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "frame",
@@ -5184,7 +5201,8 @@
           "content": "Slate blue as the soul of the product — the color of brushed aluminum panels on a Braun hi-fi, of overcast sky through a factory window, of the system itself receding so content can advance. This direction grounds Emdy in industrial calm. The website feels like a product data sheet from a company that trusts its engineering. The icon carries the blue as a quiet signature.",
           "lineHeight": 1.6,
           "fontFamily": "IBM Plex Sans",
-          "fontSize": 15
+          "fontSize": 15,
+          "fontWeight": "normal"
         },
         {
           "type": "line",
@@ -5458,7 +5476,8 @@
                   "content": "Medium weight as default — not bold enough to shout, not light enough to whisper. The typographic equivalent of brushed metal: present, reliable, understated.",
                   "lineHeight": 1.6,
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -5477,7 +5496,8 @@
                   "fill": "#5A6D7A",
                   "content": "IBM Plex Mono",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 28
+                  "fontSize": 28,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -5489,7 +5509,8 @@
                   "content": "Monospace in the accent color for technical details — version numbers, file metadata, code blocks. The blue tint connects system information to the industrial palette.",
                   "lineHeight": 1.6,
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -5767,7 +5788,8 @@
               "content": "The monogram in slate blue — like a maker's mark stamped into aluminum. Three variants: light field (cool wash bg), dark field (deep slate bg), and solid (slate blue bg with white mark). The medium-weight sans-serif 'M' reads as engineering, not design.",
               "lineHeight": 1.6,
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -5803,7 +5825,8 @@
           "content": "Cool-toned product page with warm undertones. Hero section: app screenshot on #ECF0F2, headline in Plex Sans Medium, a single line of slate-blue metadata underneath (v1.0 · macOS · 2.1 MB). Features in a two-column layout with Plex Mono labels in #5A6D7A and Plex Sans descriptions in charcoal. Dark mode section flips to #3A4A52 background with #B0C0C8 text. The page has the calm authority of a Braun product manual.",
           "lineHeight": 1.6,
           "fontFamily": "IBM Plex Sans",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "frame",
@@ -5915,7 +5938,8 @@
                   "content": "Minimap blocks in desaturated slate. Status bar metadata in #5A6D7A. Toolbar icons tinted cool gray. The blue surfaces only in system-level elements — never in content.",
                   "lineHeight": 1.5,
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -5951,7 +5975,8 @@
                   "content": "Minimap blocks in muted #B0C0C8. Status bar in lighter slate. The dark bg (#2B2622) keeps its warmth while the blue accents run cool — tension that feels intentional.",
                   "lineHeight": 1.5,
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -6019,7 +6044,8 @@
                       "fill": "#666666",
                       "content": "Features",
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -6028,7 +6054,8 @@
                       "fill": "#666666",
                       "content": "Screenshots",
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -6037,7 +6064,8 @@
                       "fill": "#666666",
                       "content": "Pricing",
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -6106,7 +6134,8 @@
                   "fill": "#888888",
                   "content": "macOS app · Version 1.0",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -6135,7 +6164,8 @@
               "lineHeight": 1.5,
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 20
+              "fontSize": 20,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -6186,7 +6216,8 @@
                   "fill": "#999999",
                   "content": "Requires macOS 14+",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -6255,7 +6286,8 @@
               "content": "Emdy focuses on one thing and does it well.",
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -6309,7 +6341,8 @@
                       "content": "Open a folder and browse all its markdown files in a sidebar. Nested folders expand inline.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -6358,7 +6391,8 @@
                       "content": "Switch between serif, sans-serif, and monospace. All set in IBM Plex — designed for the screen.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -6407,7 +6441,8 @@
                       "content": "A cool-toned light mode and a warm, Braun-inspired dark mode. Or follow the system.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -6465,7 +6500,8 @@
                       "content": "Fenced code blocks are highlighted for Swift, Python, JavaScript, Go, Rust, and a dozen more languages.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -6514,7 +6550,8 @@
                       "content": "A color-coded minimap for navigating long documents. Click to jump, drag to scroll. Replaces the scrollbar.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -6563,7 +6600,8 @@
                       "content": "Copy as rich text, export to PDF, or print directly. The rendered output looks as good on paper as on screen.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -6602,7 +6640,8 @@
               "lineHeight": 1.5,
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -6914,6 +6953,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -6954,6 +6994,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -6994,6 +7035,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -7045,7 +7087,8 @@
               "content": "One-time purchase. No subscriptions. No accounts. Just a great reader.",
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -7099,7 +7142,8 @@
               "content": "macOS 14+ · Universal binary · 12 MB download",
               "textAlign": "center",
               "fontFamily": "IBM Plex Mono",
-              "fontSize": 13
+              "fontSize": 13,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -7146,7 +7190,8 @@
                   "fill": "#999999",
                   "content": "· © 2026 · Made by Ghaida",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -7164,7 +7209,8 @@
                   "fill": "#888888",
                   "content": "GitHub",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -7173,7 +7219,8 @@
                   "fill": "#888888",
                   "content": "Privacy",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -7182,7 +7229,8 @@
                   "fill": "#888888",
                   "content": "Support",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -7191,7 +7239,8 @@
                   "fill": "#BBBBBB",
                   "content": "v1.0",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -7259,7 +7308,8 @@
                       "fill": "#555555",
                       "content": "Features",
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -7268,7 +7318,8 @@
                       "fill": "#555555",
                       "content": "Screenshots",
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -7277,7 +7328,8 @@
                       "fill": "#555555",
                       "content": "Pricing",
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -7346,7 +7398,8 @@
                   "fill": "#6B7280",
                   "content": "macOS app · Version 1.0",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -7375,7 +7428,8 @@
               "lineHeight": 1.5,
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 20
+              "fontSize": 20,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -7426,7 +7480,8 @@
                   "fill": "#8891A0",
                   "content": "Requires macOS 14+",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -7495,7 +7550,8 @@
               "content": "Emdy focuses on one thing and does it well.",
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -7549,7 +7605,8 @@
                       "content": "Open a folder and browse all its markdown files in a sidebar. Nested folders expand inline.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -7598,7 +7655,8 @@
                       "content": "Switch between serif, sans-serif, and monospace. All set in IBM Plex — designed for the screen.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -7647,7 +7705,8 @@
                       "content": "A cool-toned light mode and a warm, Braun-inspired dark mode. Or follow the system.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -7705,7 +7764,8 @@
                       "content": "Fenced code blocks are highlighted for Swift, Python, JavaScript, Go, Rust, and a dozen more languages.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -7754,7 +7814,8 @@
                       "content": "A color-coded minimap for navigating long documents. Click to jump, drag to scroll. Replaces the scrollbar.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -7803,7 +7864,8 @@
                       "content": "Copy as rich text, export to PDF, or print directly. The rendered output looks as good on paper as on screen.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -7842,7 +7904,8 @@
               "lineHeight": 1.5,
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -8154,6 +8217,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -8194,6 +8258,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -8234,6 +8299,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -8285,7 +8351,8 @@
               "content": "One-time purchase. No subscriptions. No accounts. Just a great reader.",
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -8339,7 +8406,8 @@
               "content": "macOS 14+ · Universal binary · 12 MB download",
               "textAlign": "center",
               "fontFamily": "IBM Plex Mono",
-              "fontSize": 13
+              "fontSize": 13,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -8386,7 +8454,8 @@
                   "fill": "#8891A0",
                   "content": "· © 2026 · Made by Ghaida",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -8404,7 +8473,8 @@
                   "fill": "#6B7280",
                   "content": "GitHub",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -8413,7 +8483,8 @@
                   "fill": "#6B7280",
                   "content": "Privacy",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -8422,7 +8493,8 @@
                   "fill": "#6B7280",
                   "content": "Support",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -8431,7 +8503,8 @@
                   "fill": "#8891A0",
                   "content": "v1.0",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -8499,7 +8572,8 @@
                       "fill": "#7A7268",
                       "content": "Features",
                       "fontFamily": "IBM Plex Serif",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -8508,7 +8582,8 @@
                       "fill": "#7A7268",
                       "content": "Screenshots",
                       "fontFamily": "IBM Plex Serif",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -8517,7 +8592,8 @@
                       "fill": "#7A7268",
                       "content": "Pricing",
                       "fontFamily": "IBM Plex Serif",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -8586,7 +8662,8 @@
                   "fill": "#9C9488",
                   "content": "macOS app · Version 1.0",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -8615,7 +8692,8 @@
               "lineHeight": 1.5,
               "textAlign": "center",
               "fontFamily": "IBM Plex Serif",
-              "fontSize": 20
+              "fontSize": 20,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -8666,7 +8744,8 @@
                   "fill": "#A89E92",
                   "content": "Requires macOS 14+",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -8735,7 +8814,8 @@
               "content": "Emdy focuses on one thing and does it well.",
               "textAlign": "center",
               "fontFamily": "IBM Plex Serif",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -8789,7 +8869,8 @@
                       "content": "Open a folder and browse all its markdown files in a sidebar. Nested folders expand inline.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Serif",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -8838,7 +8919,8 @@
                       "content": "Switch between serif, sans-serif, and monospace. All set in IBM Plex — designed for the screen.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Serif",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -8887,7 +8969,8 @@
                       "content": "A cool-toned light mode and a warm, Braun-inspired dark mode. Or follow the system.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Serif",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -8945,7 +9028,8 @@
                       "content": "Fenced code blocks are highlighted for Swift, Python, JavaScript, Go, Rust, and a dozen more languages.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Serif",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -8994,7 +9078,8 @@
                       "content": "A color-coded minimap for navigating long documents. Click to jump, drag to scroll. Replaces the scrollbar.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Serif",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -9043,7 +9128,8 @@
                       "content": "Copy as rich text, export to PDF, or print directly. The rendered output looks as good on paper as on screen.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Serif",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -9082,7 +9168,8 @@
               "lineHeight": 1.5,
               "textAlign": "center",
               "fontFamily": "IBM Plex Serif",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -9394,6 +9481,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -9434,6 +9522,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -9474,6 +9563,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -9525,7 +9615,8 @@
               "content": "One-time purchase. No subscriptions. No accounts. Just a great reader.",
               "textAlign": "center",
               "fontFamily": "IBM Plex Serif",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -9579,7 +9670,8 @@
               "content": "macOS 14+ · Universal binary · 12 MB download",
               "textAlign": "center",
               "fontFamily": "IBM Plex Mono",
-              "fontSize": 13
+              "fontSize": 13,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -9626,7 +9718,8 @@
                   "fill": "#A89E92",
                   "content": "· © 2026 · Made by Ghaida",
                   "fontFamily": "IBM Plex Serif",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -9644,7 +9737,8 @@
                   "fill": "#9C9488",
                   "content": "GitHub",
                   "fontFamily": "IBM Plex Serif",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -9653,7 +9747,8 @@
                   "fill": "#9C9488",
                   "content": "Privacy",
                   "fontFamily": "IBM Plex Serif",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -9662,7 +9757,8 @@
                   "fill": "#9C9488",
                   "content": "Support",
                   "fontFamily": "IBM Plex Serif",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -9671,7 +9767,8 @@
                   "fill": "#B8AFA4",
                   "content": "v1.0",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -9739,7 +9836,8 @@
                       "fill": "#555555",
                       "content": "Features",
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -9748,7 +9846,8 @@
                       "fill": "#555555",
                       "content": "Screenshots",
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -9757,7 +9856,8 @@
                       "fill": "#555555",
                       "content": "Pricing",
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -9826,7 +9926,8 @@
                   "fill": "#777777",
                   "content": "macOS app · Version 1.0",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -9855,7 +9956,8 @@
               "lineHeight": 1.5,
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 20
+              "fontSize": 20,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -9906,7 +10008,8 @@
                   "fill": "#999999",
                   "content": "Requires macOS 14+",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -9975,7 +10078,8 @@
               "content": "Emdy focuses on one thing and does it well.",
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -10029,7 +10133,8 @@
                       "content": "Open a folder and browse all its markdown files in a sidebar. Nested folders expand inline.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -10078,7 +10183,8 @@
                       "content": "Switch between serif, sans-serif, and monospace. All set in IBM Plex — designed for the screen.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -10127,7 +10233,8 @@
                       "content": "A cool-toned light mode and a warm, Braun-inspired dark mode. Or follow the system.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -10185,7 +10292,8 @@
                       "content": "Fenced code blocks are highlighted for Swift, Python, JavaScript, Go, Rust, and a dozen more languages.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -10234,7 +10342,8 @@
                       "content": "A color-coded minimap for navigating long documents. Click to jump, drag to scroll. Replaces the scrollbar.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -10283,7 +10392,8 @@
                       "content": "Copy as rich text, export to PDF, or print directly. The rendered output looks as good on paper as on screen.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -10322,7 +10432,8 @@
               "lineHeight": 1.5,
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -10634,6 +10745,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -10674,6 +10786,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -10714,6 +10827,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -10765,7 +10879,8 @@
               "content": "One-time purchase. No subscriptions. No accounts. Just a great reader.",
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -10819,7 +10934,8 @@
               "content": "macOS 14+ · Universal binary · 12 MB download",
               "textAlign": "center",
               "fontFamily": "IBM Plex Mono",
-              "fontSize": 13
+              "fontSize": 13,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -10866,7 +10982,8 @@
                   "fill": "#999999",
                   "content": "· © 2026 · Made by Ghaida",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -10884,7 +11001,8 @@
                   "fill": "#777777",
                   "content": "GitHub",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -10893,7 +11011,8 @@
                   "fill": "#777777",
                   "content": "Privacy",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -10902,7 +11021,8 @@
                   "fill": "#777777",
                   "content": "Support",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -10911,7 +11031,8 @@
                   "fill": "#AAAAAA",
                   "content": "v1.0",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -10979,7 +11100,8 @@
                       "fill": "#5A6D7A",
                       "content": "Features",
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -10988,7 +11110,8 @@
                       "fill": "#5A6D7A",
                       "content": "Screenshots",
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -10997,7 +11120,8 @@
                       "fill": "#5A6D7A",
                       "content": "Pricing",
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -11066,7 +11190,8 @@
                   "fill": "#7A7268",
                   "content": "macOS app · Version 1.0",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -11095,7 +11220,8 @@
               "lineHeight": 1.5,
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 20
+              "fontSize": 20,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -11146,7 +11272,8 @@
                   "fill": "#9C9488",
                   "content": "Requires macOS 14+",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -11215,7 +11342,8 @@
               "content": "Emdy focuses on one thing and does it well.",
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -11269,7 +11397,8 @@
                       "content": "Open a folder and browse all its markdown files in a sidebar. Nested folders expand inline.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -11318,7 +11447,8 @@
                       "content": "Switch between serif, sans-serif, and monospace. All set in IBM Plex — designed for the screen.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -11367,7 +11497,8 @@
                       "content": "A cool-toned light mode and a warm, Braun-inspired dark mode. Or follow the system.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -11425,7 +11556,8 @@
                       "content": "Fenced code blocks are highlighted for Swift, Python, JavaScript, Go, Rust, and a dozen more languages.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -11474,7 +11606,8 @@
                       "content": "A color-coded minimap for navigating long documents. Click to jump, drag to scroll. Replaces the scrollbar.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -11523,7 +11656,8 @@
                       "content": "Copy as rich text, export to PDF, or print directly. The rendered output looks as good on paper as on screen.",
                       "lineHeight": 1.5,
                       "fontFamily": "IBM Plex Sans",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -11562,7 +11696,8 @@
               "lineHeight": 1.5,
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -11874,6 +12009,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -11914,6 +12050,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -11954,6 +12091,7 @@
                       "lineHeight": 1.6,
                       "fontFamily": "IBM Plex Serif",
                       "fontSize": 15,
+                      "fontWeight": "normal",
                       "fontStyle": "italic"
                     },
                     {
@@ -12005,7 +12143,8 @@
               "content": "One-time purchase. No subscriptions. No accounts. Just a great reader.",
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -12059,7 +12198,8 @@
               "content": "macOS 14+ · Universal binary · 12 MB download",
               "textAlign": "center",
               "fontFamily": "IBM Plex Mono",
-              "fontSize": 13
+              "fontSize": 13,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -12106,7 +12246,8 @@
                   "fill": "#9C9488",
                   "content": "· © 2026 · Made by Ghaida",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -12124,7 +12265,8 @@
                   "fill": "#7A7268",
                   "content": "GitHub",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -12133,7 +12275,8 @@
                   "fill": "#7A7268",
                   "content": "Privacy",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -12142,7 +12285,8 @@
                   "fill": "#7A7268",
                   "content": "Support",
                   "fontFamily": "IBM Plex Sans",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -12151,7 +12295,8 @@
                   "fill": "#B0C0C8",
                   "content": "v1.0",
                   "fontFamily": "IBM Plex Mono",
-                  "fontSize": 13
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -12276,6 +12421,7 @@
               "content": "MARKDOWN READER FOR MACOS",
               "fontFamily": "IBM Plex Mono",
               "fontSize": 11,
+              "fontWeight": "normal",
               "letterSpacing": 4
             },
             {
@@ -12303,7 +12449,8 @@
               "lineHeight": 1.6,
               "textAlign": "center",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -13085,7 +13232,8 @@
               "fill": "#2C2C2C",
               "content": "emdy",
               "fontFamily": "IBM Plex Serif",
-              "fontSize": 18
+              "fontSize": 18,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -13094,7 +13242,8 @@
               "fill": "#8B7E6A",
               "content": "Download →",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -13122,7 +13271,8 @@
               "content": "A quiet place\nto read your\nmarkdown.",
               "lineHeight": 1.08,
               "fontFamily": "IBM Plex Serif",
-              "fontSize": 80
+              "fontSize": 80,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -13134,7 +13284,8 @@
               "content": "Emdy is a macOS app that renders markdown files\nwith care and gets out of the way. That's all it does.",
               "lineHeight": 1.7,
               "fontFamily": "IBM Plex Serif",
-              "fontSize": 20
+              "fontSize": 20,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -13143,7 +13294,8 @@
               "fill": "#8B7E6A",
               "content": "Download for Mac — $5 ↓",
               "fontFamily": "IBM Plex Sans",
-              "fontSize": 16
+              "fontSize": 16,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -13218,7 +13370,8 @@
               "fill": "#2C2C2C",
               "content": "What it does, and nothing more.",
               "fontFamily": "IBM Plex Serif",
-              "fontSize": 36
+              "fontSize": 36,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -13249,7 +13402,8 @@
                           "fill": "#2C2C2C",
                           "content": "Browse a directory",
                           "fontFamily": "IBM Plex Serif",
-                          "fontSize": 20
+                          "fontSize": 20,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -13280,7 +13434,8 @@
                           "fill": "#2C2C2C",
                           "content": "Three typefaces",
                           "fontFamily": "IBM Plex Serif",
-                          "fontSize": 20
+                          "fontSize": 20,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -13311,7 +13466,8 @@
                           "fill": "#2C2C2C",
                           "content": "Syntax highlighting",
                           "fontFamily": "IBM Plex Serif",
-                          "fontSize": 20
+                          "fontSize": 20,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -13352,7 +13508,8 @@
                           "fill": "#2C2C2C",
                           "content": "Document minimap",
                           "fontFamily": "IBM Plex Serif",
-                          "fontSize": 20
+                          "fontSize": 20,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -13383,7 +13540,8 @@
                           "fill": "#2C2C2C",
                           "content": "Light and dark",
                           "fontFamily": "IBM Plex Serif",
-                          "fontSize": 20
+                          "fontSize": 20,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -13414,7 +13572,8 @@
                           "fill": "#2C2C2C",
                           "content": "Export and share",
                           "fontFamily": "IBM Plex Serif",
-                          "fontSize": 20
+                          "fontSize": 20,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -13457,7 +13616,8 @@
               "content": "The same quiet room, at night.",
               "textAlign": "center",
               "fontFamily": "IBM Plex Serif",
-              "fontSize": 24
+              "fontSize": 24,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -13495,7 +13655,8 @@
               "content": "Five dollars.\nYours to keep.",
               "lineHeight": 1.1,
               "fontFamily": "IBM Plex Serif",
-              "fontSize": 56
+              "fontSize": 56,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -13561,8 +13722,8 @@
     {
       "type": "frame",
       "id": "UyI9E",
-      "x": 3280,
-      "y": 10920,
+      "x": 8565,
+      "y": 10752,
       "name": "V3 WILD — The Editor's Desk",
       "clip": true,
       "width": 1440,
@@ -15226,6 +15387,3398 @@
                   "fontWeight": "normal"
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "yYKYT",
+      "x": 0,
+      "y": 14582,
+      "name": "04 — Das Produkt",
+      "width": 1440,
+      "fill": "#F5F2ED",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "oF85a",
+          "name": "Header",
+          "width": "fill_container",
+          "padding": [
+            20,
+            56
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "QmK6h",
+              "name": "logoText",
+              "fill": "#2B2622",
+              "content": "emdy",
+              "fontFamily": "IBM Plex Mono",
+              "fontSize": 18,
+              "fontWeight": "500",
+              "letterSpacing": 2
+            },
+            {
+              "type": "frame",
+              "id": "RKzar",
+              "name": "navGroup",
+              "gap": 32,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "nD1kM",
+                  "name": "nav1",
+                  "fill": "#9C9488",
+                  "content": "Features",
+                  "fontFamily": "IBM Plex Sans",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "m0zxI",
+                  "name": "nav2",
+                  "fill": "#9C9488",
+                  "content": "About",
+                  "fontFamily": "IBM Plex Sans",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "bvSSc",
+                  "name": "nav3",
+                  "fill": "#9C9488",
+                  "content": "Download",
+                  "fontFamily": "IBM Plex Sans",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "o6frt",
+                  "name": "headerCta",
+                  "fill": "#2B2622",
+                  "padding": [
+                    10,
+                    24
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ChJzb",
+                      "name": "headerCtaText",
+                      "fill": "#F5F2ED",
+                      "content": "Get Emdy",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "sv65w",
+          "name": "Hero",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 48,
+          "padding": [
+            80,
+            56
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "nlRMu",
+              "name": "heroLabel",
+              "fill": "#9C9488",
+              "content": "A MARKDOWN READER",
+              "fontFamily": "IBM Plex Mono",
+              "fontSize": 11,
+              "fontWeight": "500",
+              "letterSpacing": 3
+            },
+            {
+              "type": "text",
+              "id": "PI68O",
+              "name": "heroHeadline",
+              "fill": "#2B2622",
+              "content": "Less, but better.",
+              "textAlign": "center",
+              "fontFamily": "IBM Plex Sans",
+              "fontSize": 72,
+              "fontWeight": "300",
+              "letterSpacing": -2
+            },
+            {
+              "type": "text",
+              "id": "Wm7Gn",
+              "name": "heroSub",
+              "fill": "#9C9488",
+              "textGrowth": "fixed-width",
+              "width": 640,
+              "content": "Emdy reads and renders Markdown files beautifully. For designers, PMs, and anyone who works with words — not code.",
+              "lineHeight": 1.5,
+              "textAlign": "center",
+              "fontFamily": "IBM Plex Sans",
+              "fontSize": 20,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "45LYb",
+              "name": "heroCtas",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "d8bMv",
+                  "name": "ctaPrimary",
+                  "fill": "#ED8008",
+                  "padding": [
+                    14,
+                    32
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "9V8sL",
+                      "name": "ctaPrimaryText",
+                      "fill": "#FFFFFF",
+                      "content": "Download for Mac",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "6jz3l",
+                  "name": "ctaSecondary",
+                  "fill": "#9C9488",
+                  "content": "See how it works →",
+                  "fontFamily": "IBM Plex Sans",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "85M0j",
+          "name": "Screenshot Section",
+          "width": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            0,
+            80
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "I5SHh",
+              "name": "Screenshot Placeholder",
+              "width": 1080,
+              "height": 640,
+              "fill": "#EBE7E1",
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "1QE6S",
+                  "name": "screenshotLabel",
+                  "fill": "#9C9488",
+                  "content": "Screenshot placeholder",
+                  "fontFamily": "IBM Plex Mono",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "k4AAX",
+          "name": "divider1",
+          "fill": "#DDD8D1",
+          "width": "fill_container",
+          "height": 1
+        },
+        {
+          "type": "frame",
+          "id": "Ojqzo",
+          "name": "Features",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 48,
+          "padding": [
+            80,
+            56
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "FHrjZ",
+              "name": "featuresLabel",
+              "fill": "#9C9488",
+              "content": "WHAT IT DOES",
+              "fontFamily": "IBM Plex Mono",
+              "fontSize": 11,
+              "fontWeight": "500",
+              "letterSpacing": 3
+            },
+            {
+              "type": "frame",
+              "id": "AB7rw",
+              "name": "featuresGrid",
+              "width": "fill_container",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "poAl7",
+                  "name": "Feature: Clean Reading",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "eOEM5",
+                      "name": "card1Num",
+                      "fill": "#ED8008",
+                      "content": "01",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "PkqGn",
+                      "name": "card1Title",
+                      "fill": "#2B2622",
+                      "content": "Clean reading",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 24,
+                      "fontWeight": "300"
+                    },
+                    {
+                      "type": "text",
+                      "id": "bXmmJ",
+                      "name": "card1Desc",
+                      "fill": "#9C9488",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Beautiful typography, generous whitespace, and a distraction-free layout that lets the content breathe. Markdown rendered the way it was meant to be read.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "x621D",
+                  "name": "Feature: Instant Search",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "mY75n",
+                      "name": "card2Num",
+                      "fill": "#ED8008",
+                      "content": "02",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "sQttf",
+                      "name": "card2Title",
+                      "fill": "#2B2622",
+                      "content": "Instant search",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 24,
+                      "fontWeight": "300"
+                    },
+                    {
+                      "type": "text",
+                      "id": "47bfU",
+                      "name": "card2Desc",
+                      "fill": "#9C9488",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Find any file or phrase across your entire folder in milliseconds. A command palette that feels as fast as your thoughts.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "bKVaU",
+                  "name": "Feature: Zero Config",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "TiRQQ",
+                      "name": "card3Num",
+                      "fill": "#ED8008",
+                      "content": "03",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "jGtcV",
+                      "name": "card3Title",
+                      "fill": "#2B2622",
+                      "content": "Zero config",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 24,
+                      "fontWeight": "300"
+                    },
+                    {
+                      "type": "text",
+                      "id": "nBZeK",
+                      "name": "card3Desc",
+                      "fill": "#9C9488",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Open a folder. Read your files. No setup, no accounts, no preferences to wrestle with. It just works, exactly as you'd expect.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "nPwTZ",
+          "name": "divider2",
+          "fill": "#DDD8D1",
+          "width": "fill_container",
+          "height": 1
+        },
+        {
+          "type": "frame",
+          "id": "nctUk",
+          "name": "Social Proof",
+          "width": "fill_container",
+          "gap": 48,
+          "padding": [
+            48,
+            56
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "jRn9f",
+              "name": "stat1",
+              "layout": "vertical",
+              "gap": 4,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PFg7P",
+                  "name": "stat1Num",
+                  "fill": "#2B2622",
+                  "content": "12,400+",
+                  "fontFamily": "IBM Plex Sans",
+                  "fontSize": 32,
+                  "fontWeight": "300"
+                },
+                {
+                  "type": "text",
+                  "id": "7Nwd6",
+                  "name": "stat1Label",
+                  "fill": "#9C9488",
+                  "content": "downloads",
+                  "fontFamily": "IBM Plex Mono",
+                  "fontSize": 11,
+                  "fontWeight": "normal",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "3rnxX",
+              "name": "dotSep1",
+              "fill": "#DDD8D1",
+              "content": "·",
+              "fontFamily": "Inter",
+              "fontSize": 24,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "Lr12l",
+              "name": "stat2",
+              "layout": "vertical",
+              "gap": 4,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "9aZcZ",
+                  "name": "stat2Num",
+                  "fill": "#2B2622",
+                  "content": "4.9",
+                  "fontFamily": "IBM Plex Sans",
+                  "fontSize": 32,
+                  "fontWeight": "300"
+                },
+                {
+                  "type": "text",
+                  "id": "0PEXx",
+                  "name": "stat2Label",
+                  "fill": "#9C9488",
+                  "content": "average rating",
+                  "fontFamily": "IBM Plex Mono",
+                  "fontSize": 11,
+                  "fontWeight": "normal",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "A6YYJ",
+              "name": "dotSep2",
+              "fill": "#DDD8D1",
+              "content": "·",
+              "fontFamily": "Inter",
+              "fontSize": 24,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "nlXU9",
+              "name": "stat3",
+              "layout": "vertical",
+              "gap": 4,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "16jQB",
+                  "name": "stat3Num",
+                  "fill": "#2B2622",
+                  "content": "< 5 MB",
+                  "fontFamily": "IBM Plex Sans",
+                  "fontSize": 32,
+                  "fontWeight": "300"
+                },
+                {
+                  "type": "text",
+                  "id": "ONTxO",
+                  "name": "stat3Label",
+                  "fill": "#9C9488",
+                  "content": "app size",
+                  "fontFamily": "IBM Plex Mono",
+                  "fontSize": 11,
+                  "fontWeight": "normal",
+                  "letterSpacing": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "lONl5",
+          "name": "divider3",
+          "fill": "#DDD8D1",
+          "width": "fill_container",
+          "height": 1
+        },
+        {
+          "type": "frame",
+          "id": "8e0rf",
+          "name": "Final CTA",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            80,
+            56
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "8cRMT",
+              "name": "ctaHeadline",
+              "fill": "#2B2622",
+              "content": "Read beautifully.",
+              "textAlign": "center",
+              "fontFamily": "IBM Plex Sans",
+              "fontSize": 48,
+              "fontWeight": "300"
+            },
+            {
+              "type": "text",
+              "id": "HHSd4",
+              "name": "ctaSubline",
+              "fill": "#9C9488",
+              "content": "A Markdown reader for people who care about design.",
+              "textAlign": "center",
+              "fontFamily": "IBM Plex Sans",
+              "fontSize": 18,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "lxlew",
+              "name": "ctaBtn",
+              "fill": "#ED8008",
+              "padding": [
+                16,
+                40
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "agYmS",
+                  "name": "ctaBtnText",
+                  "fill": "#FFFFFF",
+                  "content": "Download for Mac — Free",
+                  "fontFamily": "IBM Plex Sans",
+                  "fontSize": 15,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "zixMl",
+              "name": "ctaNote",
+              "fill": "#9C9488",
+              "content": "macOS 13+ · No account required",
+              "fontFamily": "IBM Plex Mono",
+              "fontSize": 11,
+              "fontWeight": "normal",
+              "letterSpacing": 1
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "agqad",
+          "name": "divider4",
+          "fill": "#DDD8D1",
+          "width": "fill_container",
+          "height": 1
+        },
+        {
+          "type": "frame",
+          "id": "3D0zX",
+          "name": "Footer",
+          "width": "fill_container",
+          "padding": [
+            32,
+            56
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "5vhwT",
+              "name": "footerLeft",
+              "fill": "#2B2622",
+              "content": "emdy",
+              "fontFamily": "IBM Plex Mono",
+              "fontSize": 14,
+              "fontWeight": "500",
+              "letterSpacing": 2
+            },
+            {
+              "type": "frame",
+              "id": "ys0IH",
+              "name": "footerRight",
+              "gap": 24,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "b8hsG",
+                  "name": "footerLink1",
+                  "fill": "#9C9488",
+                  "content": "GitHub",
+                  "fontFamily": "IBM Plex Sans",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "kejeh",
+                  "name": "footerLink2",
+                  "fill": "#9C9488",
+                  "content": "Privacy",
+                  "fontFamily": "IBM Plex Sans",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "z6tY0",
+                  "name": "footerLink3",
+                  "fill": "#9C9488",
+                  "content": "© 2025",
+                  "fontFamily": "IBM Plex Mono",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "EgKjs",
+      "x": 1640,
+      "y": 14582,
+      "name": "05 — Broadsheet",
+      "width": 1440,
+      "fill": "#FFFFFF",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "jop8G",
+          "name": "Hero",
+          "width": "fill_container",
+          "fill": "#0A0A0A",
+          "layout": "vertical",
+          "gap": 40,
+          "padding": [
+            120,
+            80
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "YXcr8",
+              "name": "heroLabel",
+              "fill": "#999999",
+              "content": "A MARKDOWN READER FOR THE REST OF US",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "500",
+              "letterSpacing": 3
+            },
+            {
+              "type": "text",
+              "id": "GIUZ5",
+              "name": "heroHeadline",
+              "fill": "#FFFFFF",
+              "content": "Read, not write.",
+              "textAlign": "center",
+              "fontFamily": "DM Serif Display",
+              "fontSize": 92,
+              "letterSpacing": -3
+            },
+            {
+              "type": "text",
+              "id": "lrqAI",
+              "name": "heroSub",
+              "fill": "#999999",
+              "textGrowth": "fixed-width",
+              "width": 680,
+              "content": "Emdy renders Markdown files with the clarity of a design publication. Built for designers, PMs, and anyone who reads documentation — not the people who wrote it.",
+              "lineHeight": 1.6,
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 18,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "IyfER",
+              "name": "heroCtas",
+              "gap": 24,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "U3Kp3",
+                  "name": "ctaPrimary",
+                  "fill": "#FFFFFF",
+                  "padding": [
+                    16,
+                    40
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "2JIXe",
+                      "name": "ctaPrimaryText",
+                      "fill": "#0A0A0A",
+                      "content": "Download for Mac",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "vlCiy",
+                  "name": "ctaSecondary",
+                  "fill": "#999999",
+                  "content": "Learn more ↓",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "wcI4k",
+          "name": "Screenshot Section",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "layout": "vertical",
+          "padding": 80,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "6GlhC",
+              "name": "Screenshot Placeholder",
+              "width": 1080,
+              "height": 640,
+              "fill": "#F5F5F5",
+              "stroke": {
+                "thickness": 1,
+                "fill": "#E0E0E0"
+              },
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "fNcv1",
+                  "name": "screenshotLabel",
+                  "fill": "#999999",
+                  "content": "Screenshot placeholder",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "uP9R8",
+          "name": "borderLine1",
+          "fill": "#E0E0E0",
+          "width": "fill_container",
+          "height": 1
+        },
+        {
+          "type": "frame",
+          "id": "yrM3J",
+          "name": "Features",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "CgNoi",
+              "name": "Feature 1",
+              "width": "fill_container",
+              "gap": 80,
+              "padding": [
+                64,
+                80
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "yUKbo",
+                  "name": "feat1Left",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "REgKq",
+                      "name": "feat1Title",
+                      "fill": "#0A0A0A",
+                      "content": "Typography with\nbreathing room.",
+                      "lineHeight": 1.1,
+                      "fontFamily": "DM Serif Display",
+                      "fontSize": 48,
+                      "letterSpacing": -2
+                    },
+                    {
+                      "type": "text",
+                      "id": "3njId",
+                      "name": "feat1Desc",
+                      "fill": "#666666",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Clean rendering with generous whitespace, proper hierarchy, and a reading experience that feels more like a magazine than a code editor.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "DoEOy",
+                  "name": "feat1Img",
+                  "width": 400,
+                  "height": 280,
+                  "fill": "#F5F5F5",
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#E0E0E0"
+                  },
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "xHIZ6",
+                      "name": "feat1ImgLabel",
+                      "fill": "#999999",
+                      "content": "Detail placeholder",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "SSBgU",
+              "name": "borderFeat1",
+              "fill": "#E0E0E0",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "QkN0Y",
+              "name": "Feature 2",
+              "width": "fill_container",
+              "gap": 80,
+              "padding": [
+                64,
+                80
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "75iTQ",
+                  "name": "feat2Img",
+                  "width": 400,
+                  "height": 280,
+                  "fill": "#F5F5F5",
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#E0E0E0"
+                  },
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "rHRpG",
+                      "name": "feat2ImgLabel",
+                      "fill": "#999999",
+                      "content": "Detail placeholder",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "yKozd",
+                  "name": "feat2Right",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "4ks4T",
+                      "name": "feat2Title",
+                      "fill": "#0A0A0A",
+                      "content": "Find anything\nin milliseconds.",
+                      "lineHeight": 1.1,
+                      "fontFamily": "DM Serif Display",
+                      "fontSize": 48,
+                      "letterSpacing": -2
+                    },
+                    {
+                      "type": "text",
+                      "id": "fHAiD",
+                      "name": "feat2Desc",
+                      "fill": "#666666",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "A command palette that searches file names and content across your entire folder. Type a few letters, find what you need.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "mPxLZ",
+              "name": "borderFeat2",
+              "fill": "#E0E0E0",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "5RYmH",
+              "name": "Feature 3",
+              "width": "fill_container",
+              "gap": 80,
+              "padding": [
+                64,
+                80
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "YEBVh",
+                  "name": "feat3Left",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QwdXN",
+                      "name": "feat3Title",
+                      "fill": "#0A0A0A",
+                      "content": "Open a folder.\nThat's the setup.",
+                      "lineHeight": 1.1,
+                      "fontFamily": "DM Serif Display",
+                      "fontSize": 48,
+                      "letterSpacing": -2
+                    },
+                    {
+                      "type": "text",
+                      "id": "rBYxY",
+                      "name": "feat3Desc",
+                      "fill": "#666666",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "No accounts, no configuration, no preferences to wrestle with. Point it at a folder of Markdown files and start reading.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ptq9f",
+                  "name": "feat3Img",
+                  "width": 400,
+                  "height": 280,
+                  "fill": "#F5F5F5",
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#E0E0E0"
+                  },
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "OrGr5",
+                      "name": "feat3ImgLabel",
+                      "fill": "#999999",
+                      "content": "Detail placeholder",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "O5yLv",
+          "name": "borderQuote",
+          "fill": "#E0E0E0",
+          "width": "fill_container",
+          "height": 1
+        },
+        {
+          "type": "frame",
+          "id": "MmyF7",
+          "name": "Testimonial",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            80,
+            120
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "ObGrp",
+              "name": "quoteText",
+              "fill": "#0A0A0A",
+              "textGrowth": "fixed-width",
+              "width": 800,
+              "content": "'I stopped dreading documentation reviews the day I installed Emdy. It makes Markdown feel like reading a real document.'",
+              "lineHeight": 1.4,
+              "textAlign": "center",
+              "fontFamily": "DM Serif Display",
+              "fontSize": 28
+            },
+            {
+              "type": "text",
+              "id": "B4O8W",
+              "name": "quoteAttr",
+              "fill": "#999999",
+              "content": "— Sarah Chen, Senior Product Designer at Figma",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "U8m6D",
+          "name": "borderQuote2",
+          "fill": "#E0E0E0",
+          "width": "fill_container",
+          "height": 1
+        },
+        {
+          "type": "frame",
+          "id": "88Oxp",
+          "name": "Final CTA",
+          "width": "fill_container",
+          "fill": "#0A0A0A",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            100,
+            80
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "H5G8r",
+              "name": "ctaHeadline",
+              "fill": "#FFFFFF",
+              "content": "Start reading.",
+              "textAlign": "center",
+              "fontFamily": "DM Serif Display",
+              "fontSize": 72,
+              "letterSpacing": -2
+            },
+            {
+              "type": "text",
+              "id": "hqyWL",
+              "name": "ctaSubline",
+              "fill": "#999999",
+              "content": "Free. No account. Just open your files.",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 18,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "puSQ9",
+              "name": "ctaBtn",
+              "fill": "#FFFFFF",
+              "padding": [
+                18,
+                48
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vhFxl",
+                  "name": "ctaBtnText",
+                  "fill": "#0A0A0A",
+                  "content": "Download for Mac",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "BEE5E",
+              "name": "ctaNote",
+              "fill": "#666666",
+              "content": "macOS 13+ · 4.8 MB",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "iVWna",
+          "name": "accentLine",
+          "fill": "#C4633A",
+          "width": "fill_container",
+          "height": 3
+        },
+        {
+          "type": "frame",
+          "id": "UerqR",
+          "name": "Footer",
+          "width": "fill_container",
+          "fill": "#0A0A0A",
+          "layout": "vertical",
+          "gap": 40,
+          "padding": [
+            48,
+            80
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "hFJk6",
+              "name": "footerTop",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "pFfxP",
+                  "name": "footerBrand",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "KlhuQ",
+                      "name": "footerLogo",
+                      "fill": "#FFFFFF",
+                      "content": "emdy",
+                      "fontFamily": "DM Serif Display",
+                      "fontSize": 24,
+                      "letterSpacing": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "0HBhM",
+                      "name": "footerTagline",
+                      "fill": "#666666",
+                      "content": "A Markdown reader.",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "025Mv",
+                  "name": "footerLinks",
+                  "gap": 64,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "3XDGS",
+                      "name": "footerCol1",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "CiWxz",
+                          "name": "footerCol1Title",
+                          "fill": "#FFFFFF",
+                          "content": "Product",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "w0Qnp",
+                          "name": "footerCol1Link1",
+                          "fill": "#666666",
+                          "content": "Features",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "GD7QY",
+                          "name": "footerCol1Link2",
+                          "fill": "#666666",
+                          "content": "Download",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "3VdDX",
+                          "name": "footerCol1Link3",
+                          "fill": "#666666",
+                          "content": "Changelog",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "7tWFU",
+                      "name": "footerCol2",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "5B48H",
+                          "name": "footerCol2Title",
+                          "fill": "#FFFFFF",
+                          "content": "Resources",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "PLxBa",
+                          "name": "footerCol2Link1",
+                          "fill": "#666666",
+                          "content": "GitHub",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "osfHY",
+                          "name": "footerCol2Link2",
+                          "fill": "#666666",
+                          "content": "Documentation",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "HEc7F",
+                          "name": "footerCol2Link3",
+                          "fill": "#666666",
+                          "content": "Privacy",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "3jYLb",
+              "name": "footerDivider",
+              "fill": "#333333",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "le5PR",
+              "name": "footerBottom",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "6xmud",
+                  "name": "footerCopy",
+                  "fill": "#666666",
+                  "content": "© 2025 Emdy. All rights reserved.",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "XUs7R",
+                  "name": "footerMade",
+                  "fill": "#666666",
+                  "content": "Made with care.",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "rvDHo",
+      "x": 3280,
+      "y": 14582,
+      "name": "06 — Greenhouse",
+      "clip": true,
+      "width": 1440,
+      "fill": "#F7F6F3",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "BPdNS",
+          "name": "Header",
+          "width": "fill_container",
+          "padding": [
+            20,
+            48
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "lrnr6",
+              "name": "logoGroup",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "3E3EP",
+                  "name": "logoMark",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "#7C9070",
+                  "cornerRadius": 10,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "tlKAz",
+                      "name": "logoIcon",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "book-open",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "8GuQ1",
+                  "name": "logoText",
+                  "fill": "#2D2D2D",
+                  "content": "emdy",
+                  "fontFamily": "Fraunces",
+                  "fontSize": 22,
+                  "fontWeight": "500",
+                  "letterSpacing": -0.5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OtEwo",
+              "name": "navGroup",
+              "gap": 32,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "V14sd",
+                  "name": "navFeatures",
+                  "fill": "#6B6B6B",
+                  "content": "Features",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "text",
+                  "id": "ofX83",
+                  "name": "navAbout",
+                  "fill": "#6B6B6B",
+                  "content": "About",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "WI8bZ",
+                  "name": "ctaBtn",
+                  "fill": "#7C9070",
+                  "cornerRadius": 100,
+                  "padding": [
+                    10,
+                    22
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "LRmL3",
+                      "name": "ctaText",
+                      "fill": "#FFFFFF",
+                      "content": "Download",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "UgMZu",
+          "name": "Hero",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            80,
+            120,
+            60,
+            120
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "ZBSfo",
+              "name": "badge",
+              "fill": "#7C907020",
+              "cornerRadius": 100,
+              "gap": 6,
+              "padding": [
+                6,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "cm1vT",
+                  "name": "badgeDot",
+                  "fill": "#7C9070",
+                  "width": 6,
+                  "height": 6
+                },
+                {
+                  "type": "text",
+                  "id": "yP0v1",
+                  "name": "badgeText",
+                  "fill": "#4A5D43",
+                  "content": "A calm place for Markdown",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "QuaI4",
+              "name": "heroH1",
+              "fill": "#2D2D2D",
+              "textGrowth": "fixed-width",
+              "width": 800,
+              "content": "Markdown, made\nfor reading",
+              "lineHeight": 1.1,
+              "textAlign": "center",
+              "fontFamily": "Fraunces",
+              "fontSize": 64,
+              "fontWeight": "500",
+              "letterSpacing": -2
+            },
+            {
+              "type": "text",
+              "id": "Nmffw",
+              "name": "heroSub",
+              "fill": "#6B6B6B",
+              "textGrowth": "fixed-width",
+              "width": 580,
+              "content": "AI tools write in Markdown. Emdy makes it beautiful to read —\nno terminal, no code editor, no learning curve.",
+              "lineHeight": 1.6,
+              "textAlign": "center",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 18
+            },
+            {
+              "type": "frame",
+              "id": "PRTMp",
+              "name": "heroCtas",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "L9VTp",
+                  "name": "primaryCta",
+                  "fill": "#7C9070",
+                  "cornerRadius": 100,
+                  "gap": 8,
+                  "padding": [
+                    14,
+                    32
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "FIsGN",
+                      "name": "primaryCtaText",
+                      "fill": "#FFFFFF",
+                      "content": "Get Emdy — $5",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 15,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "J2S2i",
+                  "name": "secondaryCta",
+                  "cornerRadius": 100,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#D5CFC5"
+                  },
+                  "gap": 8,
+                  "padding": [
+                    14,
+                    32
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "TO3U1",
+                      "name": "secondaryCtaText",
+                      "fill": "#2D2D2D",
+                      "content": "See how it works",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "ellipse",
+              "id": "9gst3",
+              "layoutPosition": "absolute",
+              "x": 180,
+              "y": 60,
+              "name": "blob-sage",
+              "opacity": 0.25,
+              "rotation": 14.999999999999998,
+              "fill": "#7C907020",
+              "width": 180,
+              "height": 160
+            },
+            {
+              "type": "ellipse",
+              "id": "gBy6f",
+              "layoutPosition": "absolute",
+              "x": 1050,
+              "y": 120,
+              "name": "blob-terracotta",
+              "opacity": 0.22,
+              "rotation": -20,
+              "fill": "#D4845E18",
+              "width": 140,
+              "height": 120
+            },
+            {
+              "type": "ellipse",
+              "id": "KIg6K",
+              "layoutPosition": "absolute",
+              "x": 260,
+              "y": 300,
+              "name": "blob-blue",
+              "opacity": 0.18,
+              "rotation": 29.999999999999996,
+              "fill": "#5B9BD520",
+              "width": 100,
+              "height": 90
+            },
+            {
+              "type": "ellipse",
+              "id": "Ve2un",
+              "layoutPosition": "absolute",
+              "x": 1120,
+              "y": 320,
+              "name": "blob-beige",
+              "opacity": 0.2,
+              "rotation": -10,
+              "fill": "#C9B8A825",
+              "width": 200,
+              "height": 160
+            },
+            {
+              "type": "icon_font",
+              "id": "4U0hT",
+              "layoutPosition": "absolute",
+              "x": 560,
+              "y": 78,
+              "name": "leaf-deco",
+              "opacity": 0.7,
+              "rotation": 25,
+              "width": 20,
+              "height": 20,
+              "iconFontName": "leaf",
+              "iconFontFamily": "lucide",
+              "fill": "#7C907060"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "A99Tc",
+          "name": "Screenshot Section",
+          "width": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            0,
+            80,
+            80,
+            80
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "UGM6k",
+              "name": "App Screenshot",
+              "width": 920,
+              "height": 560,
+              "fill": "#FFFFFF",
+              "cornerRadius": 16,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#E5E4E1"
+              },
+              "effect": [
+                {
+                  "type": "shadow",
+                  "shadowType": "outer",
+                  "color": "#0000000A",
+                  "offset": {
+                    "x": 0,
+                    "y": 8
+                  },
+                  "blur": 48
+                },
+                {
+                  "type": "shadow",
+                  "shadowType": "outer",
+                  "color": "#00000006",
+                  "offset": {
+                    "x": 0,
+                    "y": 2
+                  },
+                  "blur": 12
+                }
+              ],
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "owQRx",
+                  "name": "screenshotLabel",
+                  "fill": "#8E8E93",
+                  "content": "Screenshot placeholder",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 14
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LTQ4w",
+          "name": "Trust Strip",
+          "width": "fill_container",
+          "stroke": {
+            "thickness": {
+              "top": 1,
+              "bottom": 1
+            },
+            "fill": "#F0EFEC"
+          },
+          "gap": 40,
+          "padding": [
+            32,
+            120
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "aPdha",
+              "name": "trustLabel",
+              "fill": "#8E8E93",
+              "content": "Used by teams at",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 12,
+              "fontWeight": "500"
+            },
+            {
+              "type": "text",
+              "id": "AkaDh",
+              "name": "trust1",
+              "fill": "#C9B8A8",
+              "content": "Stripe",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 14,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "5r35p",
+              "name": "trust2",
+              "fill": "#C9B8A8",
+              "content": "Figma",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 14,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "ToTWE",
+              "name": "trust3",
+              "fill": "#C9B8A8",
+              "content": "Linear",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 14,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "h0UAa",
+              "name": "trust4",
+              "fill": "#C9B8A8",
+              "content": "Notion",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 14,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "pgSs3",
+              "name": "trust5",
+              "fill": "#C9B8A8",
+              "content": "Vercel",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 14,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ksM0o",
+          "name": "Why Emdy",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 48,
+          "padding": [
+            80,
+            120
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "fcsX7",
+              "name": "whyHeader",
+              "layout": "vertical",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "H1KXQ",
+                  "name": "whyLabel",
+                  "fill": "#7C9070",
+                  "content": "Why Emdy",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 13,
+                  "fontWeight": "600",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "text",
+                  "id": "CFcew",
+                  "name": "whyTitle",
+                  "fill": "#2D2D2D",
+                  "content": "Reading should feel effortless",
+                  "textAlign": "center",
+                  "fontFamily": "Fraunces",
+                  "fontSize": 40,
+                  "fontWeight": "500",
+                  "letterSpacing": -1
+                },
+                {
+                  "type": "text",
+                  "id": "obhJh",
+                  "name": "whyDesc",
+                  "fill": "#6B6B6B",
+                  "content": "Three things that make Markdown files a pleasure to read.",
+                  "textAlign": "center",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 16
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FeR03",
+              "name": "Cards",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "rnTjY",
+                  "name": "card1",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 16,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000006",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 20
+                  },
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "pOt7B",
+                      "name": "card1Icon",
+                      "width": 48,
+                      "height": 48,
+                      "fill": "#C8F0D8",
+                      "cornerRadius": 14,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "Hm9T3",
+                          "name": "card1IconFont",
+                          "width": 22,
+                          "height": 22,
+                          "iconFontName": "eye",
+                          "iconFontFamily": "lucide",
+                          "fill": "#4A5D43"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "RN0Dj",
+                      "name": "card1Title",
+                      "fill": "#2D2D2D",
+                      "content": "Beautiful rendering",
+                      "fontFamily": "Fraunces",
+                      "fontSize": 20,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "qmEzr",
+                      "name": "card1Desc",
+                      "fill": "#6B6B6B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "GFM support, syntax highlighting, and polished typography. Your Markdown looks the way it was meant to be read.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 14
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wv6n8",
+                  "name": "card2",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 16,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000006",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 20
+                  },
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "5ohrc",
+                      "name": "card2Icon",
+                      "width": 48,
+                      "height": 48,
+                      "fill": "#D4845E18",
+                      "cornerRadius": 14,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "hPE6m",
+                          "name": "card2IconFont",
+                          "width": 22,
+                          "height": 22,
+                          "iconFontName": "search",
+                          "iconFontFamily": "lucide",
+                          "fill": "#D4845E"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "OpUWf",
+                      "name": "card2Title",
+                      "fill": "#2D2D2D",
+                      "content": "Instant search",
+                      "fontFamily": "Fraunces",
+                      "fontSize": 20,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ajEhd",
+                      "name": "card2Desc",
+                      "fill": "#6B6B6B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Find anything across your files in milliseconds. Search by name or content — a command palette that feels like second nature.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 14
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "V1273",
+                  "name": "card3",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 16,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000006",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 20
+                  },
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "drFta",
+                      "name": "card3Icon",
+                      "width": 48,
+                      "height": 48,
+                      "fill": "#5B9BD518",
+                      "cornerRadius": 14,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "A1jVb",
+                          "name": "card3IconFont",
+                          "width": 22,
+                          "height": 22,
+                          "iconFontName": "folder-open",
+                          "iconFontFamily": "lucide",
+                          "fill": "#5B9BD5"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "SP57c",
+                      "name": "card3Title",
+                      "fill": "#2D2D2D",
+                      "content": "Open any folder",
+                      "fontFamily": "Fraunces",
+                      "fontSize": 20,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "I1Icp",
+                      "name": "card3Desc",
+                      "fill": "#6B6B6B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Point Emdy at a folder and browse every Markdown file inside. No setup, no config files, no imports. Just open and read.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 14
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "ellipse",
+              "id": "N5U5v",
+              "layoutPosition": "absolute",
+              "x": 500,
+              "y": 200,
+              "name": "bg-blob-sage",
+              "opacity": 0.2,
+              "rotation": 8,
+              "fill": "#7C907010",
+              "width": 440,
+              "height": 340
+            },
+            {
+              "type": "ellipse",
+              "id": "7b78q",
+              "layoutPosition": "absolute",
+              "x": 160,
+              "y": 220,
+              "name": "dot-1",
+              "opacity": 0.5,
+              "fill": "#C9B8A840",
+              "width": 8,
+              "height": 8
+            },
+            {
+              "type": "ellipse",
+              "id": "P8o8X",
+              "layoutPosition": "absolute",
+              "x": 185,
+              "y": 235,
+              "name": "dot-2",
+              "opacity": 0.45,
+              "fill": "#D4845E30",
+              "width": 6,
+              "height": 6
+            },
+            {
+              "type": "ellipse",
+              "id": "DWQng",
+              "layoutPosition": "absolute",
+              "x": 170,
+              "y": 255,
+              "name": "dot-3",
+              "opacity": 0.4,
+              "fill": "#7C907035",
+              "width": 5,
+              "height": 5
+            },
+            {
+              "type": "ellipse",
+              "id": "pMc6i",
+              "layoutPosition": "absolute",
+              "x": 1260,
+              "y": 380,
+              "name": "dot-4",
+              "opacity": 0.45,
+              "fill": "#5B9BD530",
+              "width": 7,
+              "height": 7
+            },
+            {
+              "type": "ellipse",
+              "id": "z0uxv",
+              "layoutPosition": "absolute",
+              "x": 1280,
+              "y": 400,
+              "name": "dot-5",
+              "opacity": 0.4,
+              "fill": "#C9B8A840",
+              "width": 5,
+              "height": 5
+            },
+            {
+              "type": "ellipse",
+              "id": "NwC6V",
+              "layoutPosition": "absolute",
+              "x": 1250,
+              "y": 415,
+              "name": "dot-6",
+              "opacity": 0.4,
+              "fill": "#D4845E28",
+              "width": 6,
+              "height": 6
+            },
+            {
+              "type": "frame",
+              "id": "FyVJq",
+              "layoutPosition": "absolute",
+              "x": 520,
+              "y": 10,
+              "name": "organic-divider",
+              "width": 400,
+              "height": 2,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 90,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#7C907000",
+                    "position": 0
+                  },
+                  {
+                    "color": "#7C907030",
+                    "position": 0.5
+                  },
+                  {
+                    "color": "#7C907000",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 1
+            },
+            {
+              "type": "ellipse",
+              "id": "Yo70k",
+              "layoutPosition": "absolute",
+              "x": 1100,
+              "y": 180,
+              "name": "blob-terracotta-sm",
+              "opacity": 0.18,
+              "rotation": -14.999999999999998,
+              "fill": "#D4845E10",
+              "width": 100,
+              "height": 80
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "A04Ae",
+          "name": "Audience",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "layout": "vertical",
+          "gap": 48,
+          "padding": [
+            80,
+            120
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "cVhz2",
+              "name": "audienceHeader",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "2K7Ms",
+                  "name": "audienceLabel",
+                  "fill": "#7C9070",
+                  "content": "Who it's for",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 13,
+                  "fontWeight": "600",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "text",
+                  "id": "K9aAu",
+                  "name": "audienceTitle",
+                  "fill": "#2D2D2D",
+                  "content": "You write documents, not code",
+                  "textAlign": "center",
+                  "fontFamily": "Fraunces",
+                  "fontSize": 40,
+                  "fontWeight": "500",
+                  "letterSpacing": -1
+                },
+                {
+                  "type": "text",
+                  "id": "04yaM",
+                  "name": "audienceDesc",
+                  "fill": "#6B6B6B",
+                  "content": "AI tools output Markdown everywhere. Emdy is for the people who receive those files.",
+                  "textAlign": "center",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 16
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "j8lkT",
+              "name": "personaRow",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "3L3I8",
+                  "name": "p1",
+                  "width": "fill_container",
+                  "fill": "#F7F6F3",
+                  "cornerRadius": 16,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#E5E4E1"
+                  },
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": [
+                    32,
+                    28
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "sIbOB",
+                      "name": "p1Emoji",
+                      "fill": "#2D2D2D",
+                      "content": "🎨",
+                      "fontFamily": "Inter",
+                      "fontSize": 32,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "s4mz1",
+                      "name": "p1Title",
+                      "fill": "#2D2D2D",
+                      "content": "Designers",
+                      "textAlign": "center",
+                      "fontFamily": "Fraunces",
+                      "fontSize": 18,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "XHimM",
+                      "name": "p1Desc",
+                      "fill": "#6B6B6B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Reading specs, briefs, and research docs generated by AI assistants",
+                      "lineHeight": 1.5,
+                      "textAlign": "center",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 13
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "qe33f",
+                  "name": "p2",
+                  "width": "fill_container",
+                  "fill": "#F7F6F3",
+                  "cornerRadius": 16,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#E5E4E1"
+                  },
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": [
+                    32,
+                    28
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "SgB4G",
+                      "name": "p2Emoji",
+                      "fill": "#2D2D2D",
+                      "content": "📋",
+                      "fontFamily": "Inter",
+                      "fontSize": 32,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "rt592",
+                      "name": "p2Title",
+                      "fill": "#2D2D2D",
+                      "content": "Product Managers",
+                      "textAlign": "center",
+                      "fontFamily": "Fraunces",
+                      "fontSize": 18,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fJZsR",
+                      "name": "p2Desc",
+                      "fill": "#6B6B6B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Reviewing PRDs, changelogs, and technical documentation from engineering",
+                      "lineHeight": 1.5,
+                      "textAlign": "center",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 13
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "UtE9A",
+                  "name": "p3",
+                  "width": "fill_container",
+                  "fill": "#F7F6F3",
+                  "cornerRadius": 16,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#E5E4E1"
+                  },
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": [
+                    32,
+                    28
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Gj7fE",
+                      "name": "p3Emoji",
+                      "fill": "#2D2D2D",
+                      "content": "✍️",
+                      "fontFamily": "Inter",
+                      "fontSize": 32,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "8wIi0",
+                      "name": "p3Title",
+                      "fill": "#2D2D2D",
+                      "content": "Content & Ops",
+                      "textAlign": "center",
+                      "fontFamily": "Fraunces",
+                      "fontSize": 18,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "MtpWe",
+                      "name": "p3Desc",
+                      "fill": "#6B6B6B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Browsing wikis, runbooks, and knowledge bases that live as Markdown files",
+                      "lineHeight": 1.5,
+                      "textAlign": "center",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 13
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "ellipse",
+              "id": "Qx52e",
+              "layoutPosition": "absolute",
+              "x": 960,
+              "y": -40,
+              "name": "blob1",
+              "rotation": 14.999999999999998,
+              "fill": "#7C907010",
+              "width": 280,
+              "height": 280
+            },
+            {
+              "type": "ellipse",
+              "id": "zJ49i",
+              "layoutPosition": "absolute",
+              "x": -40,
+              "y": 180,
+              "name": "blob2",
+              "rotation": -20,
+              "fill": "#D4845E0C",
+              "width": 180,
+              "height": 200
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "BbNEV",
+          "name": "Feature Deep Dive",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 64,
+          "padding": [
+            80,
+            120
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "NjHCu",
+              "name": "Feature 1",
+              "width": "fill_container",
+              "gap": 48,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "AzVNp",
+                  "name": "feat1Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "rx3rV",
+                      "name": "feat1Label",
+                      "fill": "#7C9070",
+                      "content": "Typography",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 12,
+                      "fontWeight": "600",
+                      "letterSpacing": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "CiJ4d",
+                      "name": "feat1Title",
+                      "fill": "#2D2D2D",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Three typefaces,\none tap away",
+                      "lineHeight": 1.2,
+                      "fontFamily": "Fraunces",
+                      "fontSize": 32,
+                      "fontWeight": "500",
+                      "letterSpacing": -0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "WGSx6",
+                      "name": "feat1Desc",
+                      "fill": "#6B6B6B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Switch between Sans, Serif, and Mono with a single click. IBM Plex family throughout — designed for extended reading on screen.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 15
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Gqx2q",
+                  "name": "feat1Img",
+                  "width": 480,
+                  "height": 320,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 135,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#F0EFEC",
+                        "position": 0
+                      },
+                      {
+                        "color": "#E5E4E1",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 16,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Aio8m",
+                      "name": "feat1ImgLabel",
+                      "fill": "#8E8E93",
+                      "content": "Screenshot placeholder",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "66yCR",
+                      "layoutPosition": "absolute",
+                      "x": 380,
+                      "y": 240,
+                      "name": "feat1Deco",
+                      "width": 48,
+                      "height": 48,
+                      "iconFontName": "type",
+                      "iconFontFamily": "lucide",
+                      "fill": "#C9B8A830"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "H67Bl",
+              "name": "Feature 2",
+              "width": "fill_container",
+              "gap": 48,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "lGhZa",
+                  "name": "feat2Img",
+                  "width": 480,
+                  "height": 320,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 45,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#F0EFEC",
+                        "position": 0
+                      },
+                      {
+                        "color": "#E5E4E1",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "cornerRadius": 16,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Lwgnk",
+                      "name": "feat2ImgLabel",
+                      "fill": "#8E8E93",
+                      "content": "Screenshot placeholder",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "pCVoB",
+                      "layoutPosition": "absolute",
+                      "x": 380,
+                      "y": 240,
+                      "name": "feat2Deco",
+                      "width": 48,
+                      "height": 48,
+                      "iconFontName": "palette",
+                      "iconFontFamily": "lucide",
+                      "fill": "#C9B8A830"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "aFB3y",
+                  "name": "feat2Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "IdDCL",
+                      "name": "feat2Label",
+                      "fill": "#7C9070",
+                      "content": "Themes",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 12,
+                      "fontWeight": "600",
+                      "letterSpacing": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "V7Rtn",
+                      "name": "feat2Title",
+                      "fill": "#2D2D2D",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Warm or cool,\nlight or dark",
+                      "lineHeight": 1.2,
+                      "fontFamily": "Fraunces",
+                      "fontSize": 32,
+                      "fontWeight": "500",
+                      "letterSpacing": -0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "oEDrM",
+                      "name": "feat2Desc",
+                      "fill": "#6B6B6B",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Two color themes — a warm Braun-inspired palette and a cool slate blue — each with light, dark, and system-matched appearance.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 15
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "ellipse",
+              "id": "Sdbqi",
+              "layoutPosition": "absolute",
+              "x": 1050,
+              "y": 200,
+              "name": "featBlob",
+              "rotation": 29.999999999999996,
+              "fill": "#5B9BD508",
+              "width": 320,
+              "height": 320
+            },
+            {
+              "type": "ellipse",
+              "id": "Fe4wQ",
+              "layoutPosition": "absolute",
+              "x": -60,
+              "y": 40,
+              "name": "featBlob2",
+              "rotation": -10,
+              "fill": "#C9B8A812",
+              "width": 200,
+              "height": 240
+            },
+            {
+              "type": "frame",
+              "id": "LnVjY",
+              "name": "Organic Divider",
+              "width": "fill_container",
+              "gap": 16,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "OI9M5",
+                  "name": "divLine1",
+                  "width": 60,
+                  "height": 1,
+                  "fill": "#E5E4E1"
+                },
+                {
+                  "type": "ellipse",
+                  "id": "6ehy4",
+                  "name": "divDot1",
+                  "fill": "#C9B8A8",
+                  "width": 6,
+                  "height": 6
+                },
+                {
+                  "type": "icon_font",
+                  "id": "FfaV9",
+                  "name": "divLeaf",
+                  "rotation": 45,
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "leaf",
+                  "iconFontFamily": "lucide",
+                  "fill": "#7C907040"
+                },
+                {
+                  "type": "ellipse",
+                  "id": "3hOOm",
+                  "name": "divDot2",
+                  "fill": "#C9B8A8",
+                  "width": 6,
+                  "height": 6
+                },
+                {
+                  "type": "frame",
+                  "id": "NANm8",
+                  "name": "divLine2",
+                  "width": 60,
+                  "height": 1,
+                  "fill": "#E5E4E1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ENOUA",
+          "name": "Testimonial",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            80,
+            160
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "tM0OL",
+              "name": "quoteIcon",
+              "fill": "#C9B8A8",
+              "content": "“",
+              "lineHeight": 0.6,
+              "fontFamily": "Fraunces",
+              "fontSize": 72
+            },
+            {
+              "type": "text",
+              "id": "iAdY7",
+              "name": "quoteText",
+              "fill": "#2D2D2D",
+              "textGrowth": "fixed-width",
+              "width": 720,
+              "content": "I used to dread opening .md files. Now I actually look forward to reading project docs. It's like someone finally made a Markdown reader for people who care about design.",
+              "lineHeight": 1.5,
+              "textAlign": "center",
+              "fontFamily": "Fraunces",
+              "fontSize": 24
+            },
+            {
+              "type": "frame",
+              "id": "SFaq6",
+              "name": "quoteAttr",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "vkkvp",
+                  "name": "quoteAvatar",
+                  "fill": "#C9B8A8",
+                  "width": 40,
+                  "height": 40
+                },
+                {
+                  "type": "frame",
+                  "id": "EKTSi",
+                  "name": "quoteInfo",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "gw4Wu",
+                      "name": "quoteName",
+                      "fill": "#2D2D2D",
+                      "content": "Sarah Chen",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "6Km14",
+                      "name": "quoteRole",
+                      "fill": "#6B6B6B",
+                      "content": "Product Designer at Linear",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 13
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "ellipse",
+              "id": "PXwf9",
+              "layoutPosition": "absolute",
+              "x": 520,
+              "y": -60,
+              "name": "quoteBlob",
+              "rotation": 20,
+              "fill": "#7C907008",
+              "width": 400,
+              "height": 400
+            },
+            {
+              "type": "ellipse",
+              "id": "w0jzW",
+              "layoutPosition": "absolute",
+              "x": 100,
+              "y": 120,
+              "name": "quoteBlob2",
+              "rotation": -29.999999999999996,
+              "fill": "#D4845E08",
+              "width": 160,
+              "height": 180
+            },
+            {
+              "type": "icon_font",
+              "id": "gaBhv",
+              "layoutPosition": "absolute",
+              "x": 180,
+              "y": 30,
+              "name": "quoteDeco1",
+              "rotation": 14.999999999999998,
+              "width": 24,
+              "height": 24,
+              "iconFontName": "flower-2",
+              "iconFontFamily": "lucide",
+              "fill": "#C9B8A830"
+            },
+            {
+              "type": "icon_font",
+              "id": "aGEam",
+              "layoutPosition": "absolute",
+              "x": 1100,
+              "y": 160,
+              "name": "quoteDeco2",
+              "rotation": -25,
+              "width": 20,
+              "height": 20,
+              "iconFontName": "leaf",
+              "iconFontFamily": "lucide",
+              "fill": "#7C907025"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Gcj1P",
+          "name": "Final CTA",
+          "width": "fill_container",
+          "fill": "#4A5D43",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            96,
+            120
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "x07rx",
+              "name": "ctaTitle",
+              "fill": "#FFFFFF",
+              "content": "Start reading beautifully",
+              "textAlign": "center",
+              "fontFamily": "Fraunces",
+              "fontSize": 44,
+              "fontWeight": "500",
+              "letterSpacing": -1
+            },
+            {
+              "type": "text",
+              "id": "0q6qF",
+              "name": "ctaSub",
+              "fill": "#FFFFFFBB",
+              "content": "$5 for macOS. No subscription, no account.",
+              "textAlign": "center",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 16
+            },
+            {
+              "type": "frame",
+              "id": "xRecz",
+              "name": "ctaBtnWrap",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "0iZTG",
+                  "name": "ctaPrimary",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 100,
+                  "gap": 8,
+                  "padding": [
+                    16,
+                    36
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "XK4dT",
+                      "name": "ctaPrimaryText",
+                      "fill": "#4A5D43",
+                      "content": "Get Emdy — $5",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "5h78D",
+                      "name": "ctaPrimaryIcon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "arrow-down",
+                      "iconFontFamily": "lucide",
+                      "fill": "#4A5D43"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "BQbcR",
+              "name": "ctaTrust",
+              "fill": "#FFFFFF80",
+              "content": "macOS 13+ · Electron-based · Under 50 MB",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 12
+            },
+            {
+              "type": "ellipse",
+              "id": "3Bs3c",
+              "layoutPosition": "absolute",
+              "x": 40,
+              "y": 20,
+              "name": "ctaBlob1",
+              "rotation": 25,
+              "fill": "#5A6B5218",
+              "width": 180,
+              "height": 180
+            },
+            {
+              "type": "ellipse",
+              "id": "BMX2s",
+              "layoutPosition": "absolute",
+              "x": 1200,
+              "y": 140,
+              "name": "ctaBlob2",
+              "rotation": -14.999999999999998,
+              "fill": "#C8F0D80D",
+              "width": 140,
+              "height": 160
+            },
+            {
+              "type": "icon_font",
+              "id": "KI5XU",
+              "layoutPosition": "absolute",
+              "x": 120,
+              "y": 50,
+              "name": "ctaLeaf1",
+              "rotation": 29.999999999999996,
+              "width": 32,
+              "height": 32,
+              "iconFontName": "leaf",
+              "iconFontFamily": "lucide",
+              "fill": "#FFFFFF15"
+            },
+            {
+              "type": "icon_font",
+              "id": "r2z2R",
+              "layoutPosition": "absolute",
+              "x": 1200,
+              "y": 40,
+              "name": "ctaLeaf2",
+              "rotation": -45,
+              "width": 24,
+              "height": 24,
+              "iconFontName": "leaf",
+              "iconFontFamily": "lucide",
+              "fill": "#FFFFFF10"
+            },
+            {
+              "type": "icon_font",
+              "id": "T9jaB",
+              "layoutPosition": "absolute",
+              "x": 200,
+              "y": 220,
+              "name": "ctaFlower",
+              "rotation": 20,
+              "width": 28,
+              "height": 28,
+              "iconFontName": "flower-2",
+              "iconFontFamily": "lucide",
+              "fill": "#FFFFFF12"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "1aglp",
+          "name": "Footer",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            48,
+            120
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "9veWu",
+              "name": "footerTop",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "mc0IB",
+                  "name": "footerBrand",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "9pp27",
+                      "name": "footerLogo",
+                      "fill": "#FFFFFF",
+                      "content": "emdy",
+                      "fontFamily": "Fraunces",
+                      "fontSize": 20,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "h3YAv",
+                      "name": "footerTagline",
+                      "fill": "#FFFFFF80",
+                      "content": "A calm Markdown reader",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 13
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "aIks1",
+                  "name": "footerLinks",
+                  "gap": 48,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Q86h8",
+                      "name": "footerCol1",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Rr0q7",
+                          "name": "footerCol1Title",
+                          "fill": "#FFFFFF",
+                          "content": "Product",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "oebFH",
+                          "name": "footerCol1L1",
+                          "fill": "#FFFFFF80",
+                          "content": "Features",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 13
+                        },
+                        {
+                          "type": "text",
+                          "id": "Ihitx",
+                          "name": "footerCol1L2",
+                          "fill": "#FFFFFF80",
+                          "content": "Download",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 13
+                        },
+                        {
+                          "type": "text",
+                          "id": "wMX5H",
+                          "name": "footerCol1L3",
+                          "fill": "#FFFFFF80",
+                          "content": "Changelog",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 13
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Dmwjo",
+                      "name": "footerCol2",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Eq6ll",
+                          "name": "footerCol2Title",
+                          "fill": "#FFFFFF",
+                          "content": "Company",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "AjLCs",
+                          "name": "footerCol2L1",
+                          "fill": "#FFFFFF80",
+                          "content": "About",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 13
+                        },
+                        {
+                          "type": "text",
+                          "id": "yDdT3",
+                          "name": "footerCol2L2",
+                          "fill": "#FFFFFF80",
+                          "content": "GitHub",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 13
+                        },
+                        {
+                          "type": "text",
+                          "id": "hu0JL",
+                          "name": "footerCol2L3",
+                          "fill": "#FFFFFF80",
+                          "content": "Privacy",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 13
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XfWmZ",
+              "name": "footerBar",
+              "width": "fill_container",
+              "stroke": {
+                "thickness": {
+                  "top": 1
+                },
+                "fill": "#FFFFFF15"
+              },
+              "padding": [
+                24,
+                0,
+                0,
+                0
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ZppyX",
+                  "name": "footerCopy",
+                  "fill": "#FFFFFF50",
+                  "content": "© 2025 Emdy. All rights reserved.",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 12
+                },
+                {
+                  "type": "text",
+                  "id": "BqAY7",
+                  "name": "footerMade",
+                  "fill": "#FFFFFF50",
+                  "content": "Made with care in California",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 12
+                }
+              ]
+            },
+            {
+              "type": "icon_font",
+              "id": "JwRNu",
+              "layoutPosition": "absolute",
+              "x": 1300,
+              "y": 20,
+              "name": "footerDeco",
+              "rotation": 59.99999999999999,
+              "width": 40,
+              "height": 40,
+              "iconFontName": "leaf",
+              "iconFontFamily": "lucide",
+              "fill": "#FFFFFF08"
+            },
+            {
+              "type": "ellipse",
+              "id": "sXtcn",
+              "layoutPosition": "absolute",
+              "x": 50,
+              "y": 80,
+              "name": "footerDeco2",
+              "rotation": 10,
+              "fill": "#FFFFFF05",
+              "width": 120,
+              "height": 120
             }
           ]
         }
