@@ -21,6 +21,7 @@ const appearances: { value: AppTheme; label: string }[] = [
 const colorThemes: { value: ColorThemeName; label: string; swatch: string }[] = [
   { value: 'warm', label: 'Warm', swatch: '#D47418' },
   { value: 'cool', label: 'Cool', swatch: '#4A7196' },
+  { value: 'neutral', label: 'Neutral', swatch: '#007AFF' },
   { value: 'fresh', label: 'Fresh', swatch: '#FF6B00' },
   { value: 'neon', label: 'Neon', swatch: '#FF2BD2' },
 ];

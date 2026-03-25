@@ -207,6 +207,7 @@ export function App() {
         case 'theme-system': display.setTheme('system'); break;
         case 'theme-warm': display.setColorTheme('warm'); break;
         case 'theme-cool': display.setColorTheme('cool'); break;
+        case 'theme-neutral': display.setColorTheme('neutral'); break;
       }
     });
 

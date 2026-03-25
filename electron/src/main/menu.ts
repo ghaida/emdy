@@ -112,6 +112,10 @@ export function buildMenu(sendEvent: MenuCallback) {
           label: 'Cool Color Theme',
           click: () => sendEvent('theme-cool'),
         },
+        {
+          label: 'Neutral Color Theme',
+          click: () => sendEvent('theme-neutral'),
+        },
         { type: 'separator' },
         {
           label: 'Light Theme',

@@ -1,7 +1,7 @@
 // Color contrast: All token pairings verified against WCAG 2.1 AA
 // (4.5:1 for normal text, 3:1 for large text and UI components)
 // Last verified: 2026-03-22
-export type ColorThemeName = 'warm' | 'cool' | 'fresh' | 'neon';
+export type ColorThemeName = 'warm' | 'cool' | 'neutral' | 'fresh' | 'neon';
 
 export interface ColorScale {
   bgPrimary: string;
@@ -202,6 +202,84 @@ export const cool: ColorTheme = {
   },
 };
 
+// Neutral: macOS-inspired — pure grays, system blue accent, no warm or cool tint
+export const neutral: ColorTheme = {
+  light: {
+    bgPrimary: '#F0F0F0',
+    bgContent: '#FFFFFF',
+    bgCode: '#E8E8E8',
+    bgSecondary: '#E8E8E8',
+    bgTertiary: '#DEDEDE',
+    border: '#8C8C8C',
+    borderSubtle: '#B4B4B4',
+    textMuted: '#6E6E6E',
+    textSecondary: '#585858',
+    textPrimary: '#1D1D1F',
+    textHeading: '#000000',
+    accent: '#007AFF',
+    accentHover: '#0063D1',
+    success: '#34C759',
+    info: '#5856D6',
+    error: '#FF3B30',
+    codeKeyword: '#AD3DA4',       // purple keywords (Xcode-inspired)
+    codeString: '#D12F1B',        // red strings
+    codeComment: '#8E8E93',
+    codeNumber: '#272AD8',        // blue numbers
+    codePunctuation: '#585858',
+    codeFunction: '#4B21B0',      // deep purple functions
+    minimapHeading: '#007AFF',
+    minimapText: '#8E8E93',
+    minimapCode: '#AD3DA4',
+    minimapBlockquote: '#34C759',
+    minimapTable: '#5856D6',
+    minimapTableHeader: '#3634A3',
+    minimapUl: '#007AFF',
+    minimapOl: '#5856D6',
+    minimapImage: '#FF3B30',
+    minimapHr: '#B4B4B4',
+    minimapLink: '#007AFF',
+    minimapViewport: '#007AFF',
+    glowColor: 'transparent',
+  },
+  dark: {
+    bgPrimary: '#1C1C1E',
+    bgContent: '#2C2C2E',
+    bgCode: '#1A1A1C',
+    bgSecondary: '#242426',
+    bgTertiary: '#323234',
+    border: '#636366',
+    borderSubtle: '#48484A',
+    textMuted: '#8E8E93',
+    textSecondary: '#AEAEB2',
+    textPrimary: '#E5E5EA',
+    textHeading: '#F2F2F7',
+    accent: '#0A84FF',
+    accentHover: '#409CFF',
+    success: '#30D158',
+    info: '#5E5CE6',
+    error: '#FF453A',
+    codeKeyword: '#D0A0E0',       // soft purple keywords
+    codeString: '#FF6961',        // soft red strings
+    codeComment: '#636366',
+    codeNumber: '#7A7AFF',        // blue numbers
+    codePunctuation: '#AEAEB2',
+    codeFunction: '#B09AFF',      // light purple functions
+    minimapHeading: '#0A84FF',
+    minimapText: '#8E8E93',
+    minimapCode: '#D0A0E0',
+    minimapBlockquote: '#30D158',
+    minimapTable: '#5E5CE6',
+    minimapTableHeader: '#4644C4',
+    minimapUl: '#0A84FF',
+    minimapOl: '#5E5CE6',
+    minimapImage: '#FF453A',
+    minimapHr: '#48484A',
+    minimapLink: '#0A84FF',
+    minimapViewport: '#0A84FF',
+    glowColor: 'transparent',
+  },
+};
+
 // Fresh: Playful Precision — bright orange accent, electric blue, cream/navy backgrounds
 export const fresh: ColorTheme = {
   light: {
@@ -358,4 +436,4 @@ export const neon: ColorTheme = {
   },
 };
 
-export const themes: Record<ColorThemeName, ColorTheme> = { warm, cool, fresh, neon };
+export const themes: Record<ColorThemeName, ColorTheme> = { warm, cool, neutral, fresh, neon };
