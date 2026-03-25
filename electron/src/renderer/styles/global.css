@@ -893,6 +893,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 }
 
 .settings-options { display: flex; gap: var(--space-1); }
+.settings-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
 
 .settings-option {
   display: flex;
@@ -1048,8 +1049,8 @@ input:focus:not(:focus-visible) {
 
 .code-block-copy {
   position: absolute;
-  top: var(--space-2);
-  right: var(--space-2);
+  top: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;

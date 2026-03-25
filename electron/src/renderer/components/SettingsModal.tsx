@@ -19,9 +19,9 @@ const appearances: { value: AppTheme; label: string }[] = [
 ];
 
 const colorThemes: { value: ColorThemeName; label: string; swatch: string }[] = [
+  { value: 'neutral', label: 'Neutral', swatch: '#007AFF' },
   { value: 'warm', label: 'Warm', swatch: '#D47418' },
   { value: 'cool', label: 'Cool', swatch: '#4A7196' },
-  { value: 'neutral', label: 'Neutral', swatch: '#007AFF' },
   { value: 'fresh', label: 'Fresh', swatch: '#FF6B00' },
   { value: 'neon', label: 'Neon', swatch: '#FF2BD2' },
 ];
@@ -61,7 +61,7 @@ export function SettingsModal({
 
         <div className="settings-section">
           <label className="settings-label">Color Scheme</label>
-          <div className="settings-options" role="radiogroup" aria-label="Color scheme">
+          <div className="settings-options settings-grid-3" role="radiogroup" aria-label="Color scheme">
             {colorThemes.map((ct) => (
               <button
                 key={ct.value}
