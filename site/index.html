@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emdy — A Markdown Reader</title>
+  <meta name="description" content="Emdy reads Markdown files and renders them beautifully. Double-click a .md file. That's the whole workflow.">
+  <style>
+    @font-face { font-family: 'IBM Plex Sans'; src: url('../electron/src/renderer/fonts/IBMPlexSans-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; }
+    @font-face { font-family: 'IBM Plex Sans'; src: url('../electron/src/renderer/fonts/IBMPlexSans-Medium.ttf') format('truetype'); font-weight: 500; font-style: normal; }
+    @font-face { font-family: 'IBM Plex Sans'; src: url('../electron/src/renderer/fonts/IBMPlexSans-SemiBold.ttf') format('truetype'); font-weight: 600; font-style: normal; }
+    @font-face { font-family: 'IBM Plex Sans'; src: url('../electron/src/renderer/fonts/IBMPlexSans-Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; }
+    @font-face { font-family: 'IBM Plex Mono'; src: url('../electron/src/renderer/fonts/IBMPlexMono-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; }
+    @font-face { font-family: 'IBM Plex Mono'; src: url('../electron/src/renderer/fonts/IBMPlexMono-Medium.ttf') format('truetype'); font-weight: 500; font-style: normal; }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #1C1A16;
+      --bg-deep: #0E0C08;
+      --bg-card: #24211C;
+      --border: #2C2920;
+      --text-primary: #F5F2ED;
+      --text-secondary: #9C9488;
+      --text-muted: #736F69;
+      --text-faint: #4A453A;
+      --accent: #D47418;
+      --white: #FFFFFF;
+      --rendered-bg: #FFFFFF;
+      --rendered-text: #222019;
+      --rendered-text-body: #3A3732;
+      --rendered-code-bg: #F5F3EF;
+      --rendered-code-text: #3A3732;
+      --rendered-heading: #222019;
+    }
+
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* Nav */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 60px;
+    }
+    .nav-logo {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 4px;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+    .nav-download {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--white);
+      background: var(--accent);
+      border: none;
+      padding: 8px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .nav-download:hover { background: #B86210; }
+
+    /* Column */
+    .col {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Hero */
+    .hero { padding-top: 48px; }
+    .hero h1 {
+      font-size: 64px;
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+    }
+    .hero-sub {
+      font-size: 22px;
+      color: var(--accent);
+      margin-bottom: 24px;
+    }
+    .hero-body {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      max-width: 600px;
+    }
+
+    /* Rotating headline */
+    .rotating-wrapper {
+      display: inline-block;
+      overflow: hidden;
+      height: 1.2em;
+      vertical-align: bottom;
+      line-height: 1.2;
+    }
+    .rotating-text {
+      display: block;
+      height: 1.2em;
+      line-height: 1.2;
+      animation: rotate-words 8s ease-in-out infinite;
+    }
+    @keyframes rotate-words {
+      0%, 20%   { transform: translateY(0); }
+      25%, 45%  { transform: translateY(-100%); }
+      50%, 70%  { transform: translateY(-200%); }
+      75%, 95%  { transform: translateY(-300%); }
+      100%      { transform: translateY(0); }
+    }
+
+    /* Comparison */
+    .comparison {
+      margin-top: 64px;
+    }
+    .comparison-labels {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 12px;
+    }
+    .comparison-label {
+      flex: 1;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+    }
+    .comparison-label--emdy { color: var(--accent); }
+    .comparison-panels {
+      display: flex;
+      gap: 24px;
+    }
+    .panel {
+      flex: 1;
+      border-radius: 8px;
+      padding: 20px;
+      min-width: 0;
+    }
+    .panel--raw {
+      background: var(--bg-deep);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+    .panel--raw .heading { color: var(--accent); }
+    .panel--raw .fence { color: var(--text-muted); }
+    .panel--rendered {
+      background: var(--rendered-bg);
+      color: var(--rendered-text-body);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .panel--rendered h3 {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--rendered-heading);
+      margin-bottom: 12px;
+    }
+    .panel--rendered h4 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--rendered-heading);
+      margin-top: 12px;
+      margin-bottom: 8px;
+    }
+    .panel--rendered p { margin-bottom: 8px; }
+    .panel--rendered ul {
+      padding-left: 20px;
+      margin-bottom: 8px;
+    }
+    .panel--rendered li { margin-bottom: 4px; }
+    .panel--rendered .code-block {
+      background: var(--rendered-code-bg);
+      color: var(--rendered-code-text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 12px;
+    }
+
+    /* Features */
+    .features {
+      margin-top: 64px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .features-list {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+    /* CTA */
+    .cta {
+      margin-top: 80px;
+    }
+    .cta h2 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .cta-body {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+    .cta-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .cta-button {
+      display: inline-block;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--white);
+      background: var(--accent);
+      border: none;
+      padding: 14px 32px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .cta-button:hover { background: #B86210; }
+    .cta-note {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 80px;
+      padding: 20px 0;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-text {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    .spacer-end { height: 40px; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav { padding: 16px 24px; }
+      .hero { padding-top: 80px; }
+      .hero h1 { font-size: 40px; }
+      .hero-sub { font-size: 18px; }
+      .comparison-panels { flex-direction: column; }
+      .comparison-labels { flex-direction: column; gap: 0; }
+      .cta h2 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="/" class="nav-logo">EMDY</a>
+    <a href="#download" class="nav-download">Download</a>
+  </nav>
+
+  <div class="col">
+
+    <section class="hero">
+      <h1><span class="rotating-wrapper"><span class="rotating-text">An engineer sent you</span><span class="rotating-text">Claude generated</span><span class="rotating-text">ChatGPT generated</span><span class="rotating-text">A designer sent you</span></span><br>a Markdown file.</h1>
+      <p class="hero-sub">Emdy makes it readable.</p>
+      <p class="hero-body">
+        AI tools, developer documentation, GitHub repos — they all output .md files.
+        When one lands in your Downloads folder, you're expected to parse angle brackets
+        and asterisks yourself. Emdy opens that file and shows you a clean, typeset
+        document. That's it. That's the whole app.
+      </p>
+    </section>
+
+    <section class="comparison">
+      <div class="comparison-labels">
+        <span class="comparison-label">WHAT YOU GET</span>
+        <span class="comparison-label comparison-label--emdy">WHAT YOU SEE IN EMDY</span>
+      </div>
+      <div class="comparison-panels">
+        <div class="panel panel--raw">
+          <div class="heading"># Q3 Marketing Campaign</div>
+          <br>
+          <div class="heading">## Overview</div>
+          <br>
+          <div>The campaign focuses on **content-led growth**</div>
+          <div>across `email`, `social`, and `paid search`.</div>
+          <br>
+          <div class="heading">## Timeline</div>
+          <br>
+          <div>- **July** — Research and scoping</div>
+          <div>- **August** — Content production</div>
+          <div>- **September** — Launch and iterate</div>
+          <br>
+          <div class="fence">```</div>
+          <div>Budget: $45,000 | Owner: @sarah</div>
+          <div class="fence">```</div>
+        </div>
+        <div class="panel panel--rendered">
+          <h3>Q3 Marketing Campaign</h3>
+          <h4>Overview</h4>
+          <p>The campaign focuses on <strong>content-led growth</strong> across email, social, and paid search.</p>
+          <h4>Timeline</h4>
+          <ul>
+            <li><strong>July</strong> — Research and scoping</li>
+            <li><strong>August</strong> — Content production</li>
+            <li><strong>September</strong> — Launch and iterate</li>
+          </ul>
+          <div class="code-block">Budget: $45,000 | Owner: @sarah</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features">
+      <p class="features-list">
+        GFM rendering · Syntax highlighting · Minimap · Copy to clipboard · PDF export · Color themes · Dark mode · Live reload · Zoom · Keyboard shortcuts
+      </p>
+    </section>
+
+    <section class="cta" id="download">
+      <h2>Read it like it was meant to be read.</h2>
+      <p class="cta-body">Double-click a .md file. That's the whole workflow.</p>
+      <div class="cta-row">
+        <a href="#" class="cta-button">Download for macOS</a>
+        <span class="cta-note">$5 · 4.2 MB · macOS 13+</span>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span class="footer-text">Emdy — a reading instrument</span>
+      <span class="footer-text">© 2026</span>
+    </footer>
+
+    <div class="spacer-end"></div>
+
+  </div>
+
+</body>
+</html>

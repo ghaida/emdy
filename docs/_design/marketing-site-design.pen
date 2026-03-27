@@ -1,0 +1,598 @@
+{
+  "version": "2.9",
+  "children": [
+    {
+      "type": "frame",
+      "id": "ayleH",
+      "x": 587.0065243360896,
+      "y": 54.778514243758764,
+      "name": "09 — The Document",
+      "width": 1440,
+      "fill": "#1C1A16",
+      "layout": "vertical",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "VGPJV",
+          "name": "nav",
+          "width": "fill_container",
+          "padding": [
+            20,
+            60
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "oxPWo",
+              "name": "navLogo",
+              "fill": "#D9D2C6",
+              "content": "EMDY",
+              "fontFamily": "IBM Plex Mono",
+              "fontSize": 13,
+              "fontWeight": "500",
+              "letterSpacing": 4
+            },
+            {
+              "type": "frame",
+              "id": "wFETU",
+              "name": "navBtn",
+              "fill": "#D47418",
+              "cornerRadius": 4,
+              "padding": [
+                8,
+                20
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Nc6zv",
+                  "name": "navBtnText",
+                  "fill": "#FFFFFF",
+                  "content": "Download",
+                  "fontFamily": "IBM Plex Sans",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "lKTuU",
+          "name": "heroSpacer",
+          "width": "fill_container",
+          "height": 120
+        },
+        {
+          "type": "frame",
+          "id": "Hnb7o",
+          "name": "col",
+          "width": 720,
+          "layout": "vertical",
+          "gap": 32,
+          "children": [
+            {
+              "type": "text",
+              "id": "b45WD",
+              "name": "heroH1",
+              "fill": "#F5F2ED",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Someone sent you\na Markdown file.",
+              "lineHeight": 1.08,
+              "fontFamily": "IBM Plex Sans",
+              "fontSize": 64,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "AlBdK",
+              "name": "heroSub",
+              "fill": "#D47418",
+              "content": "You shouldn't need to know what that means.",
+              "fontFamily": "IBM Plex Sans",
+              "fontSize": 22,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "EBs7V",
+              "name": "heroP",
+              "fill": "#9C9488",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "AI tools, developer documentation, GitHub repos — they all output .md files. When one lands in your Downloads folder, you're expected to parse angle brackets and asterisks yourself. Emdy opens that file and shows you a clean, typeset document. That's it. That's the whole app.",
+              "lineHeight": 1.7,
+              "fontFamily": "IBM Plex Sans",
+              "fontSize": 16,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "aGdbG",
+              "name": "compSpacer",
+              "width": "fill_container",
+              "height": 32
+            },
+            {
+              "type": "frame",
+              "id": "gbzes",
+              "name": "compLabels",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RC9Sg",
+                  "name": "compLL",
+                  "fill": "#736F69",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "WHAT YOU GET",
+                  "fontFamily": "IBM Plex Mono",
+                  "fontSize": 11,
+                  "fontWeight": "500",
+                  "letterSpacing": 2
+                },
+                {
+                  "type": "text",
+                  "id": "4tlTM",
+                  "name": "compLR",
+                  "fill": "#D47418",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "WHAT YOU SEE IN EMDY",
+                  "fontFamily": "IBM Plex Mono",
+                  "fontSize": 11,
+                  "fontWeight": "500",
+                  "letterSpacing": 2
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IFo2U",
+              "name": "compRow",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "4uRCV",
+                  "name": "rawP",
+                  "width": "fill_container",
+                  "fill": "#0E0C08",
+                  "cornerRadius": 8,
+                  "layout": "vertical",
+                  "gap": 5,
+                  "padding": 20,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "e6Bst",
+                      "name": "rr1",
+                      "fill": "#D47418",
+                      "content": "# Q3 Marketing Campaign",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Xi9QQ",
+                      "name": "rr2",
+                      "fill": "#D47418",
+                      "content": "## Overview",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "4sgtO",
+                      "name": "rr3",
+                      "fill": "#9C9488",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "The campaign focuses on **content-led growth**",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "U8Rpf",
+                      "name": "rr4",
+                      "fill": "#9C9488",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "across `email`, `social`, and `paid search`.",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "0LTe9",
+                      "name": "rr5",
+                      "fill": "#D47418",
+                      "content": "## Timeline",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "9Hq7E",
+                      "name": "rr6",
+                      "fill": "#9C9488",
+                      "content": "- **July** — Research and scoping",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "AYcoe",
+                      "name": "rr7",
+                      "fill": "#9C9488",
+                      "content": "- **August** — Content production",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "VtnYn",
+                      "name": "rr8",
+                      "fill": "#9C9488",
+                      "content": "- **September** — Launch and iterate",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "K6CQ9",
+                      "name": "rr9",
+                      "fill": "#736F69",
+                      "content": "```",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "RfS9J",
+                      "name": "rr10",
+                      "fill": "#9C9488",
+                      "content": "Budget: $45,000 | Owner: @sarah",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "IgP0f",
+                      "name": "rr11",
+                      "fill": "#736F69",
+                      "content": "```",
+                      "fontFamily": "IBM Plex Mono",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "KJTmL",
+                  "name": "rendP",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 8,
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": 20,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "AuqNP",
+                      "name": "re1",
+                      "fill": "#222019",
+                      "content": "Q3 Marketing Campaign",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 22,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "wUbJa",
+                      "name": "re2",
+                      "fill": "#222019",
+                      "content": "Overview",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "bpeVb",
+                      "name": "re3",
+                      "fill": "#3A3732",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "The campaign focuses on content-led growth across email, social, and paid search.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "2MovR",
+                      "name": "re4",
+                      "fill": "#222019",
+                      "content": "Timeline",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "yja7z",
+                      "name": "reList",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        0,
+                        0,
+                        0,
+                        16
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "qvvJC",
+                          "name": "re5",
+                          "fill": "#3A3732",
+                          "content": "•  July — Research and scoping",
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "dH6qu",
+                          "name": "re6",
+                          "fill": "#3A3732",
+                          "content": "•  August — Content production",
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "OvpxQ",
+                          "name": "re7",
+                          "fill": "#3A3732",
+                          "content": "•  September — Launch and iterate",
+                          "fontFamily": "IBM Plex Sans",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mTqNV",
+                      "name": "reCode",
+                      "width": "fill_container",
+                      "fill": "#F5F3EF",
+                      "cornerRadius": 6,
+                      "layout": "vertical",
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "UmkzO",
+                          "name": "re8",
+                          "fill": "#3A3732",
+                          "content": "Budget: $45,000 | Owner: @sarah",
+                          "fontFamily": "IBM Plex Mono",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "t5xt7",
+              "name": "featSpacer",
+              "width": "fill_container",
+              "height": 32
+            },
+            {
+              "type": "rectangle",
+              "id": "XjBvH",
+              "name": "featLine",
+              "fill": "#2C2920",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "mwmW2",
+              "name": "featSpacer2",
+              "width": "fill_container",
+              "height": 8
+            },
+            {
+              "type": "text",
+              "id": "lbdQq",
+              "name": "featInline",
+              "fill": "#736F69",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "GFM rendering · Syntax highlighting · Minimap · Copy to clipboard · PDF export · Color themes · Dark mode · Live reload · Zoom · Keyboard shortcuts",
+              "lineHeight": 1.8,
+              "fontFamily": "IBM Plex Mono",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "aRJTs",
+              "name": "featSpacer3",
+              "width": "fill_container",
+              "height": 8
+            },
+            {
+              "type": "rectangle",
+              "id": "hl5mF",
+              "name": "featLine2",
+              "fill": "#2C2920",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "L0vt9",
+              "name": "ctaSpacer",
+              "width": "fill_container",
+              "height": 48
+            },
+            {
+              "type": "text",
+              "id": "mtRhB",
+              "name": "ctaH",
+              "fill": "#F5F2ED",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Read it like it was meant to be read.",
+              "fontFamily": "IBM Plex Sans",
+              "fontSize": 32,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "SQSWW",
+              "name": "ctaP",
+              "fill": "#9C9488",
+              "content": "Double-click a .md file. That's the whole workflow.",
+              "fontFamily": "IBM Plex Sans",
+              "fontSize": 16,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "XEYgm",
+              "name": "ctaBtnRow",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "NuGQX",
+                  "name": "ctaBtn",
+                  "fill": "#D47418",
+                  "cornerRadius": 4,
+                  "padding": [
+                    14,
+                    32
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "yijUt",
+                      "name": "ctaBtnTxt",
+                      "fill": "#FFFFFF",
+                      "content": "Download for macOS",
+                      "fontFamily": "IBM Plex Sans",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "whpsI",
+                  "name": "ctaNote",
+                  "fill": "#736F69",
+                  "content": "Free · 4.2 MB · No account required",
+                  "fontFamily": "IBM Plex Mono",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "6oObq",
+              "name": "endSpacer",
+              "width": "fill_container",
+              "height": 80
+            },
+            {
+              "type": "rectangle",
+              "id": "JX3Pl",
+              "name": "endLine",
+              "fill": "#2C2920",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "6NajE",
+              "name": "footRow",
+              "width": "fill_container",
+              "padding": [
+                20,
+                0
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "q2hV5",
+                  "name": "footL",
+                  "fill": "#4A453A",
+                  "content": "Emdy — a reading instrument",
+                  "fontFamily": "IBM Plex Mono",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "bDNSx",
+                  "name": "footR",
+                  "fill": "#4A453A",
+                  "content": "© 2026",
+                  "fontFamily": "IBM Plex Mono",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "4mySo",
+          "name": "endSpacer2",
+          "width": "fill_container",
+          "height": 40
+        }
+      ]
+    }
+  ]
+}
