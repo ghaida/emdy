@@ -136,6 +136,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-left: auto;
   transition: border-color 0.2s ease, color 0.2s ease;
 }
 .theme-toggle:hover { border-color: var(--ink-mid); }
@@ -387,18 +388,14 @@ a.download-button:hover {
   padding-top: var(--sp-5);
   padding-bottom: var(--sp-8);
 }
-.comparison-labels {
-  display: flex;
-  gap: var(--sp-3);
-  margin-bottom: var(--sp-1);
-}
 .comparison-label {
-  flex: 1;
+  display: block;
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 3px;
   color: var(--ink-faint);
+  margin-bottom: var(--sp-1);
 }
 .comparison-label--active {
   color: var(--accent);
@@ -406,6 +403,15 @@ a.download-button:hover {
 .comparison-panels {
   display: flex;
   gap: var(--sp-3);
+}
+.panel-group {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.panel-group .panel {
+  flex: 1;
 }
 .panel {
   flex: 1;
@@ -572,12 +578,8 @@ a.download-button:hover {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1px;
-  background: var(--border-light);
-  border-radius: var(--radius-md);
-  overflow: hidden;
 }
 .feature-chip {
-  background: var(--surface);
   padding: var(--sp-2) var(--sp-3);
   display: grid;
   grid-template-columns: var(--sp-1) 1fr;
@@ -749,7 +751,6 @@ a.download-button:hover {
   .tagline { display: none; }
   .hero-title { font-size: 36px; }
   .comparison-panels { flex-direction: column; }
-  .comparison-labels { flex-direction: column; gap: 0; }
   .features-grid { grid-template-columns: 1fr; }
   .features-secondary { grid-template-columns: 1fr; }
   .showcase-nav { flex-wrap: wrap; }
