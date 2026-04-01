@@ -30,3 +30,12 @@ Package.resolved
 *.ipa
 *.dSYM.zip
 *.dSYM
+
+# Playwright debug output
+.playwright-mcp/
+
+# Debug screenshots
+site-debug.png
+site-fixed.png
+site-layered.png
+site-layered2.png

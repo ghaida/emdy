@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Section Explorations</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: var(--housing); }
+    .explorations {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--sp-10);
+    }
+    .exploration { margin-bottom: 200px; }
+    .exploration-label {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      color: var(--ink-faint);
+      margin-bottom: var(--sp-4);
+      text-transform: uppercase;
+    }
+    .exploration-desc {
+      font-size: 14px;
+      color: var(--ink-mid);
+      max-width: 640px;
+      line-height: 1.6;
+      margin-bottom: var(--sp-8);
+    }
+
+    /* Shared */
+    .ex-doc h2 { font-size: 18px; font-weight: 600; color: var(--doc-heading); margin-bottom: var(--sp-2); }
+    .ex-doc h3 { font-size: 14px; font-weight: 600; color: var(--doc-heading); margin-top: var(--sp-3); margin-bottom: var(--sp-1); }
+    .ex-doc p { font-size: 13px; color: var(--doc-text); line-height: 1.5; margin-bottom: var(--sp-2); }
+    .ex-doc ul { font-size: 13px; color: var(--doc-text); line-height: 1.5; padding-left: var(--sp-5); margin-bottom: var(--sp-2); }
+    .ex-doc li { margin-bottom: var(--sp-1); }
+    .ex-doc pre { font-family: var(--font-mono); font-size: 11px; background: var(--doc-code-bg); color: var(--doc-text); padding: var(--sp-3); border-radius: var(--radius-sm); margin-top: var(--sp-3); }
+
+    .raw-body { font-family: var(--font-mono); font-size: 12px; line-height: 2; color: var(--ink-mid); white-space: pre-wrap; }
+    .raw-body .h { color: var(--ink); }
+    .raw-body .d { color: var(--metal); }
+    .raw-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; color: var(--ink-faint); }
+    .emdy-label { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 2px; color: var(--accent); }
+
+
+    /* ═══════════════════════════════════════════
+       A — "THE SPLIT"
+       ═══════════════════════════════════════════ */
+
+    .ex-a {
+      position: relative;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      min-height: 420px;
+      background: var(--doc-bg);
+      border: 1px solid var(--metal-light);
+    }
+    .ex-a-raw {
+      position: absolute;
+      inset: 0;
+      padding: var(--sp-8) var(--sp-10);
+      background: var(--doc-bg);
+    }
+    .ex-a-rendered {
+      position: absolute;
+      inset: 0;
+      background: var(--doc-bg);
+      padding: var(--sp-8) var(--sp-10);
+      clip-path: inset(0 0 0 50%);
+    }
+    .ex-a-divider {
+      position: absolute;
+      top: 0; bottom: 0; left: 50%;
+      width: 2px;
+      background: var(--accent);
+      z-index: 2;
+    }
+    .ex-a-divider::before {
+      content: "";
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: var(--sp-8); height: var(--sp-8);
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .ex-a-divider::after {
+      content: "→";
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 16px;
+      color: white;
+      z-index: 1;
+    }
+    .ex-a-label-left { position: absolute; top: var(--sp-4); left: var(--sp-5); z-index: 3; }
+    .ex-a-label-right { position: absolute; top: var(--sp-4); right: var(--sp-5); z-index: 3; }
+
+
+    /* ═══════════════════════════════════════════
+       B — "THE COMIC STRIP"
+       ═══════════════════════════════════════════ */
+
+    .ex-b {
+      display: flex;
+      gap: var(--sp-4);
+      align-items: stretch;
+    }
+    .ex-b-frame {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--doc-bg);
+      border: 1px solid var(--metal-light);
+      display: flex;
+      flex-direction: column;
+    }
+    .ex-b-frame-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      padding: var(--sp-3) var(--sp-4);
+      border-bottom: 1px solid var(--metal-light);
+      color: var(--ink-faint);
+    }
+    .ex-b-frame-label--active { color: var(--accent); }
+    .ex-b-frame-body { flex: 1; padding: var(--sp-5); }
+    .ex-b-frame--file { flex: 0.6; }
+    .ex-b-file-icon {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100%; gap: var(--sp-3);
+    }
+    .ex-b-file-icon svg { width: 64px; height: 64px; color: var(--metal); }
+    .ex-b-file-name { font-family: var(--font-mono); font-size: 12px; color: var(--ink-mid); }
+    .ex-b-file-size { font-family: var(--font-mono); font-size: 10px; color: var(--ink-faint); }
+    .ex-b-frame--raw { flex: 1; }
+    .ex-b-frame--rendered { flex: 1.4; }
+    .ex-b-arrow { display: flex; align-items: center; flex-shrink: 0; }
+    .ex-b-arrow svg { width: var(--sp-5); height: var(--sp-5); color: var(--metal); }
+
+
+    /* ═══════════════════════════════════════════
+       C — "THE RUPTURE"
+
+       The page itself transforms. The raw markdown
+       is shown in the page's normal instrument
+       language (mono, cream, housing). Then the
+       page breaks open — full viewport white,
+       different typography, generous space.
+       The site momentarily BECOMES the output.
+       Then it closes back. The page is the demo.
+       ═══════════════════════════════════════════ */
+
+    .ex-c-before {
+      max-width: 540px;
+      background: var(--housing-warm);
+      border: 1px solid var(--metal-light);
+      border-radius: var(--radius-md);
+      padding: var(--sp-6);
+      position: relative;
+    }
+    .ex-c-before-label {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      margin-bottom: var(--sp-4);
+    }
+    .ex-c-before-icon {
+      width: var(--sp-4);
+      height: var(--sp-4);
+      color: var(--ink-faint);
+    }
+    .ex-c-before-name {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-mid);
+    }
+    .ex-c-before-ext {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--ink-faint);
+      letter-spacing: 1px;
+    }
+
+    /* The rupture — breaks out of EVERYTHING */
+    .ex-c-rupture {
+      margin-left: calc(-50vw + 50%);
+      margin-right: calc(-50vw + 50%);
+      width: 100vw;
+      background: var(--doc-bg);
+      border-top: 2px solid var(--accent);
+      border-bottom: 2px solid var(--accent);
+      margin-top: var(--sp-8);
+      margin-bottom: var(--sp-8);
+    }
+    .ex-c-rupture-inner {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: var(--sp-16) var(--sp-10);
+    }
+    .ex-c-rupture-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      color: var(--accent);
+      margin-bottom: var(--sp-8);
+    }
+
+    /* Rendered content inside the rupture — larger, more generous */
+    .ex-c-rupture-doc h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--doc-heading);
+      margin-bottom: var(--sp-4);
+      letter-spacing: -0.02em;
+    }
+    .ex-c-rupture-doc h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--doc-heading);
+      margin-top: var(--sp-6);
+      margin-bottom: var(--sp-3);
+    }
+    .ex-c-rupture-doc p {
+      font-size: 17px;
+      color: var(--doc-text);
+      line-height: 1.7;
+      margin-bottom: var(--sp-4);
+    }
+    .ex-c-rupture-doc ul {
+      font-size: 17px;
+      color: var(--doc-text);
+      line-height: 1.7;
+      padding-left: var(--sp-6);
+      margin-bottom: var(--sp-4);
+    }
+    .ex-c-rupture-doc li { margin-bottom: var(--sp-2); }
+    .ex-c-rupture-doc pre {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      background: var(--doc-code-bg);
+      padding: var(--sp-5);
+      border-radius: var(--radius-sm);
+      margin-top: var(--sp-5);
+      line-height: 1.6;
+    }
+
+    /* After — the page returns to normal */
+    .ex-c-after {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-faint);
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="explorations">
+
+  <!-- A — THE SPLIT -->
+  <div class="exploration">
+    <div class="exploration-label">A — THE SPLIT</div>
+    <p class="exploration-desc">One white surface, split down the middle. Left: raw mono. Right: typeset. Same background. The typography is the only difference.</p>
+
+    <div class="ex-a">
+      <div class="ex-a-raw raw-body" aria-hidden="true">
+<span class="h"># Q3 Marketing Campaign</span>
+
+<span class="h">## Overview</span>
+
+The campaign focuses on **content-led
+growth** across `email`, `social`,
+and `paid search`.
+
+<span class="h">## Timeline</span>
+
+- **July** — Research &amp; scoping
+- **August** — Content production
+- **September** — Launch &amp; iterate
+
+<span class="d">```</span>
+Budget: $45,000
+Owner: @sarah
+<span class="d">```</span></div>
+
+      <div class="ex-a-rendered ex-doc">
+        <h2>Q3 Marketing Campaign</h2>
+        <h3>Overview</h3>
+        <p>The campaign focuses on <strong>content-led growth</strong> across email, social, and paid search.</p>
+        <h3>Timeline</h3>
+        <ul>
+          <li><strong>July</strong> — Research &amp; scoping</li>
+          <li><strong>August</strong> — Content production</li>
+          <li><strong>September</strong> — Launch &amp; iterate</li>
+        </ul>
+        <pre>Budget: $45,000
+Owner: @sarah</pre>
+      </div>
+
+      <div class="ex-a-divider" aria-hidden="true"></div>
+      <span class="ex-a-label-left raw-label">.md</span>
+      <span class="ex-a-label-right emdy-label">Emdy</span>
+    </div>
+  </div>
+
+
+  <!-- B — THE COMIC STRIP -->
+  <div class="exploration">
+    <div class="exploration-label">B — THE COMIC STRIP</div>
+    <p class="exploration-desc">Three frames: file icon → raw markdown → rendered. Each progressively wider. A story, not a comparison.</p>
+
+    <div class="ex-b">
+      <div class="ex-b-frame ex-b-frame--file">
+        <div class="ex-b-frame-label">YOU RECEIVE</div>
+        <div class="ex-b-frame-body">
+          <div class="ex-b-file-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>
+            </svg>
+            <span class="ex-b-file-name">campaign-q3.md</span>
+            <span class="ex-b-file-size">2.4 KB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ex-b-arrow" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="14 7 19 12 14 17"/>
+        </svg>
+      </div>
+
+      <div class="ex-b-frame ex-b-frame--raw">
+        <div class="ex-b-frame-label">YOU SEE</div>
+        <div class="ex-b-frame-body raw-body"><span class="h"># Q3 Marketing Campaign</span>
+
+<span class="h">## Overview</span>
+
+The campaign focuses on **content-led
+growth** across `email`, `social`,
+and `paid search`.
+
+<span class="h">## Timeline</span>
+
+- **July** — Research &amp; scoping
+- **August** — Content production
+- **September** — Launch &amp; iterate
+
+<span class="d">```</span>
+Budget: $45,000
+Owner: @sarah
+<span class="d">```</span></div>
+      </div>
+
+      <div class="ex-b-arrow" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="14 7 19 12 14 17"/>
+        </svg>
+      </div>
+
+      <div class="ex-b-frame ex-b-frame--rendered">
+        <div class="ex-b-frame-label ex-b-frame-label--active">EMDY RENDERS</div>
+        <div class="ex-b-frame-body ex-doc">
+          <h2>Q3 Marketing Campaign</h2>
+          <h3>Overview</h3>
+          <p>The campaign focuses on <strong>content-led growth</strong> across email, social, and paid search.</p>
+          <h3>Timeline</h3>
+          <ul>
+            <li><strong>July</strong> — Research &amp; scoping</li>
+            <li><strong>August</strong> — Content production</li>
+            <li><strong>September</strong> — Launch &amp; iterate</li>
+          </ul>
+          <pre>Budget: $45,000
+Owner: @sarah</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- C — THE RUPTURE -->
+  <div class="exploration">
+    <div class="exploration-label">C — THE RUPTURE</div>
+    <p class="exploration-desc">The page itself transforms. First: raw markdown in the site's normal instrument style — mono, cream, small. Then the page breaks open — full viewport width, white, generous typography. The site momentarily becomes Emdy's output. The page IS the demo. No container. The container is the viewport.</p>
+
+    <!-- The "before" — a file sitting in the page's normal style -->
+    <div class="ex-c-before">
+      <div class="ex-c-before-label">
+        <svg class="ex-c-before-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <span class="ex-c-before-name">campaign-q3.md</span>
+        <span class="ex-c-before-ext">2.4 KB</span>
+      </div>
+      <div class="raw-body"><span class="h"># Q3 Marketing Campaign</span>
+
+<span class="h">## Overview</span>
+
+The campaign focuses on **content-led
+growth** across `email`, `social`,
+and `paid search`.
+
+<span class="h">## Timeline</span>
+
+- **July** — Research &amp; scoping
+- **August** — Content production
+- **September** — Launch &amp; iterate
+
+<span class="d">```</span>
+Budget: $45,000
+Owner: @sarah
+<span class="d">```</span></div>
+    </div>
+
+    <!-- THE RUPTURE — the page breaks open -->
+    <div class="ex-c-rupture">
+      <div class="ex-c-rupture-inner">
+        <div class="ex-c-rupture-label">OPENED IN EMDY</div>
+        <div class="ex-c-rupture-doc">
+          <h2>Q3 Marketing Campaign</h2>
+          <h3>Overview</h3>
+          <p>The campaign focuses on <strong>content-led growth</strong> across email, social, and paid search.</p>
+          <h3>Timeline</h3>
+          <ul>
+            <li><strong>July</strong> — Research &amp; scoping</li>
+            <li><strong>August</strong> — Content production</li>
+            <li><strong>September</strong> — Launch &amp; iterate</li>
+          </ul>
+          <pre>Budget: $45,000
+Owner: @sarah</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- The page returns to normal -->
+    <div class="ex-c-after">The page continues.</div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="960" viewBox="0 0 1440 960">
+  <defs>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <line x1="48" y1="0" x2="48" y2="48" stroke="#3A3630" stroke-width="0.5"/>
+      <line x1="0" y1="48" x2="48" y2="48" stroke="#3A3630" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+
+  <rect width="1440" height="960" fill="#1C1A16"/>
+
+  <!-- Grid -->
+  <rect width="1440" height="960" fill="url(#grid)" opacity="0.35"/>
+
+  <!-- Concentric arcs -->
+  <circle cx="1200" cy="720" r="120" fill="none" stroke="#C09C6F" stroke-width="0.75" opacity="0.1"/>
+  <circle cx="1200" cy="720" r="240" fill="none" stroke="#C09C6F" stroke-width="0.75" opacity="0.07"/>
+  <circle cx="1200" cy="720" r="360" fill="none" stroke="#C09C6F" stroke-width="0.75" opacity="0.05"/>
+  <circle cx="1200" cy="720" r="480" fill="none" stroke="#C09C6F" stroke-width="0.75" opacity="0.03"/>
+  <circle cx="1200" cy="720" r="600" fill="none" stroke="#C09C6F" stroke-width="0.75" opacity="0.02"/>
+
+  <!-- Crosshair -->
+  <line x1="1170" y1="720" x2="1230" y2="720" stroke="#C09C6F" stroke-width="0.75" opacity="0.12"/>
+  <line x1="1200" y1="690" x2="1200" y2="750" stroke="#C09C6F" stroke-width="0.75" opacity="0.12"/>
+
+  <!-- Measurement ticks -->
+
+  <!-- Vignette -->
+  <radialGradient id="vignette" cx="50%" cy="40%" r="70%">
+    <stop offset="0%" stop-color="transparent"/>
+    <stop offset="100%" stop-color="#0C0A07" stop-opacity="0.5"/>
+  </radialGradient>
+  <rect width="1440" height="960" fill="url(#vignette)"/>
+</svg>

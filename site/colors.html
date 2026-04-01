@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rams Color Options</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: var(--bg); padding: 40px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1100px; margin: 0 auto; }
+    .option { border-radius: 8px; overflow: hidden; border: 1px solid var(--border-light); }
+    .option-header { padding: 32px 24px; }
+    .option-header h2 { font-size: 28px; font-weight: 700; margin-bottom: 8px; line-height: 1.1; }
+    .option-header p { font-size: 13px; opacity: 0.8; }
+    .option-body { background: var(--surface); padding: 24px; }
+    .option-body .label { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 2px; margin-bottom: 4px; text-transform: uppercase; }
+    .option-body .product { font-family: var(--font-mono); font-size: 12px; color: var(--ink-faint); margin-bottom: 12px; }
+    .option-body p { font-size: 14px; color: var(--ink-mid); line-height: 1.5; margin-bottom: 16px; }
+    .option-body .btn {
+      display: inline-block; padding: 8px 24px; border-radius: 8px;
+      font-family: var(--font-mono); font-size: 13px; font-weight: 500;
+      text-decoration: none; border: none;
+    }
+    .option-body .link { font-family: var(--font-mono); font-size: 13px; margin-left: 16px; text-decoration: none; padding-bottom: 1px; }
+
+    /* Value variations */
+    .variations { display: flex; gap: 0; margin-top: 16px; border-radius: 6px; overflow: hidden; }
+    .var-swatch {
+      flex: 1; height: 40px; display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px;
+    }
+    .var-swatch--light { font-weight: 400; }
+    .var-swatch--base { font-weight: 600; }
+    .var-swatch--dark { font-weight: 400; }
+    .var-labels { display: flex; gap: 0; margin-top: 4px; }
+    .var-label {
+      flex: 1; text-align: center;
+      font-family: var(--font-mono); font-size: 10px; color: var(--ink-faint);
+    }
+
+    .title { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 3px; color: var(--ink-faint); text-transform: uppercase; margin-bottom: 8px; max-width: 1100px; margin-left: auto; margin-right: auto; }
+    .subtitle { font-size: 14px; color: var(--ink-mid); max-width: 1100px; margin-left: auto; margin-right: auto; margin-bottom: 32px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<p class="title">BRAUN / DIETER RAMS ACCENT COLORS</p>
+<p class="subtitle">Chad Ashley DR01–DR06 palettes. Three value stops per color: light (hover/highlight), base (primary accent), dark (active/pressed). Some originals darkened for WCAG AA on cream.</p>
+
+<div class="grid">
+
+  <!-- 1. Burnt Red -->
+  <div class="option">
+    <div class="option-header" style="background: #AF2E1B; color: white;">
+      <h2>An engineer sent you a Markdown file.</h2>
+      <p>Emdy makes it readable.</p>
+    </div>
+    <div class="option-body">
+      <div class="label" style="color: #AF2E1B;">BURNT RED</div>
+      <div class="product">DR05 · regie 500, Atelier series</div>
+      <p>Deep red-orange from Braun's premium hi-fi. Warm, authoritative.</p>
+      <a href="#" class="btn" style="background: #AF2E1B; color: white;">Download</a>
+      <a href="#" class="link" style="color: #AF2E1B; border-bottom: 1px solid #AF2E1B;">Learn more</a>
+      <div class="variations">
+        <div class="var-swatch var-swatch--light" style="background: #D4503A; color: white;">#D4503A</div>
+        <div class="var-swatch var-swatch--base" style="background: #AF2E1B; color: white;">#AF2E1B</div>
+        <div class="var-swatch var-swatch--dark" style="background: #8A2215; color: white;">#8A2215</div>
+      </div>
+      <div class="var-labels"><span class="var-label">light</span><span class="var-label">base</span><span class="var-label">dark</span></div>
+    </div>
+  </div>
+
+  <!-- 2. Braun Orange -->
+  <div class="option">
+    <div class="option-header" style="background: #CC6324; color: white;">
+      <h2>An engineer sent you a Markdown file.</h2>
+      <p>Emdy makes it readable.</p>
+    </div>
+    <div class="option-body">
+      <div class="label" style="color: #99490F;">BRAUN ORANGE</div>
+      <div class="product">DR05 · FM dial markings, scale digits</div>
+      <p>The Braun FM tuner accent. Darkened from original #CC6324 for contrast.</p>
+      <a href="#" class="btn" style="background: #99490F; color: white;">Download</a>
+      <a href="#" class="link" style="color: #99490F; border-bottom: 1px solid #99490F;">Learn more</a>
+      <div class="variations">
+        <div class="var-swatch var-swatch--light" style="background: #CC6324; color: white;">#CC6324</div>
+        <div class="var-swatch var-swatch--base" style="background: #99490F; color: white;">#99490F</div>
+        <div class="var-swatch var-swatch--dark" style="background: #7A3A0B; color: white;">#7A3A0B</div>
+      </div>
+      <div class="var-labels"><span class="var-label">light</span><span class="var-label">base</span><span class="var-label">dark</span></div>
+    </div>
+  </div>
+
+  <!-- 3. Braun Red -->
+  <div class="option">
+    <div class="option-header" style="background: #BF1B1B; color: white;">
+      <h2>An engineer sent you a Markdown file.</h2>
+      <p>Emdy makes it readable.</p>
+    </div>
+    <div class="option-body">
+      <div class="label" style="color: #BF1B1B;">BRAUN RED</div>
+      <div class="product">DR06 · Power indicator, regie 500</div>
+      <p>The classic power-on red. Unmodified — passes contrast as-is.</p>
+      <a href="#" class="btn" style="background: #BF1B1B; color: white;">Download</a>
+      <a href="#" class="link" style="color: #BF1B1B; border-bottom: 1px solid #BF1B1B;">Learn more</a>
+      <div class="variations">
+        <div class="var-swatch var-swatch--light" style="background: #E03030; color: white;">#E03030</div>
+        <div class="var-swatch var-swatch--base" style="background: #BF1B1B; color: white;">#BF1B1B</div>
+        <div class="var-swatch var-swatch--dark" style="background: #961515; color: white;">#961515</div>
+      </div>
+      <div class="var-labels"><span class="var-label">light</span><span class="var-label">base</span><span class="var-label">dark</span></div>
+    </div>
+  </div>
+
+  <!-- 4. Braun Slate -->
+  <div class="option">
+    <div class="option-header" style="background: #3B4B59; color: white;">
+      <h2>An engineer sent you a Markdown file.</h2>
+      <p>Emdy makes it readable.</p>
+    </div>
+    <div class="option-body">
+      <div class="label" style="color: #3B4B59;">BRAUN SLATE</div>
+      <div class="product">DR05 · Brushed aluminum panels</div>
+      <p>Cool blue-grey from metal fascia. Calm, technical, balances warm cream.</p>
+      <a href="#" class="btn" style="background: #3B4B59; color: white;">Download</a>
+      <a href="#" class="link" style="color: #3B4B59; border-bottom: 1px solid #3B4B59;">Learn more</a>
+      <div class="variations">
+        <div class="var-swatch var-swatch--light" style="background: #5E7385; color: white;">#5E7385</div>
+        <div class="var-swatch var-swatch--base" style="background: #3B4B59; color: white;">#3B4B59</div>
+        <div class="var-swatch var-swatch--dark" style="background: #263038; color: white;">#263038</div>
+      </div>
+      <div class="var-labels"><span class="var-label">light</span><span class="var-label">base</span><span class="var-label">dark</span></div>
+    </div>
+  </div>
+
+  <!-- 5. Leaf Green -->
+  <div class="option">
+    <div class="option-header" style="background: #736B1E; color: white;">
+      <h2>An engineer sent you a Markdown file.</h2>
+      <p>Emdy makes it readable.</p>
+    </div>
+    <div class="option-body">
+      <div class="label" style="color: #736B1E;">LEAF GREEN</div>
+      <div class="product">DR06 · Power buttons, ET calculator keys</div>
+      <p>Braun's "leaf green." Earthy, warm, naturally paired with cream housing.</p>
+      <a href="#" class="btn" style="background: #736B1E; color: white;">Download</a>
+      <a href="#" class="link" style="color: #736B1E; border-bottom: 1px solid #736B1E;">Learn more</a>
+      <div class="variations">
+        <div class="var-swatch var-swatch--light" style="background: #9E9438; color: white;">#9E9438</div>
+        <div class="var-swatch var-swatch--base" style="background: #736B1E; color: white;">#736B1E</div>
+        <div class="var-swatch var-swatch--dark" style="background: #544E16; color: white;">#544E16</div>
+      </div>
+      <div class="var-labels"><span class="var-label">light</span><span class="var-label">base</span><span class="var-label">dark</span></div>
+    </div>
+  </div>
+
+  <!-- 6. Aubergine -->
+  <div class="option">
+    <div class="option-header" style="background: #372E3D; color: white;">
+      <h2>An engineer sent you a Markdown file.</h2>
+      <p>Emdy makes it readable.</p>
+    </div>
+    <div class="option-body">
+      <div class="label" style="color: #372E3D;">AUBERGINE</div>
+      <div class="product">DR04 · Dark trim, blackcurrant</div>
+      <p>Near-black with purple warmth. Luxurious, almost monochrome but alive.</p>
+      <a href="#" class="btn" style="background: #372E3D; color: white;">Download</a>
+      <a href="#" class="link" style="color: #372E3D; border-bottom: 1px solid #372E3D;">Learn more</a>
+      <div class="variations">
+        <div class="var-swatch var-swatch--light" style="background: #5E5068; color: white;">#5E5068</div>
+        <div class="var-swatch var-swatch--base" style="background: #372E3D; color: white;">#372E3D</div>
+        <div class="var-swatch var-swatch--dark" style="background: #1E1822; color: white;">#1E1822</div>
+      </div>
+      <div class="var-labels"><span class="var-label">light</span><span class="var-label">base</span><span class="var-label">dark</span></div>
+    </div>
+  </div>
+
+  <!-- 7. Honey Yellow -->
+  <div class="option">
+    <div class="option-header" style="background: #ED8008; color: white;">
+      <h2>An engineer sent you a Markdown file.</h2>
+      <p>Emdy makes it readable.</p>
+    </div>
+    <div class="option-body">
+      <div class="label" style="color: #9A6508;">HONEY YELLOW</div>
+      <div class="product">DR06 · Phono buttons, ET 22 result key</div>
+      <p>Braun's "honey yellow." The only colored key on the ET 22. Darkened from #ED8008.</p>
+      <a href="#" class="btn" style="background: #9A6508; color: white;">Download</a>
+      <a href="#" class="link" style="color: #9A6508; border-bottom: 1px solid #9A6508;">Learn more</a>
+      <div class="variations">
+        <div class="var-swatch var-swatch--light" style="background: #C88A18; color: white;">#C88A18</div>
+        <div class="var-swatch var-swatch--base" style="background: #9A6508; color: white;">#9A6508</div>
+        <div class="var-swatch var-swatch--dark" style="background: #7A5006; color: white;">#7A5006</div>
+      </div>
+      <div class="var-labels"><span class="var-label">light</span><span class="var-label">base</span><span class="var-label">dark</span></div>
+    </div>
+  </div>
+
+  <!-- 8. Dark Chocolate -->
+  <div class="option">
+    <div class="option-header" style="background: #3A3124; color: white;">
+      <h2>An engineer sent you a Markdown file.</h2>
+      <p>Emdy makes it readable.</p>
+    </div>
+    <div class="option-body">
+      <div class="label" style="color: #3A3124;">DARK CHOCOLATE</div>
+      <div class="product">DR02 · Wood-veneered audio equipment</div>
+      <p>The walnut speaker cabinet brown. Warm, dense, nearly monochrome.</p>
+      <a href="#" class="btn" style="background: #3A3124; color: white;">Download</a>
+      <a href="#" class="link" style="color: #3A3124; border-bottom: 1px solid #3A3124;">Learn more</a>
+      <div class="variations">
+        <div class="var-swatch var-swatch--light" style="background: #665848; color: white;">#665848</div>
+        <div class="var-swatch var-swatch--base" style="background: #3A3124; color: white;">#3A3124</div>
+        <div class="var-swatch var-swatch--dark" style="background: #1E1810; color: white;">#1E1810</div>
+      </div>
+      <div class="var-labels"><span class="var-label">light</span><span class="var-label">base</span><span class="var-label">dark</span></div>
+    </div>
+  </div>
+
+  <!-- 9. Kilimanjaro -->
+  <div class="option">
+    <div class="option-header" style="background: #261201; color: white;">
+      <h2>An engineer sent you a Markdown file.</h2>
+      <p>Emdy makes it readable.</p>
+    </div>
+    <div class="option-body">
+      <div class="label" style="color: #261201;">KILIMANJARO</div>
+      <div class="product">DR01 · Dark trim, speaker grilles</div>
+      <p>Near-black with warm brown undertone. The deepest Braun neutral.</p>
+      <a href="#" class="btn" style="background: #261201; color: white;">Download</a>
+      <a href="#" class="link" style="color: #261201; border-bottom: 1px solid #261201;">Learn more</a>
+      <div class="variations">
+        <div class="var-swatch var-swatch--light" style="background: #5A3818; color: white;">#5A3818</div>
+        <div class="var-swatch var-swatch--base" style="background: #261201; color: white;">#261201</div>
+        <div class="var-swatch var-swatch--dark" style="background: #0A0400; color: white;">#0A0400</div>
+      </div>
+      <div class="var-labels"><span class="var-label">light</span><span class="var-label">base</span><span class="var-label">dark</span></div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

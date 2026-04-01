@@ -984,7 +984,16 @@ select:focus-visible,
 /* Suppress focus ring on mouse click */
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible),
-input:focus:not(:focus-visible) {
+input:focus:not(:focus-visible),
+[role="treeitem"]:focus:not(:focus-visible),
+[role="treeitem"] button:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+  -webkit-focus-ring-color: transparent;
+}
+
+/* Suppress macOS system focus ring globally for mouse interaction */
+*:focus:not(:focus-visible) {
   outline: none;
 }
 
