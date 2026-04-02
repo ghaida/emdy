@@ -12,6 +12,7 @@ import { SkipLink } from './components/SkipLink';
 import { ToastNotification, type Toast } from './components/ToastNotification';
 import { FileContextMenu } from './components/FileContextMenu';
 import { SupportBanner } from './components/SupportBanner';
+import { AboutDialog } from './components/AboutDialog';
 import { useAnnounce } from './hooks/useAnnounce';
 import { useDisplaySettings } from './hooks/useDisplaySettings';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
@@ -42,6 +43,7 @@ export function App() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; filePath: string } | null>(null);
   const [nudgeState, setNudgeState] = useState<NudgeState | null>(null);
+  const [aboutVisible, setAboutVisible] = useState(false);
 
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -214,6 +216,7 @@ export function App() {
         case 'theme-warm': display.setColorTheme('warm'); break;
         case 'theme-cool': display.setColorTheme('cool'); break;
         case 'theme-neutral': display.setColorTheme('neutral'); break;
+        case 'show-about': setAboutVisible(true); break;
       }
     });
 
@@ -339,6 +342,10 @@ export function App() {
         systemAccentColor={display.systemAccentColor}
         onThemeChange={display.setTheme}
         onColorThemeChange={display.setColorTheme}
+      />
+      <AboutDialog
+        visible={aboutVisible}
+        onClose={() => setAboutVisible(false)}
       />
       <div className="main-layout">
         {dirEntries && (
