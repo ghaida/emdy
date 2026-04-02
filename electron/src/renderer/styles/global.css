@@ -736,6 +736,114 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
 .status-words { font-variant-numeric: tabular-nums; }
 
+/* ---- Support banner ---- */
+
+.support-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding: var(--space-4) var(--space-5);
+  margin: 0 var(--space-3) var(--space-2);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border: var(--space-px) solid color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: var(--radius-md);
+  animation: banner-slide-up var(--transition-slow) ease-out;
+}
+
+@keyframes banner-slide-up {
+  from { opacity: 0; transform: translateY(var(--space-2)); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.support-banner-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.support-banner-icon {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.support-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.support-banner-title {
+  font-size: var(--fs-base);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.support-banner-subtitle {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+}
+
+.support-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.support-banner-cta {
+  padding: var(--space-1-5) var(--space-4);
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.support-banner-cta:hover {
+  background: var(--accent-hover);
+}
+
+.support-banner-later {
+  padding: var(--space-1-5) var(--space-3);
+  background: transparent;
+  border: var(--space-px) solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.support-banner-later:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.support-banner-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.support-banner-close:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
 /* ---- Empty states ---- */
 
 .empty-state {
