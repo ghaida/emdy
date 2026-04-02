@@ -9,7 +9,10 @@ export function buildMenu(sendEvent: MenuCallback) {
     ...(isMac ? [{
       label: app.name,
       submenu: [
-        { role: 'about' as const },
+        {
+          label: 'About Emdy',
+          click: () => sendEvent('show-about'),
+        },
         { type: 'separator' as const },
         { role: 'services' as const },
         { type: 'separator' as const },
