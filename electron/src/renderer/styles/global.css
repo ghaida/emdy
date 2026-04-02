@@ -744,7 +744,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   justify-content: space-between;
   gap: var(--space-6);
   padding: var(--space-4) var(--space-5);
-  margin: 0 var(--space-3) var(--space-2);
+  margin: var(--space-2);
   background: color-mix(in srgb, var(--accent) 6%, transparent);
   border: var(--space-px) solid color-mix(in srgb, var(--accent) 18%, transparent);
   border-radius: var(--radius-md);
@@ -775,7 +775,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
 .support-banner-title {
   font-size: var(--fs-base);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -821,7 +821,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 }
 
 .support-banner-later:hover {
-  background: var(--bg-secondary);
+  border-color: var(--text-muted);
   color: var(--text-primary);
 }
 
@@ -840,7 +840,6 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 }
 
 .support-banner-close:hover {
-  background: var(--bg-secondary);
   color: var(--text-primary);
 }
 
@@ -1023,20 +1022,20 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: color-mix(in srgb, var(--accent) 6%, transparent);
-  border: var(--space-px) solid color-mix(in srgb, var(--accent) 18%, transparent);
+  padding: var(--space-2) var(--space-6);
+  background: var(--accent);
+  color: white;
+  border: none;
   border-radius: var(--radius-sm);
-  color: var(--accent);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-md);
   font-weight: 500;
-  font-family: var(--font-sans);
+  font-family: inherit;
   cursor: pointer;
-  transition: background var(--transition-fast);
+  transition: background var(--transition-normal);
 }
 
 .settings-support-btn:hover {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: var(--accent-hover);
 }
 
 /* ---- About dialog ---- */

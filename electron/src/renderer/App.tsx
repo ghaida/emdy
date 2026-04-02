@@ -276,6 +276,7 @@ export function App() {
     }
     return (
       <main id="main-content" className="content-column">
+        <SupportBanner nudgeState={nudgeState} />
         <div className="content-wrapper">
           <div className={`content-area${minimapVisible ? ' hide-scrollbar' : ''}`} ref={scrollContainerRef}>
             <MarkdownView
@@ -292,7 +293,6 @@ export function App() {
             scrollContainerRef={scrollContainerRef}
           />
         </div>
-        <SupportBanner nudgeState={nudgeState} />
         <StatusBar filePath={filePath} rootPath={dirPath} content={content} />
       </main>
     );

@@ -386,7 +386,7 @@ a.download-button:hover {
 }
 .comparison .col {
   padding-top: var(--sp-5);
-  padding-bottom: var(--sp-8);
+  padding-bottom: var(--sp-3);
 }
 .comparison-label {
   display: block;

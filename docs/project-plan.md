@@ -62,7 +62,7 @@ The current feature set was designed from assumptions about what a "Markdown rea
 - [ ] Free/paid gating — share feature requires paid upgrade
 - [ ] Pricing and purchase flow
 
-### App Features (free)
+### App Features
 - [x] Register as default macOS handler for `.md` / `.markdown` (UTType in Info.plist + first-launch prompt)
 - [x] Drag-and-drop file opening (drop a `.md` file onto the app icon or window)
 - [x] Heading navigator sidebar — list all headings in the document, click to jump to any heading
@@ -72,18 +72,19 @@ The current feature set was designed from assumptions about what a "Markdown rea
 - [x] Error state when a file can't be read (permissions, missing)
 - [x] Empty state when a directory has no Markdown files
 - [x] File-deleted notice when an open file is removed from disk
-- [ ] License key system — validation, activation, and gating in-app
 - [x] User-facing help documentation (accessible from Help menu)
 
+### Pay What You Want
+- [x] **Payment platform analysis** — Gumroad selected. See `docs/payment-platform-analysis.md`
+- [ ] Gumroad product setup — PWYW product with $0+ minimum, app binary to be uploaded when ready
+- [ ] Payment page — embed Gumroad widget on marketing site
+- [ ] In-app support prompt — usage-based nudge (e.g., after N files opened), gentle and non-blocking
+- [ ] Link from app to payment page (support button in settings or about screen)
+- [ ] Thank-you flow — confirmation after payment, optional in-app acknowledgment
+
 ### Legal
-- [ ] Draft EULA (End User License Agreement)
 - [ ] Draft Terms of Use
 - [ ] Draft Privacy Policy
-
-### Licensing & Payments
-- [ ] License key generation service
-- [ ] Payment processing integration
-- [ ] Email confirmation on purchase
 
 ### Distribution & Packaging
 - [ ] Sparkle auto-update integration
