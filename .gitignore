@@ -39,3 +39,8 @@ site-debug.png
 site-fixed.png
 site-layered.png
 site-layered2.png
+
+# Private docs, design, and AI config
+CLAUDE.md
+docs/
+.superpowers/
