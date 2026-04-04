@@ -1,6 +1,6 @@
 // Color contrast: All token pairings verified against WCAG 2.1 AA
 // (4.5:1 for normal text, 3:1 for large text and UI components)
-// Last verified: 2026-03-22
+// Last verified: 2026-04-04
 export type ColorThemeName = 'warm' | 'cool' | 'neutral' | 'fresh' | 'neon';
 
 export interface ColorScale {
@@ -93,7 +93,7 @@ export const warm: ColorTheme = {
     bgTertiary: '#2C2920',
     border: '#6A665C',
     borderSubtle: '#4A453A',
-    textMuted: '#898177',
+    textMuted: '#9A9288',
     textSecondary: '#9C9488',
     textPrimary: '#D9D2C6',
     textHeading: '#F5F2ED',
@@ -171,7 +171,7 @@ export const cool: ColorTheme = {
     bgTertiary: '#282827',
     border: '#666664',
     borderSubtle: '#42423E',
-    textMuted: '#82827C',
+    textMuted: '#93938D',
     textSecondary: '#94948E',
     textPrimary: '#D0D0CA',
     textHeading: '#ECECEA',
@@ -212,7 +212,7 @@ export const neutral: ColorTheme = {
     bgTertiary: '#DEDEDE',
     border: '#8C8C8C',
     borderSubtle: '#B4B4B4',
-    textMuted: '#6E6E6E',
+    textMuted: '#6A6A6A',
     textSecondary: '#585858',
     textPrimary: '#1D1D1F',
     textHeading: '#000000',
@@ -249,7 +249,7 @@ export const neutral: ColorTheme = {
     bgTertiary: '#323234',
     border: '#636366',
     borderSubtle: '#48484A',
-    textMuted: '#8E8E93',
+    textMuted: '#98989D',
     textSecondary: '#AEAEB2',
     textPrimary: '#E5E5EA',
     textHeading: '#F2F2F7',
@@ -327,7 +327,7 @@ export const fresh: ColorTheme = {
     bgTertiary: '#162438',
     border: '#526484',
     borderSubtle: '#2A3E5E',
-    textMuted: '#70809A',
+    textMuted: '#8090AA',
     textSecondary: '#8A9AB4',
     textPrimary: '#D8DDE8',
     textHeading: '#F5F2EB',
@@ -405,7 +405,7 @@ export const neon: ColorTheme = {
     bgTertiary: '#16142C',
     border: '#FF2BD240',
     borderSubtle: '#00E5FF30',
-    textMuted: '#7971A1',
+    textMuted: '#8880B0',
     textSecondary: '#9890C0',
     textPrimary: '#D8D0F0',
     textHeading: '#F0E8FF',
