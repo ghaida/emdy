@@ -235,7 +235,7 @@ a.download-button:hover {
 .col {
   max-width: 980px;
   margin: 0 auto;
-  padding: 0 var(--sp-3);
+  padding: 0 var(--sp-2);
 }
 
 /* Section heading — consistent h2 across all sections */
@@ -275,6 +275,7 @@ a.download-button:hover {
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.12)) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.08));
 }
 .tagline {
+  display: none;
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--ink-faint);
@@ -286,10 +287,11 @@ a.download-button:hover {
   font-size: 12px;
   color: var(--ink-mid);
   text-decoration: none;
-  border-bottom: none;
+  border-bottom: 1px solid var(--border);
 }
 .header-link:hover {
   color: var(--ink);
+  border-color: var(--ink-mid);
 }
 .header-cta {
   font-family: var(--font-mono);
@@ -298,7 +300,7 @@ a.download-button:hover {
   letter-spacing: 1px;
   background: var(--accent);
   border: none;
-  padding: var(--sp-1) var(--sp-3);
+  padding: var(--sp-1) var(--sp-2);
   border-radius: var(--radius-xs);
   cursor: pointer;
   text-decoration: none;
@@ -337,7 +339,7 @@ a.download-button:hover {
 }
 .hero-title {
   font-family: var(--font-serif);
-  font-size: 48px;
+  font-size: 36px;
   font-weight: 700;
   line-height: 1.08;
   letter-spacing: -0.02em;
@@ -352,24 +354,27 @@ a.download-button:hover {
 }
 .hero-actions {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: var(--sp-2);
 }
-.hero-meta {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--ink-faint);
-}
 .hero-cta {
+  width: 100%;
+  text-align: center;
   display: inline-block;
   font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 500;
   letter-spacing: 1px;
   background: var(--accent);
-  padding: var(--sp-2) var(--sp-4);
+  padding: var(--sp-1) var(--sp-3);
   border-radius: var(--radius-xs);
   transition: opacity 0.2s ease;
+}
+.hero-meta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-faint);
 }
 
 .rotating-wrapper {
@@ -419,6 +424,7 @@ a.download-button:hover {
 }
 .comparison-panels {
   display: flex;
+  flex-direction: column;
   gap: var(--sp-3);
 }
 .panel-group {
@@ -506,7 +512,7 @@ a.download-button:hover {
 /* Primary — 3-up panels */
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: 1px;
   background: var(--border-light);
   border-radius: var(--radius-md);
@@ -593,7 +599,7 @@ a.download-button:hover {
 .features-secondary {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   gap: 1px;
 }
 .feature-chip {
@@ -636,6 +642,7 @@ a.download-button:hover {
 /* Tab nav — horizontal above the content area */
 .showcase-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--sp-1);
   margin-bottom: var(--sp-3);
 }
@@ -664,13 +671,13 @@ a.download-button:hover {
 /* Content area: sidebar (title + caption) + slides */
 .showcase-content {
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: 1fr;
   gap: var(--sp-3);
 }
 
 /* Sidebar — title + caption only */
 .showcase-detail {
-  padding-top: var(--sp-3);
+  margin-bottom: var(--sp-2);
 }
 .showcase-title {
   font-family: var(--font-serif);
@@ -718,7 +725,9 @@ a.download-button:hover {
 }
 .download-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  text-align: center;
   gap: var(--sp-2);
 }
 .download-info {
@@ -738,14 +747,16 @@ a.download-button:hover {
 }
 .download-actions {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: var(--sp-2);
   margin-top: var(--sp-2);
-  margin-left: calc(72px + var(--sp-2));
 }
 .download-actions .download-button {
-  padding: var(--sp-1) var(--sp-3);
+  padding: var(--sp-1) var(--sp-2);
   font-size: 12px;
+  width: 100%;
+  text-align: center;
 }
 .download-button {
   font-family: var(--font-mono);
@@ -754,11 +765,15 @@ a.download-button:hover {
   letter-spacing: 1px;
   background: var(--accent);
   border: none;
-  padding: var(--sp-2) var(--sp-5);
+  padding: var(--sp-1) var(--sp-2);
   border-radius: var(--radius-xs);
   cursor: pointer;
   text-decoration: none;
   transition: opacity 0.2s ease;
+}
+.download-links {
+  display: flex;
+  gap: var(--sp-3);
 }
 .github-link {
   font-family: var(--font-mono);
@@ -795,16 +810,21 @@ a.download-button:hover {
    Responsive
    ═══════════════════════════════════════════ */
 
-@media (max-width: 768px) {
-  .col { padding-left: var(--sp-2); padding-right: var(--sp-2); }
-  .tagline { display: none; }
-  .hero-title { font-size: 36px; }
-  .comparison-panels { flex-direction: column; }
-  .features-grid { grid-template-columns: 1fr; }
-  .features-secondary { grid-template-columns: 1fr; }
-  .showcase-nav { flex-wrap: wrap; }
-  .showcase-content { grid-template-columns: 1fr; }
-  .showcase-detail { margin-bottom: var(--sp-2); }
+@media (min-width: 769px) {
+  .col { padding-left: var(--sp-3); padding-right: var(--sp-3); }
+  .tagline { display: inline; }
+  .hero-title { font-size: 48px; }
+  .comparison-panels { flex-direction: row; }
+  .features-grid { grid-template-columns: repeat(3, 1fr); }
+  .features-secondary { grid-template-columns: repeat(2, 1fr); }
+  .showcase-content { grid-template-columns: 200px 1fr; }
+  .showcase-detail { padding-top: var(--sp-3); }
+  .hero-actions { flex-direction: row; align-items: center; }
+  .download-row { flex-direction: row; align-items: center; text-align: left; }
+  .download-actions { margin-left: calc(72px + var(--sp-2)); flex-direction: row; align-items: center; }
+  .hero-cta { width: auto; }
+  .download-actions .download-button { width: auto; }
+  .showcase-detail { margin-bottom: 0; padding-top: var(--sp-3); }
 }
 
 @media (prefers-reduced-motion: reduce) {
