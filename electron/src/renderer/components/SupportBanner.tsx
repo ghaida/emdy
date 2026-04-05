@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Heart, X } from 'lucide-react';
 import type { NudgeState } from '../lib/types';
 
-const SUPPORT_URL = 'https://buy.stripe.com/test_4gM6oIflwdfn4pvdES4F200';
+const SUPPORT_URL = 'https://buy.stripe.com/eVq14o0r23dZ7H12breZ200';
 
 interface SupportBannerProps {
   nudgeState: NudgeState | null;

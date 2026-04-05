@@ -103,7 +103,7 @@ export function SettingsModal({
           <label className="settings-label">Support</label>
           <button
             className="settings-support-btn"
-            onClick={() => window.electronAPI.openExternal('https://buy.stripe.com/test_4gM6oIflwdfn4pvdES4F200')}
+            onClick={() => window.electronAPI.openExternal('https://buy.stripe.com/eVq14o0r23dZ7H12breZ200')}
           >
             Support Emdy
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

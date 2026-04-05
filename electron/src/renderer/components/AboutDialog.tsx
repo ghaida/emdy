@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useTransition } from '../hooks/useTransition';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
-const SUPPORT_URL = 'https://buy.stripe.com/test_4gM6oIflwdfn4pvdES4F200';
+const SUPPORT_URL = 'https://buy.stripe.com/eVq14o0r23dZ7H12breZ200';
 const WEBSITE_URL = 'https://emdyapp.com';
 
 interface AboutDialogProps {
