@@ -43,7 +43,7 @@ Electron Forge + Vite, React 18, TypeScript, Tailwind CSS v3, react-markdown + r
 
 ## Support
 
-If you find Emdy useful, consider [sponsoring on GitHub](https://github.com/sponsors/ghaida).
+If you find Emdy useful, consider [supporting the project.](https://buy.stripe.com/eVq14o0r23dZ7H12breZ200)
 
 ## License
 
