@@ -4,7 +4,6 @@
 
 A minimal, open source Markdown reader for macOS.
 
-
 Emdy renders Markdown files as clean, formatted documents. No editing, no plugins, no clutter. Open a file or folder and read.
 
 <img src="site/img/app-light.png" alt="Emdy screenshot" width="680">
