@@ -13,6 +13,7 @@ const config: ForgeConfig = {
     asar: true,
     name: 'Emdy',
     icon: path.resolve(__dirname, 'src/main/emdy'),
+    osxSign: {},
     extendInfo: {
       CFBundleDocumentTypes: [
         {
