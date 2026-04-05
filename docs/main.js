@@ -5,8 +5,13 @@
     function updateAppScreenshots(theme) {
       const isDark = theme === 'dark' ||
         (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      document.querySelectorAll('.showcase-slide img').forEach(img => {
-        img.src = img.src.replace(isDark ? '-light.png' : '-dark.png', isDark ? '-dark.png' : '-light.png');
+      const suffix = isDark ? '-dark.png' : '-light.png';
+      const other = isDark ? '-light.png' : '-dark.png';
+      document.querySelectorAll('.showcase-slide picture').forEach(picture => {
+        const source = picture.querySelector('source');
+        const img = picture.querySelector('img');
+        if (img) img.src = img.src.replace(other, suffix);
+        if (source) source.srcset = source.srcset.replace(other, suffix);
       });
     }
 
