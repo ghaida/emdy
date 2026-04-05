@@ -79,8 +79,19 @@ node -e "
   fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
 "
 
+# Update site/version.json
+SITE_VERSION="../site/version.json"
+if [ -f "$SITE_VERSION" ]; then
+  node -e "
+    const fs = require('fs');
+    const v = { version: '$NEW_VERSION', url: 'https://github.com/ghaida/emdy/releases/latest' };
+    fs.writeFileSync('$SITE_VERSION', JSON.stringify(v, null, 2) + '\n');
+  "
+fi
+
 # Commit and tag
 git add package.json
+git add -f ../site/version.json 2>/dev/null || true
 git commit -m "release: v$NEW_VERSION"
 git tag -a "$TAG" -m "v$NEW_VERSION"
 

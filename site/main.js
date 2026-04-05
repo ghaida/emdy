@@ -28,6 +28,15 @@
     });
   }
 
+  // Version badge
+  fetch('version.json')
+    .then(r => r.json())
+    .then(data => {
+      const badge = document.getElementById('version-badge');
+      if (badge && data.version) badge.textContent = 'v' + data.version + ' · ';
+    })
+    .catch(() => {});
+
   // Showcase carousel
   const tabs = document.querySelectorAll('.showcase-tab');
   const slides = document.querySelectorAll('.showcase-slide');
