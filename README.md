@@ -1,4 +1,4 @@
-<img src="site/img/app-icon.png" alt="Emdy" width="128" height="128">
+<img src="docs/img/app-icon.png" alt="Emdy" width="128" height="128">
 
 # Emdy
 
@@ -6,7 +6,7 @@ A minimal, open source Markdown reader for macOS.
 
 Emdy renders Markdown files as clean, formatted documents. No editing, no plugins, no clutter. Open a file or folder and read.
 
-<img src="site/img/app-light.png" alt="Emdy screenshot" width="680">
+<img src="docs/img/app-light.png" alt="Emdy screenshot" width="680">
 
 ## Features
 

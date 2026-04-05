@@ -42,5 +42,5 @@ site-layered2.png
 
 # Private docs, design, and AI config
 CLAUDE.md
-docs/
+design-docs/
 .superpowers/
