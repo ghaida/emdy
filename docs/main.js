@@ -34,7 +34,7 @@
   }
 
   // Version badge + download links
-  fetch('version.json')
+  fetch('version.json?t=' + Date.now())
     .then(r => r.json())
     .then(data => {
       const badge = document.getElementById('version-badge');
