@@ -281,6 +281,16 @@ a.download-button:hover {
   letter-spacing: 2px;
   flex: 1;
 }
+.header-link {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-mid);
+  text-decoration: none;
+  border-bottom: none;
+}
+.header-link:hover {
+  color: var(--ink);
+}
 .header-cta {
   font-family: var(--font-mono);
   font-size: 12px;
