@@ -5,6 +5,7 @@ import type { FileEntry } from '../renderer/lib/types';
 import { nudgeTrackFileOpen } from './settings-store';
 
 let currentDirPath: string | null = null;
+let currentFilePath: string | null = null;
 
 export function registerFileHandlers() {
   // Combined open dialog — allows selecting either a file or a directory
@@ -23,6 +24,7 @@ export function registerFileHandlers() {
       return { type: 'directory' as const, dirPath: selected, entries: await scanDirectory(selected) };
     }
     const content = await fs.readFile(selected, 'utf-8');
+    currentFilePath = selected;
     app.addRecentDocument(selected);
     return { type: 'file' as const, filePath: selected, content };
   });
@@ -37,6 +39,7 @@ export function registerFileHandlers() {
     if (result.canceled || result.filePaths.length === 0) return null;
     const filePath = result.filePaths[0];
     const content = await fs.readFile(filePath, 'utf-8');
+    currentFilePath = filePath;
     app.addRecentDocument(filePath);
     return { filePath, content };
   });
@@ -93,8 +96,10 @@ export function registerFileHandlers() {
   });
 
   ipcMain.handle('search:everything', async (_event, query: string) => {
-    if (!currentDirPath || !query.trim()) return [];
-    return searchEverything(currentDirPath, query.toLowerCase());
+    if (!query.trim()) return [];
+    const searchDir = currentDirPath || (currentFilePath ? path.dirname(currentFilePath) : null);
+    if (!searchDir) return [];
+    return searchEverything(searchDir, query.toLowerCase());
   });
 }
 

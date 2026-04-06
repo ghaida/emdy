@@ -606,6 +606,8 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   font-size: var(--fs-lg);
 }
 
+.command-palette-input:focus,
+.command-palette-input:focus-visible { outline: none !important; box-shadow: none !important; border: none !important; -webkit-appearance: none; }
 .command-palette-input::placeholder { color: var(--text-muted); }
 
 .command-palette-spinner {

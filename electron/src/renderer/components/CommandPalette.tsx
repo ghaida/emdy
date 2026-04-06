@@ -30,12 +30,17 @@ export function CommandPalette({ visible, onClose, onFileSelect }: CommandPalett
   const { announce } = useAnnounce();
 
   useEffect(() => {
-    if (visible && inputRef.current) {
-      inputRef.current.focus();
+    if (visible) {
       setQuery('');
       setResults([]);
       setSelectedIndex(0);
     }
+  }, [visible]);
+
+  // Focus input when mounted via callback ref
+  const setInputRef = useCallback((node: HTMLInputElement | null) => {
+    (inputRef as React.MutableRefObject<HTMLInputElement | null>).current = node;
+    if (node && visible) node.focus();
   }, [visible]);
 
   // Close on Escape even if input doesn't have focus
@@ -165,7 +170,7 @@ export function CommandPalette({ visible, onClose, onFileSelect }: CommandPalett
             <path d="M10 10l4 4" />
           </svg>
           <input
-            ref={inputRef}
+            ref={setInputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

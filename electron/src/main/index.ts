@@ -140,7 +140,7 @@ app.on('open-file', async (event, filePath) => {
 
 function sendMenuEvent(event: string) {
   const win = BrowserWindow.getFocusedWindow() || mainWindow;
-  if (win) {
+  if (win && !win.isDestroyed()) {
     win.webContents.send('menu:event', event);
   }
 }
