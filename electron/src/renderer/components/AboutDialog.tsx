@@ -38,11 +38,15 @@ export function AboutDialog({ visible, onClose }: AboutDialogProps) {
         aria-modal="true"
         aria-labelledby="about-modal-title"
       >
-        <div className="about-icon">E</div>
+        <button className="settings-close about-close" onClick={onClose} aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M2 2l10 10M12 2L2 12" />
+          </svg>
+        </button>
+        <img src="emdy-icon.png" alt="Emdy" className="about-icon-img" width="80" height="80" />
         <h2 id="about-modal-title" className="about-name">Emdy</h2>
         <p className="about-version">Version {version}</p>
         <p className="about-tagline">A Markdown reader for macOS</p>
-        <div className="about-divider" />
         <button
           className="settings-support-btn"
           onClick={() => window.electronAPI.openExternal(SUPPORT_URL)}

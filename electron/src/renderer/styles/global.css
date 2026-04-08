@@ -942,7 +942,6 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 .settings-modal {
   width: var(--settings-width);
   background: var(--bg-primary);
-  border: var(--space-px) solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
   overflow: hidden;
@@ -958,7 +957,6 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   align-items: center;
   justify-content: space-between;
   padding: var(--space-4) var(--space-4);
-  border-bottom: var(--space-px) solid var(--border);
 }
 
 .settings-title {
@@ -984,10 +982,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
 .settings-section {
   padding: var(--space-4) var(--space-4);
-  border-bottom: var(--space-px) solid var(--border);
 }
-
-.settings-section:last-child { border-bottom: none; }
 
 .settings-label {
   display: block;
@@ -1043,12 +1038,12 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 /* ---- About dialog ---- */
 
 .about-modal {
+  position: relative;
   width: 280px;
   background: var(--bg-primary);
-  border: var(--space-px) solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
-  padding: var(--space-8) var(--space-6);
+  padding: var(--space-4);
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -1060,19 +1055,16 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
 .about-modal.active { transform: scale(1); opacity: 1; }
 
-.about-icon {
-  width: 64px;
-  height: 64px;
-  background: var(--bg-tertiary);
+.about-close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+}
+
+.about-icon-img {
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-2);
   border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--accent);
-  font-size: 24px;
-  font-weight: 700;
-  font-family: var(--font-sans);
-  margin-bottom: var(--space-4);
 }
 
 .about-name {
@@ -1094,11 +1086,9 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   margin: var(--space-1) 0 0;
 }
 
-.about-divider {
-  width: 100%;
-  height: var(--space-px);
-  background: var(--border);
-  margin: var(--space-5) 0;
+
+.about-modal .settings-support-btn {
+  margin-top: var(--space-3);
 }
 
 .about-link {
