@@ -561,12 +561,16 @@ a.download-button:hover {
 /* Minimap schematic */
 .minimap-schematic { display: flex; gap: var(--sp-1); height: 40px; }
 .minimap-doc { display: flex; flex-direction: column; gap: 2px; width: 32px; }
-.minimap-line { height: 2px; border-radius: 1px; background: var(--ink-faint); }
-.minimap-line--heading { background: var(--accent); width: 60%; }
-.minimap-line--code { background: var(--led-green); opacity: 0.6; }
+.minimap-line { height: 2px; border-radius: 1px; background: #C8C0B4; }
+.minimap-line--heading { background: #D47418; width: 60%; }
+.minimap-line--code { background: #4CAF50; }
+.minimap-line--list { background: #5B7BA5; width: 80%; }
 .minimap-line--short { width: 75%; }
 .minimap-track { width: var(--sp-1); background: var(--border-light); border-radius: 1px; position: relative; }
-.minimap-thumb { position: absolute; top: 20%; width: 100%; height: 30%; background: var(--accent); border-radius: 1px; }
+.minimap-thumb { position: absolute; top: 20%; width: 100%; height: 30%; background: #D47418; border-radius: 1px; opacity: 0.5; }
+
+/* Privacy visual */
+.privacy-visual { display: flex; align-items: center; justify-content: center; }
 
 /* Export badges */
 .export-badges { display: flex; gap: var(--sp-1); }
