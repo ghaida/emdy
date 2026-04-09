@@ -67,5 +67,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // App info
   getAppVersion: () => ipcRenderer.invoke('app:version'),
+  checkForUpdate: () => ipcRenderer.invoke('app:check-update'),
+  checkForUpdateProactive: () => ipcRenderer.invoke('app:check-update-proactive'),
+  skipUpdate: (version: string) => ipcRenderer.invoke('app:skip-update', version),
   openExternal: (url: string) => ipcRenderer.invoke('app:open-external', url),
 });

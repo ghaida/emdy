@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, protocol, net, systemPreferences, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import started from 'electron-squirrel-startup';
 import { registerFileHandlers } from './ipc-handlers';
@@ -83,6 +84,76 @@ ipcMain.handle('app:version', () => {
 
 ipcMain.handle('app:open-external', (_event, url: string) => {
   shell.openExternal(url);
+});
+
+// Update check state
+const updateStatePath = path.join(app.getPath('userData'), 'update-check.json');
+
+interface UpdateCheckState {
+  lastChecked: string | null;
+  skippedVersion: string | null;
+}
+
+function loadUpdateState(): UpdateCheckState {
+  try {
+    const data = fsSync.readFileSync(updateStatePath, 'utf-8');
+    return { lastChecked: null, skippedVersion: null, ...JSON.parse(data) };
+  } catch {
+    return { lastChecked: null, skippedVersion: null };
+  }
+}
+
+function saveUpdateState(state: UpdateCheckState) {
+  fsSync.writeFileSync(updateStatePath, JSON.stringify(state, null, 2));
+}
+
+// Returns update info, null if up to date, or throws on network error
+async function fetchLatestVersion(): Promise<{ version: string; url: string } | null> {
+  const res = await net.fetch('https://emdyapp.com/version.json');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json() as { version: string };
+  const current = app.getVersion();
+  const isNewer = data.version.localeCompare(current, undefined, { numeric: true }) > 0;
+  if (!isNewer) return null;
+  const url = `https://github.com/ghaida/emdy/releases/download/v${data.version}/Emdy-${data.version}-arm64.dmg`;
+  return { version: data.version, url };
+}
+
+// Manual check — always fetches, ignores cooldown and skipped version
+ipcMain.handle('app:check-update', async () => {
+  try {
+    const result = await fetchLatestVersion();
+    const state = loadUpdateState();
+    state.lastChecked = new Date().toISOString();
+    saveUpdateState(state);
+    return { ok: true, update: result };
+  } catch {
+    return { ok: false, update: null };
+  }
+});
+
+// Proactive check — respects 24h cooldown and skipped version
+ipcMain.handle('app:check-update-proactive', async () => {
+  const state = loadUpdateState();
+  if (state.lastChecked) {
+    const hoursSince = (Date.now() - new Date(state.lastChecked).getTime()) / (1000 * 60 * 60);
+    if (hoursSince < 24) return null;
+  }
+  try {
+    const result = await fetchLatestVersion();
+    state.lastChecked = new Date().toISOString();
+    saveUpdateState(state);
+    if (result && state.skippedVersion === result.version) return null;
+    return result;
+  } catch {
+    return null;
+  }
+});
+
+ipcMain.handle('app:skip-update', (_event, version: string) => {
+  const state = loadUpdateState();
+  state.skippedVersion = version;
+  saveUpdateState(state);
 });
 
 // Register protocol to serve local files for markdown images

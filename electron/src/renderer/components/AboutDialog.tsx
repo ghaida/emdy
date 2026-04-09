@@ -14,11 +14,14 @@ export function AboutDialog({ visible, onClose }: AboutDialogProps) {
   const { mounted, active } = useTransition(visible);
   const modalRef = useRef<HTMLDivElement>(null);
   const [version, setVersion] = useState('');
+  const [update, setUpdate] = useState<{ version: string; url: string } | null | 'checking'>('checking');
   useFocusTrap(modalRef, visible);
 
   useEffect(() => {
     if (visible) {
       window.electronAPI.getAppVersion().then(setVersion);
+      setUpdate('checking');
+      window.electronAPI.checkForUpdate().then(({ ok, update }) => setUpdate(ok ? update : null));
       if (modalRef.current) {
         const firstFocusable = modalRef.current.querySelector<HTMLElement>('button, [href], input');
         firstFocusable?.focus();
@@ -45,7 +48,14 @@ export function AboutDialog({ visible, onClose }: AboutDialogProps) {
         </button>
         <img src="emdy-icon.png" alt="Emdy" className="about-icon-img" width="80" height="80" />
         <h2 id="about-modal-title" className="about-name">Emdy</h2>
-        <p className="about-version">Version {version}</p>
+        <p className="about-version">
+          Version {version}
+          {update === 'checking' ? '' : update ? (
+            <> · <button className="about-update-link" onClick={() => window.electronAPI.openExternal(update.url)}>{update.version} available</button></>
+          ) : (
+            <span className="about-up-to-date"> · Up to date</span>
+          )}
+        </p>
         <p className="about-tagline">A Markdown reader for macOS</p>
         <button
           className="settings-support-btn"

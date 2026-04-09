@@ -13,6 +13,7 @@ import { ToastNotification, type Toast } from './components/ToastNotification';
 import { FileContextMenu } from './components/FileContextMenu';
 import { SupportBanner } from './components/SupportBanner';
 import { AboutDialog } from './components/AboutDialog';
+import { UpdateDialog } from './components/UpdateDialog';
 import { useAnnounce } from './hooks/useAnnounce';
 import { useDisplaySettings } from './hooks/useDisplaySettings';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
@@ -44,6 +45,8 @@ export function App() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; filePath: string } | null>(null);
   const [nudgeState, setNudgeState] = useState<NudgeState | null>(null);
   const [aboutVisible, setAboutVisible] = useState(false);
+  const [updateVisible, setUpdateVisible] = useState(false);
+  const [updateInitialResult, setUpdateInitialResult] = useState<{ version: string; url: string } | null>(null);
 
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -194,6 +197,16 @@ export function App() {
     window.electronAPI.getNudgeState().then(setNudgeState);
   }, []);
 
+  // Check for updates on launch (silently — only show dialog if update available)
+  useEffect(() => {
+    window.electronAPI.checkForUpdateProactive().then((result) => {
+      if (result) {
+        setUpdateInitialResult(result);
+        setUpdateVisible(true);
+      }
+    });
+  }, []);
+
   // Handle menu events from main process
   useEffect(() => {
     const removeMenu = window.electronAPI.onMenuEvent((event) => {
@@ -217,6 +230,7 @@ export function App() {
         case 'theme-cool': display.setColorTheme('cool'); break;
         case 'theme-neutral': display.setColorTheme('neutral'); break;
         case 'show-about': setAboutVisible(true); break;
+        case 'check-for-updates': setUpdateInitialResult(null); setUpdateVisible(true); break;
       }
     });
 
@@ -346,6 +360,11 @@ export function App() {
       <AboutDialog
         visible={aboutVisible}
         onClose={() => setAboutVisible(false)}
+      />
+      <UpdateDialog
+        visible={updateVisible}
+        onClose={() => setUpdateVisible(false)}
+        initialResult={updateInitialResult}
       />
       <div className="main-layout">
         {dirEntries && (

@@ -13,6 +13,10 @@ export function buildMenu(sendEvent: MenuCallback) {
           label: 'About Emdy',
           click: () => sendEvent('show-about'),
         },
+        {
+          label: 'Check for Updates…',
+          click: () => sendEvent('check-for-updates'),
+        },
         { type: 'separator' as const },
         { role: 'services' as const },
         { type: 'separator' as const },

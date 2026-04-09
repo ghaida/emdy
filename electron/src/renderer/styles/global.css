@@ -1079,6 +1079,72 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   color: var(--text-muted);
   margin: var(--space-1) 0 0;
 }
+.about-up-to-date {
+  color: var(--text-muted);
+}
+.about-update-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+}
+.about-update-link:hover {
+  text-decoration: underline;
+}
+
+/* Update dialog */
+.update-modal {
+  position: relative;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  width: 320px;
+  text-align: center;
+  transform: scale(0.97);
+  opacity: 0;
+  transition: transform var(--transition-normal), opacity var(--transition-normal);
+}
+.update-modal.active { transform: scale(1); opacity: 1; }
+.update-title {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--text-heading);
+  margin: 0 0 var(--space-3);
+}
+.update-message {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  margin: 0;
+}
+.update-download-btn {
+  margin-top: var(--space-4);
+  padding: var(--space-2) var(--space-5);
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+.update-download-btn:hover {
+  filter: brightness(1.1);
+}
+.update-skip-btn {
+  display: block;
+  margin: var(--space-3) auto 0;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.update-skip-btn:hover {
+  color: var(--text-secondary);
+}
 
 .about-tagline {
   font-size: var(--fs-sm);
