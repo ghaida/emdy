@@ -161,7 +161,6 @@ export function Toolbar({
   }, [overflowOpen]);
 
   const pct = Math.round(zoom * 100);
-  const currentFont = fonts.find((f) => f.value === fontFamily) || fonts[0];
 
   return (
     <div className="toolbar" role="toolbar" aria-label="Document tools" ref={toolbarRef} onKeyDown={handleToolbarKeyDown}>

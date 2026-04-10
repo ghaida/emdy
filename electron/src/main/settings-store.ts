@@ -31,7 +31,7 @@ function save(settings: Settings) {
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
 }
 
-let current = load();
+const current = load();
 
 export function registerSettingsHandlers() {
   ipcMain.handle('settings:get', () => {
@@ -79,7 +79,7 @@ function saveNudge(state: NudgeState) {
   fs.writeFileSync(nudgePath, JSON.stringify(state, null, 2));
 }
 
-let nudge = loadNudge();
+const nudge = loadNudge();
 
 export function registerNudgeHandlers() {
   ipcMain.handle('nudge:get', () => {

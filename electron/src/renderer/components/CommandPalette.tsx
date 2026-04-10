@@ -97,30 +97,26 @@ export function CommandPalette({ visible, onClose, onFileSelect }: CommandPalett
   }, [onFileSelect, onClose]);
 
   // Group results by type and build a flat list with group headers
-  const { flatItems, resultIndices } = useMemo(() => {
+  const { flatItems } = useMemo(() => {
     const fileResults = results.filter((r) => r.type === 'file');
     const contentResults = results.filter((r) => r.type === 'content');
 
     const flatItems: ({ kind: 'header'; label: string } | { kind: 'result'; result: SearchResult })[] = [];
-    const resultIndices: number[] = []; // maps flat index to results array index
 
-    let resultIdx = 0;
     if (fileResults.length > 0) {
       flatItems.push({ kind: 'header', label: 'Files' });
       for (const r of fileResults) {
         flatItems.push({ kind: 'result', result: r });
-        resultIndices.push(results.indexOf(r));
       }
     }
     if (contentResults.length > 0) {
       flatItems.push({ kind: 'header', label: 'Content' });
       for (const r of contentResults) {
         flatItems.push({ kind: 'result', result: r });
-        resultIndices.push(results.indexOf(r));
       }
     }
 
-    return { flatItems, resultIndices };
+    return { flatItems };
   }, [results]);
 
   // Map selectedIndex (over all results) to the flat item for keyboard nav

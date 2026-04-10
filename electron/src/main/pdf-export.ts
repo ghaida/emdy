@@ -134,7 +134,7 @@ ${html}
 
     await fs.writeFile(savePath.filePath, pdfData);
     printWin.close();
-    await fs.rm(tmpDir, { recursive: true }).catch(() => {});
+    await fs.rm(tmpDir, { recursive: true }).catch(() => undefined);
     return true;
   });
 
