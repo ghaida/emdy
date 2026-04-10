@@ -1063,7 +1063,6 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
 .about-icon-img {
   margin-top: var(--space-4);
-  margin-bottom: var(--space-2);
   border-radius: var(--radius-lg);
 }
 
@@ -1071,7 +1070,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--text-heading);
-  margin: 0;
+  margin: 0 0 var(--space-2);
 }
 
 .about-version {
@@ -1170,6 +1169,19 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
 .about-link:hover {
   color: var(--text-primary);
+}
+.about-links-row {
+  margin-top: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.about-links-row .about-link {
+  margin-top: 0;
+}
+.about-link-sep {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
 }
 
 /* ---- Context menu ---- */

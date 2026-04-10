@@ -792,6 +792,62 @@ a.download-button:hover {
 }
 
 /* ═══════════════════════════════════════════
+   Legal pages (privacy, etc.)
+   ═══════════════════════════════════════════ */
+
+.legal-page {
+  padding: var(--sp-8) 0 var(--sp-10);
+}
+.legal-title {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: var(--sp-1);
+}
+.legal-effective {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin-bottom: var(--sp-6);
+}
+.legal-page h2 {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: var(--sp-5);
+  margin-bottom: var(--sp-1);
+}
+.legal-page p,
+.legal-page li {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-mid);
+  max-width: 640px;
+}
+.legal-page p {
+  margin-bottom: var(--sp-2);
+}
+.legal-page ul {
+  list-style: disc;
+  padding-left: var(--sp-3);
+  margin-bottom: var(--sp-2);
+}
+.legal-page li {
+  margin-bottom: var(--sp-1);
+}
+.legal-page a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.legal-page a:hover {
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════
    Footer
    ═══════════════════════════════════════════ */
 
@@ -808,6 +864,17 @@ a.download-button:hover {
   font-weight: 500;
   letter-spacing: 2px;
   color: var(--ink-ghost);
+}
+a.footer-text {
+  text-decoration: none;
+}
+a.footer-text:hover {
+  color: var(--ink-mid);
+}
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
 }
 
 /* ═══════════════════════════════════════════

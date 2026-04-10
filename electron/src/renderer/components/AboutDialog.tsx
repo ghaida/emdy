@@ -4,6 +4,8 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 
 const SUPPORT_URL = 'https://buy.stripe.com/eVq14o0r23dZ7H12breZ200';
 const WEBSITE_URL = 'https://emdyapp.com';
+const PRIVACY_URL = 'https://emdyapp.com/privacy.html';
+const LICENSE_URL = 'https://github.com/ghaida/emdy/blob/main/LICENSE';
 
 interface AboutDialogProps {
   visible: boolean;
@@ -74,6 +76,21 @@ export function AboutDialog({ visible, onClose }: AboutDialogProps) {
         >
           emdyapp.com
         </button>
+        <div className="about-links-row">
+          <button
+            className="about-link"
+            onClick={() => window.electronAPI.openExternal(PRIVACY_URL)}
+          >
+            Privacy
+          </button>
+          <span className="about-link-sep">·</span>
+          <button
+            className="about-link"
+            onClick={() => window.electronAPI.openExternal(LICENSE_URL)}
+          >
+            License (GPLv3)
+          </button>
+        </div>
       </div>
     </div>
   );
