@@ -1,5 +1,5 @@
 import { ipcMain, BrowserWindow } from 'electron';
-import chokidar, { type FSWatcher } from 'chokidar';
+import { watch, type FSWatcher } from 'chokidar';
 
 let watcher: FSWatcher | null = null;
 
@@ -7,7 +7,7 @@ export function registerFileWatcher() {
   ipcMain.handle('file:watch', (_event, filePath: string) => {
     stopWatcher();
 
-    watcher = chokidar.watch(filePath, {
+    watcher = watch(filePath, {
       persistent: true,
       ignoreInitial: true,
     });

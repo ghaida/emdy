@@ -1,4 +1,4 @@
-import { Menu, app, shell } from 'electron';
+import { Menu, app } from 'electron';
 
 type MenuCallback = (event: string) => void;
 
