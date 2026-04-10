@@ -65,8 +65,8 @@ export interface ElectronAPI {
   getNudgeState: () => Promise<NudgeState>;
   setNudgeSetting: (key: string, value: unknown) => Promise<void>;
   getAppVersion: () => Promise<string>;
-  checkForUpdate: () => Promise<{ ok: boolean; update: { version: string; url: string } | null }>;
-  checkForUpdateProactive: () => Promise<{ version: string; url: string } | null>;
+  checkForUpdate: () => Promise<{ ok: boolean; update: { version: string; url: string; notes?: string[] } | null }>;
+  checkForUpdateProactive: () => Promise<{ version: string; url: string; notes?: string[] } | null>;
   skipUpdate: (version: string) => Promise<void>;
   openExternal: (url: string) => Promise<void>;
 }

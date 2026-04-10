@@ -114,15 +114,15 @@ function saveUpdateState(state: UpdateCheckState) {
 }
 
 // Returns update info, null if up to date, or throws on network error
-async function fetchLatestVersion(): Promise<{ version: string; url: string } | null> {
+async function fetchLatestVersion(): Promise<{ version: string; url: string; notes?: string[] } | null> {
   const res = await net.fetch('https://emdyapp.com/version.json');
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json() as { version: string };
+  const data = await res.json() as { version: string; notes?: string[] };
   const current = app.getVersion();
   const isNewer = data.version.localeCompare(current, undefined, { numeric: true }) > 0;
   if (!isNewer) return null;
   const url = `https://github.com/ghaida/emdy/releases/download/v${data.version}/Emdy-${data.version}-arm64.dmg`;
-  return { version: data.version, url };
+  return { version: data.version, url, notes: data.notes };
 }
 
 // Manual check — always fetches, ignores cooldown and skipped version

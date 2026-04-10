@@ -1088,9 +1088,10 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   font: inherit;
   color: var(--accent);
   cursor: pointer;
+  transition: color var(--transition-normal);
 }
 .about-update-link:hover {
-  text-decoration: underline;
+  color: var(--accent-hover);
 }
 
 /* Update dialog */
@@ -1098,9 +1099,9 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   position: relative;
   background: var(--bg-primary);
   border-radius: var(--radius-lg);
-  padding: var(--space-8);
+  padding: var(--space-4);
   width: 320px;
-  text-align: center;
+  text-align: left;
   transform: scale(0.97);
   opacity: 0;
   transition: transform var(--transition-normal), opacity var(--transition-normal);
@@ -1117,8 +1118,42 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   color: var(--text-secondary);
   margin: 0;
 }
-.update-download-btn {
+.update-notes-section {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3);
+  text-align: left;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.update-notes-heading {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-2);
+}
+.update-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+}
+.update-notes li {
+  padding: var(--space-1) 0;
+}
+.update-notes li::before {
+  content: "·";
+  margin-right: var(--space-2);
+  color: var(--text-muted);
+}
+.update-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-top: var(--space-4);
+}
+.update-download-btn {
   padding: var(--space-2) var(--space-5);
   background: var(--accent);
   color: white;
@@ -1127,22 +1162,23 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   font-size: var(--fs-sm);
   font-weight: 500;
   cursor: pointer;
+  transition: background var(--transition-normal);
 }
 .update-download-btn:hover {
-  filter: brightness(1.1);
+  background: var(--accent-hover);
 }
 .update-skip-btn {
-  display: block;
-  margin: var(--space-3) auto 0;
+  margin: 0;
   background: none;
   border: none;
   padding: 0;
   font-size: var(--fs-sm);
   color: var(--text-muted);
   cursor: pointer;
+  transition: color var(--transition-normal);
 }
 .update-skip-btn:hover {
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .about-tagline {
@@ -1164,11 +1200,11 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   font-size: var(--fs-sm);
   font-family: var(--font-sans);
   cursor: pointer;
-  transition: color var(--transition-fast);
+  transition: color var(--transition-normal);
 }
 
 .about-link:hover {
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
 .about-links-row {
   margin-top: var(--space-2);

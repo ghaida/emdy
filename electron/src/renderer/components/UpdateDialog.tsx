@@ -2,12 +2,12 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useTransition } from '../hooks/useTransition';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
-type UpdateState = 'checking' | 'up-to-date' | 'error' | { version: string; url: string };
+type UpdateState = 'checking' | 'up-to-date' | 'error' | { version: string; url: string; notes?: string[] };
 
 interface UpdateDialogProps {
   visible: boolean;
   onClose: () => void;
-  initialResult?: { version: string; url: string } | null;
+  initialResult?: { version: string; url: string; notes?: string[] } | null;
 }
 
 export function UpdateDialog({ visible, onClose, initialResult }: UpdateDialogProps) {
@@ -64,21 +64,33 @@ export function UpdateDialog({ visible, onClose, initialResult }: UpdateDialogPr
         {typeof state === 'object' && (
           <>
             <p className="update-message">Emdy {state.version} is available. You have {currentVersion}.</p>
-            <button
-              className="update-download-btn"
-              onClick={() => window.electronAPI.openExternal(state.url)}
-            >
-              Download Latest Version
-            </button>
-            <button
-              className="update-skip-btn"
-              onClick={() => {
-                window.electronAPI.skipUpdate(state.version);
-                onClose();
-              }}
-            >
-              Skip This Version
-            </button>
+            {state.notes && state.notes.length > 0 && (
+              <div className="update-notes-section">
+                <h3 className="update-notes-heading">Changes in this update</h3>
+                <ul className="update-notes">
+                  {state.notes.map((note, i) => (
+                    <li key={i}>{note}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className="update-actions">
+              <button
+                className="update-download-btn"
+                onClick={() => window.electronAPI.openExternal(state.url)}
+              >
+                Download
+              </button>
+              <button
+                className="update-skip-btn"
+                onClick={() => {
+                  window.electronAPI.skipUpdate(state.version);
+                  onClose();
+                }}
+              >
+                Skip this version
+              </button>
+            </div>
           </>
         )}
       </div>
