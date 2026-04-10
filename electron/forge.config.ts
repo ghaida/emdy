@@ -30,6 +30,12 @@ const config: ForgeConfig = {
           LSItemContentTypes: ['net.daringfireball.markdown', 'public.plain-text'],
           CFBundleTypeExtensions: ['md', 'markdown', 'txt'],
         },
+        {
+          CFBundleTypeName: 'Folder',
+          CFBundleTypeRole: 'Viewer',
+          LSHandlerRank: 'Alternate',
+          LSItemContentTypes: ['public.folder'],
+        },
       ],
     },
   },

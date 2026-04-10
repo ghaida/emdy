@@ -61,6 +61,7 @@ export interface ElectronAPI {
   setSetting: (key: string, value: unknown) => Promise<void>;
   onMenuEvent: (callback: (event: string) => void) => () => void;
   onFileOpen: (callback: (filePath: string, content: string) => void) => () => void;
+  onDirOpen: (callback: (dirPath: string, entries: FileEntry[]) => void) => () => void;
   getNudgeState: () => Promise<NudgeState>;
   setNudgeSetting: (key: string, value: unknown) => Promise<void>;
   getAppVersion: () => Promise<string>;

@@ -108,7 +108,7 @@ const IGNORED_DIRS = new Set([
   'vendor', '.git', '.svn', 'coverage', '.next', '.nuxt',
 ]);
 
-async function scanDirectory(dirPath: string): Promise<FileEntry[]> {
+export async function scanDirectory(dirPath: string): Promise<FileEntry[]> {
   const entries: FileEntry[] = [];
   try {
     const items = await fs.readdir(dirPath, { withFileTypes: true });

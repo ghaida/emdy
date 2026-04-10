@@ -54,11 +54,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener('menu:event', handler);
   },
 
-  // File open from main process (drag-drop, open-recent, etc.)
+  // File/directory open from main process (drag-drop, open-recent, etc.)
   onFileOpen: (callback: (filePath: string, content: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, filePath: string, content: string) => callback(filePath, content);
     ipcRenderer.on('file:open', handler);
     return () => ipcRenderer.removeListener('file:open', handler);
+  },
+  onDirOpen: (callback: (dirPath: string, entries: unknown[]) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, dirPath: string, entries: unknown[]) => callback(dirPath, entries);
+    ipcRenderer.on('dir:open', handler);
+    return () => ipcRenderer.removeListener('dir:open', handler);
   },
 
   // Nudge

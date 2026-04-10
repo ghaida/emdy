@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import started from 'electron-squirrel-startup';
-import { registerFileHandlers } from './ipc-handlers';
+import { registerFileHandlers, scanDirectory } from './ipc-handlers';
 import { registerSettingsHandlers, registerNudgeHandlers, nudgeTrackAppLaunch } from './settings-store';
 import { registerFileWatcher } from './file-watcher';
 import { registerExportHandlers } from './pdf-export';
@@ -45,15 +45,21 @@ const createWindow = () => {
     event.preventDefault();
   });
 
-  // Send pending file from dock drop / double-click during launch
+  // Send pending file/directory from dock drop / double-click during launch
   mainWindow.webContents.once('did-finish-load', async () => {
     if (pendingFilePath) {
       try {
-        const content = await fs.readFile(pendingFilePath, 'utf-8');
-        mainWindow?.webContents.send('file:open', pendingFilePath, content);
-        app.addRecentDocument(pendingFilePath);
+        const stat = await fs.stat(pendingFilePath);
+        if (stat.isDirectory()) {
+          const entries = await scanDirectory(pendingFilePath);
+          mainWindow?.webContents.send('dir:open', pendingFilePath, entries);
+        } else {
+          const content = await fs.readFile(pendingFilePath, 'utf-8');
+          mainWindow?.webContents.send('file:open', pendingFilePath, content);
+          app.addRecentDocument(pendingFilePath);
+        }
       } catch {
-        // File can't be read
+        // File/directory can't be read
       }
       pendingFilePath = null;
     }
@@ -191,20 +197,26 @@ app.on('activate', () => {
   }
 });
 
-// Handle opening files via OS (double-click, drag to dock, Open Recent)
+// Handle opening files/directories via OS (double-click, drag to dock, Open Recent)
 app.on('open-file', async (event, filePath) => {
   event.preventDefault();
   const win = mainWindow || BrowserWindow.getAllWindows()[0];
   if (win && win.webContents && !win.webContents.isLoading()) {
     try {
-      const content = await fs.readFile(filePath, 'utf-8');
-      win.webContents.send('file:open', filePath, content);
-      app.addRecentDocument(filePath);
+      const stat = await fs.stat(filePath);
+      if (stat.isDirectory()) {
+        const entries = await scanDirectory(filePath);
+        win.webContents.send('dir:open', filePath, entries);
+      } else {
+        const content = await fs.readFile(filePath, 'utf-8');
+        win.webContents.send('file:open', filePath, content);
+        app.addRecentDocument(filePath);
+      }
     } catch {
-      // File can't be read
+      // File/directory can't be read
     }
   } else {
-    // App is still launching — queue the file for when the window is ready
+    // App is still launching — queue the path for when the window is ready
     pendingFilePath = filePath;
   }
 });

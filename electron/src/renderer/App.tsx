@@ -241,7 +241,25 @@ export function App() {
       setFileError(null);
     });
 
-    return () => { removeMenu(); removeFileOpen(); };
+    const removeDirOpen = window.electronAPI.onDirOpen(async (dirOpenPath, entries) => {
+      setDirEntries(entries);
+      setDirPath(dirOpenPath);
+      setSidebarVisible(true);
+      if (entries.length === 0) {
+        addToast('No Markdown files found in this directory', 'info');
+      } else {
+        const first = findFirstFile(entries);
+        if (first) {
+          const fileContent = await window.electronAPI.readFile(first);
+          setContent(fileContent);
+          setFilePath(first);
+          setFileDeleted(false);
+          setFileError(null);
+        }
+      }
+    });
+
+    return () => { removeMenu(); removeFileOpen(); removeDirOpen(); };
   }, [handleOpen, handleExportPDF, display, addToast]);
 
   // Welcome = nothing loaded at all. Once a folder or file is open, show toolbar.
