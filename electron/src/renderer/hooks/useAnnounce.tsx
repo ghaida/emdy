@@ -5,9 +5,11 @@ interface AnnounceContextValue {
   announceAssertive: (message: string) => void;
 }
 
+const noopAnnounce: AnnounceContextValue['announce'] = () => undefined;
+
 const AnnounceContext = createContext<AnnounceContextValue>({
-  announce: () => {},
-  announceAssertive: () => {},
+  announce: noopAnnounce,
+  announceAssertive: noopAnnounce,
 });
 
 export function useAnnounce() {

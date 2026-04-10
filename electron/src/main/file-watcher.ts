@@ -1,5 +1,5 @@
 import { ipcMain, BrowserWindow } from 'electron';
-import chokidar, { type FSWatcher } from 'chokidar';
+import { watch, type FSWatcher } from 'chokidar';
 import { isPathAllowed } from './allowed-paths';
 import { scanDirectory } from './ipc-handlers';
 
@@ -17,7 +17,7 @@ export function registerFileWatcher() {
     if (typeof filePath !== 'string' || !isPathAllowed(filePath)) return;
     stopFileWatcher();
 
-    fileWatcher = chokidar.watch(filePath, {
+    fileWatcher = watch(filePath, {
       persistent: true,
       ignoreInitial: true,
     });
@@ -43,7 +43,7 @@ export function registerFileWatcher() {
 
     watchedDirPath = dirPath;
 
-    dirWatcher = chokidar.watch(dirPath, {
+    dirWatcher = watch(dirPath, {
       persistent: true,
       ignoreInitial: true,
       ignored: IGNORED_DIRS,

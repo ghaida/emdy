@@ -35,6 +35,8 @@ npm run make       # build DMG
 npm run bump       # interactive version bump
 ```
 
+For contributor setup and local testing notes, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ### Tech stack
 
 Electron Forge + Vite, React 18, TypeScript, Tailwind CSS v3, react-markdown + remark-gfm, react-syntax-highlighter (Prism), Lucide React icons, IBM Plex fonts.

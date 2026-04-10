@@ -9,19 +9,36 @@ import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
 
+function getMacReleaseConfig() {
+  const appleId = process.env.APPLE_ID;
+  const appleIdPassword = process.env.APPLE_ID_PASSWORD;
+
+  if (!appleId && !appleIdPassword) {
+    return {};
+  }
+
+  if (!appleId || !appleIdPassword) {
+    throw new Error('Both APPLE_ID and APPLE_ID_PASSWORD must be set for notarization builds');
+  }
+
+  return {
+    osxSign: {
+      identity: 'Developer ID Application',
+    },
+    osxNotarize: {
+      appleId,
+      appleIdPassword,
+      teamId: '6RS25SR36X',
+    },
+  };
+}
+
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     name: 'Emdy',
     icon: path.resolve(__dirname, 'src/main/emdy'),
-    osxSign: {
-      identity: 'Developer ID Application',
-    },
-    osxNotarize: {
-      appleId: process.env.APPLE_ID!,
-      appleIdPassword: process.env.APPLE_ID_PASSWORD!,
-      teamId: '6RS25SR36X',
-    },
+    ...getMacReleaseConfig(),
     extendInfo: {
       CFBundleDocumentTypes: [
         {

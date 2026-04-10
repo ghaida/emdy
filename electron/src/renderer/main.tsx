@@ -11,7 +11,13 @@ applyTheme('warm', 'light');
 // Remove the static loading indicator from index.html
 document.getElementById('loading')?.remove();
 
-const root = createRoot(document.getElementById('root')!);
+const rootElement = document.getElementById('root');
+
+if (!rootElement) {
+  throw new Error('Root element not found');
+}
+
+const root = createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <AnnounceProvider>
