@@ -2,7 +2,8 @@
   "version": "1.2.1",
   "url": "https://github.com/ghaida/emdy/releases/latest",
   "notes": [
-    "Drag folders onto dock icon to open",
-    "Link to privacy policy"
+    "Performance improvements",
+    "Security fixes",
+    "Bug fixes"
   ]
 }
