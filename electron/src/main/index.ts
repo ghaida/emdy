@@ -140,7 +140,7 @@ app.on('ready', () => {
         responseHeaders: {
           ...details.responseHeaders,
           'Content-Security-Policy': [
-            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' local-file: data:; font-src 'self'; connect-src 'self' https://emdyapp.com https://update.electronjs.org",
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' local-file: data:; font-src 'self'; connect-src 'self' https://emdyapp.com",
           ],
         },
       });

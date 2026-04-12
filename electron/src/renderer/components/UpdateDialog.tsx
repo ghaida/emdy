@@ -24,38 +24,34 @@ export function UpdateDialog({ visible, onClose, readyVersion }: UpdateDialogPro
   useEffect(() => {
     if (!visible) return;
 
+    let removeStatus: (() => void) | undefined;
+    let removeReady: (() => void) | undefined;
+
     window.electronAPI.getAppVersion().then(setCurrentVersion);
 
     if (readyVersion) {
       setState(readyVersion);
-      return;
+    } else {
+      setState('checking');
+      window.electronAPI.checkForUpdate().then((result) => {
+        if (result.status === 'downloaded' && result.version) {
+          setState({ version: result.version, notes: result.notes ?? null });
+        } else if (result.status === 'error') {
+          setState('error');
+        } else if (result.status === 'checking') {
+          removeStatus = window.electronAPI.onUpdateStatus((status) => {
+            if (status === 'not-available') { setState('up-to-date'); removeStatus?.(); }
+            else if (status === 'error') { setState('error'); removeStatus?.(); }
+          });
+          removeReady = window.electronAPI.onUpdateReady((info) => {
+            setState({ version: info.version, notes: info.notes });
+            removeReady?.();
+          });
+        }
+      });
     }
 
-    setState('checking');
-    window.electronAPI.checkForUpdate().then((result) => {
-      if (result.status === 'downloaded' && result.version) {
-        setState({ version: result.version, notes: result.notes ?? null });
-      } else if (result.status === 'error') {
-        setState('error');
-      } else if (result.status === 'checking') {
-        // Wait for status events
-        const removeStatus = window.electronAPI.onUpdateStatus((status) => {
-          if (status === 'not-available') {
-            setState('up-to-date');
-            removeStatus();
-          } else if (status === 'error') {
-            setState('error');
-            removeStatus();
-          }
-        });
-        const removeReady = window.electronAPI.onUpdateReady((info) => {
-          setState({ version: info.version, notes: info.notes });
-          removeReady();
-        });
-        // Clean up listeners when dialog closes
-        return () => { removeStatus(); removeReady(); };
-      }
-    });
+    return () => { removeStatus?.(); removeReady?.(); };
   }, [visible, readyVersion]);
 
   if (!mounted) return null;

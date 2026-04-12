@@ -35,10 +35,13 @@ function saveState(state: UpdateState) {
 }
 
 // Track update state for renderer queries
+let isSetUp = false;
 let updateStatus: 'idle' | 'checking' | 'available' | 'downloaded' | 'error' = 'idle';
 let downloadedVersion: string | null = null;
 let downloadedNotes: string | null = null;
 let updateError: string | null = null;
+
+const RECHECK_INTERVAL_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 function broadcast(channel: string, ...args: unknown[]) {
   for (const win of BrowserWindow.getAllWindows()) {
@@ -97,14 +100,17 @@ export function setupAutoUpdater() {
     broadcast('update:status', 'error');
   });
 
-  // Check on launch
+  isSetUp = true;
+
+  // Check on launch, then periodically
   autoUpdater.checkForUpdates();
+  setInterval(() => autoUpdater.checkForUpdates(), RECHECK_INTERVAL_MS);
 }
 
 export function registerAutoUpdaterIPC() {
   // Manual check (from menu "Check for Updates")
   ipcMain.handle('update:check', () => {
-    if (isDev) return { status: 'error', error: 'Auto-updates not available in dev mode' };
+    if (isDev || !isSetUp) return { status: 'error', error: 'Auto-updates not available in dev mode' };
 
     // If already downloaded, return that immediately
     if (updateStatus === 'downloaded' && downloadedVersion) {
