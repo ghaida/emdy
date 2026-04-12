@@ -14,7 +14,7 @@ const RESCAN_DEBOUNCE_MS = 300;
 
 export function registerFileWatcher() {
   ipcMain.handle('file:watch', (_event, filePath: string) => {
-    if (!isPathAllowed(filePath)) return;
+    if (typeof filePath !== 'string' || !isPathAllowed(filePath)) return;
     stopFileWatcher();
 
     fileWatcher = chokidar.watch(filePath, {

@@ -37,7 +37,19 @@ export function getSettings(): Settings {
   return { ...current };
 }
 
-const SETTINGS_KEYS = new Set<string>(['fontFamily', 'theme', 'colorTheme', 'zoom']);
+const VALID_FONT_FAMILIES = new Set(['sans', 'serif', 'mono']);
+const VALID_THEMES = new Set(['light', 'dark', 'system']);
+const VALID_COLOR_THEMES = new Set(['warm', 'cool', 'neutral', 'fresh', 'neon']);
+
+function validateSetting(key: string, value: unknown): boolean {
+  switch (key) {
+    case 'fontFamily': return typeof value === 'string' && VALID_FONT_FAMILIES.has(value);
+    case 'theme': return typeof value === 'string' && VALID_THEMES.has(value);
+    case 'colorTheme': return typeof value === 'string' && VALID_COLOR_THEMES.has(value);
+    case 'zoom': return typeof value === 'number' && value >= 0.5 && value <= 3.0;
+    default: return false;
+  }
+}
 
 export function registerSettingsHandlers() {
   ipcMain.handle('settings:get', () => {
@@ -45,7 +57,7 @@ export function registerSettingsHandlers() {
   });
 
   ipcMain.handle('settings:set', (_event, key: string, value: unknown) => {
-    if (!SETTINGS_KEYS.has(key)) return;
+    if (typeof key !== 'string' || !validateSetting(key, value)) return;
     (current as unknown as Record<string, unknown>)[key] = value;
     save(current);
   });
@@ -88,7 +100,14 @@ function saveNudge(state: NudgeState) {
 
 const nudge = loadNudge();
 
-const NUDGE_KEYS = new Set<string>(['dismissedUntil', 'dismissCount', 'contributed']);
+function validateNudgeSetting(key: string, value: unknown): boolean {
+  switch (key) {
+    case 'dismissedUntil': return value === null || (typeof value === 'string' && !isNaN(Date.parse(value)));
+    case 'dismissCount': return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+    case 'contributed': return typeof value === 'boolean';
+    default: return false;
+  }
+}
 
 export function registerNudgeHandlers() {
   ipcMain.handle('nudge:get', () => {
@@ -96,7 +115,7 @@ export function registerNudgeHandlers() {
   });
 
   ipcMain.handle('nudge:set', (_event, key: string, value: unknown) => {
-    if (!NUDGE_KEYS.has(key)) return;
+    if (typeof key !== 'string' || !validateNudgeSetting(key, value)) return;
     (nudge as unknown as Record<string, unknown>)[key] = value;
     saveNudge(nudge);
   });

@@ -49,6 +49,7 @@ export function registerFileHandlers() {
   });
 
   ipcMain.handle('file:read', async (_event, filePath: string) => {
+    if (typeof filePath !== 'string') throw new Error('Invalid argument');
     if (!isPathAllowed(filePath)) throw new Error('Access denied');
     nudgeTrackFileOpen();
     return fs.readFile(filePath, 'utf-8');
@@ -68,16 +69,19 @@ export function registerFileHandlers() {
   });
 
   ipcMain.handle('dir:scan', async (_event, dirPath: string) => {
+    if (typeof dirPath !== 'string') throw new Error('Invalid argument');
     if (!isPathAllowed(dirPath)) throw new Error('Access denied');
     return scanDirectory(dirPath);
   });
 
   ipcMain.handle('file:show-in-folder', (_event, filePath: string) => {
+    if (typeof filePath !== 'string') return;
     if (!isPathAllowed(filePath)) return;
     shell.showItemInFolder(filePath);
   });
 
   ipcMain.handle('file:open-new-window', async (_event, filePath: string) => {
+    if (typeof filePath !== 'string') throw new Error('Invalid argument');
     if (!isPathAllowed(filePath)) throw new Error('Access denied');
     const content = await fs.readFile(filePath, 'utf-8');
     const win = new BrowserWindow({

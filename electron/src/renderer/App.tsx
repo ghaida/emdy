@@ -292,13 +292,17 @@ export function App() {
       } else {
         const first = findFirstFile(entries);
         if (first) {
-          const fileContent = await window.electronAPI.readFile(first);
-          setContent(fileContent);
-          setFilePath(first);
-          setFileDeleted(false);
-          setFileError(null);
-          if (scrollContainerRef.current) {
-            scrollContainerRef.current.scrollTop = 0;
+          try {
+            const fileContent = await window.electronAPI.readFile(first);
+            setContent(fileContent);
+            setFilePath(first);
+            setFileDeleted(false);
+            setFileError(null);
+            if (scrollContainerRef.current) {
+              scrollContainerRef.current.scrollTop = 0;
+            }
+          } catch {
+            addToast('Failed to read file', 'error');
           }
         }
       }
