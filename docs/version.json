@@ -2,8 +2,7 @@
   "version": "1.2.2",
   "url": "https://github.com/ghaida/emdy/releases/latest",
   "notes": [
-    "Performance improvements",
-    "Security fixes",
+    "Live reload for open directory",
     "Bug fixes"
   ]
 }
