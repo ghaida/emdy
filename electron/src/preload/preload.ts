@@ -22,6 +22,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener('file:deleted', handler);
   },
 
+  // Directory watching
+  watchDir: (dirPath: string) => ipcRenderer.invoke('dir:watch', dirPath),
+  unwatchDir: () => ipcRenderer.invoke('dir:unwatch'),
+  onDirEntriesUpdated: (callback: (entries: unknown[]) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, entries: unknown[]) => callback(entries);
+    ipcRenderer.on('dir:entries-updated', handler);
+    return () => ipcRenderer.removeListener('dir:entries-updated', handler);
+  },
+
   // Finder / search
   showItemInFolder: (filePath: string) => ipcRenderer.invoke('file:show-in-folder', filePath),
   openInNewWindow: (filePath: string) => ipcRenderer.invoke('file:open-new-window', filePath),
@@ -46,6 +55,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Window
   toggleMaximize: () => ipcRenderer.invoke('window:toggle-maximize'),
+
+  // Menu state
+  setMenuHasFile: (hasFile: boolean) => ipcRenderer.invoke('menu:set-has-file', hasFile),
 
   // Menu events from main process
   onMenuEvent: (callback: (event: string) => void) => {

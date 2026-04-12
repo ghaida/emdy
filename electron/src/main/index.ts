@@ -269,6 +269,16 @@ app.on('open-file', async (event, filePath) => {
   }
 });
 
+let hasFileOpen = false;
+
+ipcMain.handle('menu:set-has-file', (_event, hasFile: unknown) => {
+  const value = Boolean(hasFile);
+  if (value !== hasFileOpen) {
+    hasFileOpen = value;
+    buildMenu(sendMenuEvent, hasFileOpen);
+  }
+});
+
 function sendMenuEvent(event: string) {
   const win = BrowserWindow.getFocusedWindow() || mainWindow;
   if (win && !win.isDestroyed()) {

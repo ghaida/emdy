@@ -79,6 +79,11 @@ export function App() {
     prevFileRef.current = filePath;
   }, [filePath, announce]);
 
+  // Notify main process of file state for dynamic menu
+  useEffect(() => {
+    window.electronAPI.setMenuHasFile(content !== null);
+  }, [content]);
+
   const handleOpen = useCallback(async () => {
     try {
       const result = await window.electronAPI.openDialog();
@@ -88,6 +93,9 @@ export function App() {
         setFilePath(result.filePath);
         setFileDeleted(false);
         setFileError(null);
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = 0;
+        }
       } else {
         setDirEntries(result.entries);
         setDirPath(result.dirPath);
@@ -102,6 +110,9 @@ export function App() {
             setFilePath(first);
             setFileDeleted(false);
             setFileError(null);
+            if (scrollContainerRef.current) {
+              scrollContainerRef.current.scrollTop = 0;
+            }
           }
         }
       }
@@ -126,6 +137,10 @@ export function App() {
       setFilePath(path);
       setFileDeleted(false);
       setFileError(null);
+      // Scroll to top of new file
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = 0;
+      }
     } catch {
       setFileError('Could not read the file.');
       addToast('Failed to read file', 'error');
@@ -185,6 +200,22 @@ export function App() {
     },
   });
 
+  // Directory watching — live-update sidebar when files are added/removed
+  useEffect(() => {
+    if (!dirPath) return;
+
+    window.electronAPI.watchDir(dirPath);
+
+    const removeEntriesUpdated = window.electronAPI.onDirEntriesUpdated((entries) => {
+      setDirEntries(entries as FileEntry[]);
+    });
+
+    return () => {
+      window.electronAPI.unwatchDir();
+      removeEntriesUpdated();
+    };
+  }, [dirPath]);
+
   useKeyboardShortcuts({
     onZoomIn: display.zoomIn,
     onZoomOut: display.zoomOut,
@@ -239,6 +270,9 @@ export function App() {
       setFilePath(path);
       setFileDeleted(false);
       setFileError(null);
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = 0;
+      }
     });
 
     const removeDirOpen = window.electronAPI.onDirOpen(async (dirOpenPath, entries) => {
@@ -255,6 +289,9 @@ export function App() {
           setFilePath(first);
           setFileDeleted(false);
           setFileError(null);
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = 0;
+          }
         }
       }
     });

@@ -51,6 +51,10 @@ export interface ElectronAPI {
   unwatchFile: () => Promise<void>;
   onFileChanged: (callback: (filePath: string) => void) => () => void;
   onFileDeleted: (callback: (filePath: string) => void) => () => void;
+  watchDir: (dirPath: string) => Promise<void>;
+  unwatchDir: () => Promise<void>;
+  onDirEntriesUpdated: (callback: (entries: FileEntry[]) => void) => () => void;
+  setMenuHasFile: (hasFile: boolean) => Promise<void>;
   exportPDF: (opts: { html: string; title: string }) => Promise<boolean>;
   print: () => Promise<void>;
   writeClipboardHTML: (html: string) => Promise<void>;
