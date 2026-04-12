@@ -84,8 +84,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // App info
   getAppVersion: () => ipcRenderer.invoke('app:version'),
-  checkForUpdate: () => ipcRenderer.invoke('app:check-update'),
-  checkForUpdateProactive: () => ipcRenderer.invoke('app:check-update-proactive'),
-  skipUpdate: (version: string) => ipcRenderer.invoke('app:skip-update', version),
+  checkForUpdate: () => ipcRenderer.invoke('update:check'),
+  getUpdateStatus: () => ipcRenderer.invoke('update:get-status'),
+  installUpdate: () => ipcRenderer.invoke('update:install'),
+  skipUpdate: (version: string) => ipcRenderer.invoke('update:skip', version),
+  onUpdateReady: (callback: (info: { version: string; notes: string | null }) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, info: { version: string; notes: string | null }) => callback(info);
+    ipcRenderer.on('update:ready', handler);
+    return () => ipcRenderer.removeListener('update:ready', handler);
+  },
+  onUpdateStatus: (callback: (status: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, status: string) => callback(status);
+    ipcRenderer.on('update:status', handler);
+    return () => ipcRenderer.removeListener('update:status', handler);
+  },
   openExternal: (url: string) => ipcRenderer.invoke('app:open-external', url),
 });
