@@ -78,10 +78,10 @@ export const MarkdownView = React.memo(function MarkdownView({ content, colors, 
             },
             img({ src, alt, ...props }) {
               let resolvedSrc = src || '';
-              // Resolve relative paths to file:// URLs
+              // Resolve relative paths to local-file:// URLs
               if (filePath && resolvedSrc && !resolvedSrc.startsWith('http') && !resolvedSrc.startsWith('data:') && !resolvedSrc.startsWith('file:')) {
                 const dir = filePath.replace(/\/[^/]+$/, '');
-                resolvedSrc = `local-file://${dir}/${resolvedSrc}`;
+                resolvedSrc = `local-file://${dir}/${encodeURIComponent(resolvedSrc).replace(/%2F/g, '/')}`;
               }
               return <img src={resolvedSrc} alt={alt || ''} {...props} />;
             },

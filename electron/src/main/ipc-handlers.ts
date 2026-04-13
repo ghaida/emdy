@@ -8,6 +8,13 @@ import { addAllowedRoot, isPathAllowed, hardenWindow } from './allowed-paths';
 let currentDirPath: string | null = null;
 let currentFilePath: string | null = null;
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+export function setCurrentPaths(opts: { dirPath?: string; filePath?: string }) {
+  if (opts.dirPath !== undefined) currentDirPath = opts.dirPath;
+  if (opts.filePath !== undefined) currentFilePath = opts.filePath;
+}
+
 export function registerFileHandlers() {
   // Combined open dialog — allows selecting either a file or a directory
   ipcMain.handle('open:dialog', async (event) => {
@@ -51,6 +58,8 @@ export function registerFileHandlers() {
   ipcMain.handle('file:read', async (_event, filePath: string) => {
     if (typeof filePath !== 'string') throw new Error('Invalid argument');
     if (!isPathAllowed(filePath)) throw new Error('Access denied');
+    const stat = await fs.stat(filePath);
+    if (stat.size > MAX_FILE_SIZE) throw new Error('File too large (>10 MB)');
     nudgeTrackFileOpen();
     return fs.readFile(filePath, 'utf-8');
   });
@@ -93,6 +102,7 @@ export function registerFileHandlers() {
         preload: path.join(__dirname, 'preload.js'),
         contextIsolation: true,
         nodeIntegration: false,
+        sandbox: true,
       },
     });
     hardenWindow(win);
@@ -107,7 +117,7 @@ export function registerFileHandlers() {
   });
 
   ipcMain.handle('search:everything', async (_event, query: string) => {
-    if (!query.trim()) return [];
+    if (typeof query !== 'string' || !query.trim()) return [];
     const searchDir = currentDirPath || (currentFilePath ? path.dirname(currentFilePath) : null);
     if (!searchDir) return [];
     return searchEverything(searchDir, query.toLowerCase());

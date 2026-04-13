@@ -31,7 +31,7 @@ function loadState(): UpdateState {
 }
 
 function saveState(state: UpdateState) {
-  fsSync.writeFileSync(statePath, JSON.stringify(state, null, 2));
+  fsSync.writeFileSync(statePath, JSON.stringify(state, null, 2), { mode: 0o600 });
 }
 
 // Track update state for renderer queries

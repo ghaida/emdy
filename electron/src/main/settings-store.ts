@@ -28,7 +28,7 @@ function load(): Settings {
 }
 
 function save(settings: Settings) {
-  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), { mode: 0o600 });
 }
 
 const current = load();
@@ -95,7 +95,7 @@ function loadNudge(): NudgeState {
 }
 
 function saveNudge(state: NudgeState) {
-  fs.writeFileSync(nudgePath, JSON.stringify(state, null, 2));
+  fs.writeFileSync(nudgePath, JSON.stringify(state, null, 2), { mode: 0o600 });
 }
 
 const nudge = loadNudge();

@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import started from 'electron-squirrel-startup';
-import { registerFileHandlers, scanDirectory } from './ipc-handlers';
+import { registerFileHandlers, scanDirectory, setCurrentPaths } from './ipc-handlers';
 import { registerSettingsHandlers, registerNudgeHandlers, nudgeTrackAppLaunch, getSettings } from './settings-store';
 import { registerFileWatcher } from './file-watcher';
 import { registerExportHandlers } from './pdf-export';
@@ -14,6 +14,10 @@ import { setupAutoUpdater, registerAutoUpdaterIPC } from './auto-updater';
 if (started) {
   app.quit();
 }
+
+// Prevent macOS Keychain "confidential information" dialog on first launch.
+// Emdy stores nothing sensitive in web storage, so encrypted storage is unnecessary.
+app.commandLine.appendSwitch('use-mock-keychain');
 
 let mainWindow: BrowserWindow | null = null;
 let pendingFilePath: string | null = null;
@@ -45,6 +49,7 @@ const createWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: true,
     },
   });
 
@@ -69,10 +74,12 @@ const createWindow = () => {
         const stat = await fs.stat(pendingFilePath);
         if (stat.isDirectory()) {
           addAllowedRoot(pendingFilePath);
+          setCurrentPaths({ dirPath: pendingFilePath });
           const entries = await scanDirectory(pendingFilePath);
           mainWindow?.webContents.send('dir:open', pendingFilePath, entries);
         } else {
           addAllowedRoot(path.dirname(pendingFilePath));
+          setCurrentPaths({ filePath: pendingFilePath });
           const content = await fs.readFile(pendingFilePath, 'utf-8');
           mainWindow?.webContents.send('file:open', pendingFilePath, content);
           app.addRecentDocument(pendingFilePath);
@@ -126,7 +133,8 @@ protocol.registerSchemesAsPrivileged([
 
 app.on('ready', () => {
   protocol.handle('local-file', (request) => {
-    const resolved = path.resolve(decodeURIComponent(request.url.replace('local-file://', '')));
+    const parsed = new URL(request.url);
+    const resolved = path.resolve(decodeURIComponent(parsed.pathname));
     if (!isPathAllowed(resolved)) {
       return new Response('Forbidden', { status: 403 });
     }
@@ -156,7 +164,9 @@ app.on('ready', () => {
   systemPreferences.subscribeNotification('AppleColorPreferencesChangedNotification', () => {
     const color = '#' + systemPreferences.getAccentColor().slice(0, 6);
     for (const win of BrowserWindow.getAllWindows()) {
-      win.webContents.send('system:accent-color-changed', color);
+      if (!win.isDestroyed()) {
+        win.webContents.send('system:accent-color-changed', color);
+      }
     }
   });
 });
@@ -182,10 +192,12 @@ app.on('open-file', async (event, filePath) => {
       const stat = await fs.stat(filePath);
       if (stat.isDirectory()) {
         addAllowedRoot(filePath);
+        setCurrentPaths({ dirPath: filePath });
         const entries = await scanDirectory(filePath);
         win.webContents.send('dir:open', filePath, entries);
       } else {
         addAllowedRoot(path.dirname(filePath));
+        setCurrentPaths({ filePath });
         const content = await fs.readFile(filePath, 'utf-8');
         win.webContents.send('file:open', filePath, content);
         app.addRecentDocument(filePath);

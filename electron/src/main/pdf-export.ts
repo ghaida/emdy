@@ -98,29 +98,32 @@ export function registerExportHandlers() {
 
     if (savePath.canceled || !savePath.filePath) return false;
 
-    const printWin = new BrowserWindow({
-      show: false,
-      width: 800,
-      height: 600,
-      webPreferences: {
-        contextIsolation: true,
-        nodeIntegration: false,
-        javascript: false,
-      },
-    });
-    hardenWindow(printWin);
-
-    // Write CSS and HTML as separate files to avoid escaping issues
     const tmpDir = path.join(os.tmpdir(), `emdy-print-${Date.now()}`);
-    await fs.mkdir(tmpDir, { recursive: true });
+    let printWin: BrowserWindow | null = null;
+    try {
+      printWin = new BrowserWindow({
+        show: false,
+        width: 800,
+        height: 600,
+        webPreferences: {
+          contextIsolation: true,
+          nodeIntegration: false,
+          sandbox: true,
+          javascript: false,
+        },
+      });
+      hardenWindow(printWin);
 
-    const safeTitle = escapeHtml(title);
-    await fs.writeFile(path.join(tmpDir, 'print.css'), PRINT_CSS, 'utf-8');
-    await fs.writeFile(path.join(tmpDir, 'index.html'), `<!DOCTYPE html>
+      // Write CSS and HTML as separate files to avoid escaping issues
+      await fs.mkdir(tmpDir, { recursive: true });
+
+      const safeTitle = escapeHtml(title);
+      await fs.writeFile(path.join(tmpDir, 'print.css'), PRINT_CSS, 'utf-8');
+      await fs.writeFile(path.join(tmpDir, 'index.html'), `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src * data:; font-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'">
 <title>${safeTitle}</title>
 <link rel="stylesheet" href="print.css">
 </head>
@@ -129,18 +132,20 @@ ${html}
 </body>
 </html>`, 'utf-8');
 
-    await printWin.loadFile(path.join(tmpDir, 'index.html'));
-    await new Promise((resolve) => setTimeout(resolve, 500));
+      await printWin.loadFile(path.join(tmpDir, 'index.html'));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const pdfData = await printWin.webContents.printToPDF({
-      printBackground: true,
-      preferCSSPageSize: false,
-    });
+      const pdfData = await printWin.webContents.printToPDF({
+        printBackground: true,
+        preferCSSPageSize: false,
+      });
 
-    await fs.writeFile(savePath.filePath, pdfData);
-    printWin.close();
-    await fs.rm(tmpDir, { recursive: true }).catch(() => {});
-    return true;
+      await fs.writeFile(savePath.filePath, pdfData);
+      return true;
+    } finally {
+      if (printWin && !printWin.isDestroyed()) printWin.close();
+      await fs.rm(tmpDir, { recursive: true }).catch(() => {});
+    }
   });
 
   ipcMain.handle('export:print', async (event) => {
@@ -154,6 +159,7 @@ ${html}
   });
 
   ipcMain.handle('clipboard:write-html', async (_event, html: string) => {
+    if (typeof html !== 'string') return;
     const { clipboard } = await import('electron');
     clipboard.writeHTML(html);
   });
