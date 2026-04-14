@@ -8,12 +8,14 @@ export interface FileEntry {
 export type FontFamily = 'sans' | 'serif' | 'mono';
 export type AppTheme = 'light' | 'dark' | 'system';
 export type ColorThemeName = 'warm' | 'cool' | 'neutral' | 'fresh' | 'neon';
+export type ContentWidth = 'narrow' | 'medium' | 'wide';
 
 export interface DisplaySettings {
   fontFamily: FontFamily;
   theme: AppTheme;
   colorTheme: ColorThemeName;
   zoom: number;
+  contentWidth: ContentWidth;
 }
 
 export interface NudgeState {
