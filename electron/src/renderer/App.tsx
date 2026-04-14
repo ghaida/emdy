@@ -321,11 +321,23 @@ export function App() {
     display.fontFamily === 'serif' ? 'var(--font-serif)' :
     'var(--font-mono)';
 
+  const contentWidthStyle = useMemo(() => {
+    switch (display.contentWidth) {
+      case 'narrow':
+        return { maxWidth: `min(${560 * display.zoom}px, 100%)` };
+      case 'wide':
+        return { maxWidth: '100%' };
+      case 'medium':
+      default:
+        return { maxWidth: `min(${680 * display.zoom}px, 100%)` };
+    }
+  }, [display.contentWidth, display.zoom]);
+
   const markdownStyle = useMemo(() => ({
     fontFamily: fontFamilyVar,
     fontSize: `${display.zoom}rem`,
-    maxWidth: `min(${680 * display.zoom}px, 100%)`,
-  }), [fontFamilyVar, display.zoom]);
+    ...contentWidthStyle,
+  }), [contentWidthStyle, fontFamilyVar, display.zoom]);
 
   const renderContent = () => {
     if (fileDeleted) {
@@ -421,9 +433,11 @@ export function App() {
         onClose={() => setSettingsVisible(false)}
         theme={display.theme}
         colorTheme={display.colorTheme}
+        contentWidth={display.contentWidth}
         systemAccentColor={display.systemAccentColor}
         onThemeChange={display.setTheme}
         onColorThemeChange={display.setColorTheme}
+        onContentWidthChange={display.setContentWidth}
       />
       <AboutDialog
         visible={aboutVisible}
