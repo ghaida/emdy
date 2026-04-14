@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import type { AppTheme, ColorThemeName } from '../lib/types';
+import type { AppTheme, ColorThemeName, ContentWidth } from '../lib/types';
 import { useTransition } from '../hooks/useTransition';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
@@ -8,9 +8,11 @@ interface SettingsModalProps {
   onClose: () => void;
   theme: AppTheme;
   colorTheme: ColorThemeName;
+  contentWidth: ContentWidth;
   systemAccentColor?: string;
   onThemeChange: (theme: AppTheme) => void;
   onColorThemeChange: (colorTheme: ColorThemeName) => void;
+  onContentWidthChange: (contentWidth: ContentWidth) => void;
 }
 
 const appearances: { value: AppTheme; label: string }[] = [
@@ -27,14 +29,22 @@ const colorThemes: { value: ColorThemeName; label: string; swatch: string }[] = 
   { value: 'neon', label: 'Neon', swatch: '#FF2BD2' },
 ];
 
+const contentWidths: { value: ContentWidth; label: string }[] = [
+  { value: 'narrow', label: 'Narrow' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'wide', label: 'Wide' },
+];
+
 export function SettingsModal({
   visible,
   onClose,
   theme,
   colorTheme,
+  contentWidth,
   systemAccentColor,
   onThemeChange,
   onColorThemeChange,
+  onContentWidthChange,
 }: SettingsModalProps) {
   const { mounted, active } = useTransition(visible);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -94,6 +104,23 @@ export function SettingsModal({
                 aria-checked={theme === a.value}
               >
                 {a.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <label className="settings-label">Content Width</label>
+          <div className="settings-options settings-grid-3" role="radiogroup" aria-label="Content width">
+            {contentWidths.map((width) => (
+              <button
+                key={width.value}
+                className={`settings-option${contentWidth === width.value ? ' active' : ''}`}
+                onClick={() => onContentWidthChange(width.value)}
+                role="radio"
+                aria-checked={contentWidth === width.value}
+              >
+                {width.label}
               </button>
             ))}
           </div>

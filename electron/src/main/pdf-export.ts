@@ -144,7 +144,7 @@ ${html}
       return true;
     } finally {
       if (printWin && !printWin.isDestroyed()) printWin.close();
-      await fs.rm(tmpDir, { recursive: true }).catch(() => {});
+      await fs.rm(tmpDir, { recursive: true }).catch(() => undefined);
     }
   });
 

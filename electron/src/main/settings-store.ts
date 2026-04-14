@@ -7,6 +7,7 @@ interface Settings {
   theme: string;
   colorTheme: string;
   zoom: number;
+  contentWidth: string;
 }
 
 const defaults: Settings = {
@@ -14,6 +15,7 @@ const defaults: Settings = {
   theme: 'system',
   colorTheme: 'warm',
   zoom: 1.0,
+  contentWidth: 'medium',
 };
 
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
