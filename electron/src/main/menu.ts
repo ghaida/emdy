@@ -73,6 +73,17 @@ export function buildMenu(sendEvent: MenuCallback, hasFile = false) {
             accelerator: 'CmdOrCtrl+F',
             click: () => sendEvent('find'),
           },
+          { type: 'separator' as const },
+          {
+            label: 'Find Next',
+            accelerator: 'CmdOrCtrl+G',
+            click: () => sendEvent('find-next'),
+          },
+          {
+            label: 'Find Previous',
+            accelerator: 'CmdOrCtrl+Shift+G',
+            click: () => sendEvent('find-previous'),
+          },
         ],
       },
       {

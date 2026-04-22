@@ -6,6 +6,8 @@ interface ShortcutHandlers {
   onZoomReset: () => void;
   onOpen: () => void;
   onFind?: () => void;
+  onNextMatch?: () => void;
+  onPrevMatch?: () => void;
 }
 
 export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
@@ -28,6 +30,12 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       } else if (meta && e.key === 'f' && handlers.onFind) {
         e.preventDefault();
         handlers.onFind();
+      } else if (meta && e.key === 'g' && !e.shiftKey && handlers.onNextMatch) {
+        e.preventDefault();
+        handlers.onNextMatch();
+      } else if (meta && e.key === 'g' && e.shiftKey && handlers.onPrevMatch) {
+        e.preventDefault();
+        handlers.onPrevMatch();
       }
     };
 

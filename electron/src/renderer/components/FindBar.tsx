@@ -1,179 +1,189 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ChevronUp, ChevronDown, X } from 'lucide-react';
+import { useTransition } from '../hooks/useTransition';
+import { useAnnounce } from '../hooks/useAnnounce';
+
+export type FindBarMode = 'multi-persistent' | 'zero' | 'over-cap';
 
 interface FindBarProps {
   visible: boolean;
+  query: string;
+  currentIndex: number;
+  totalMatches: number;
+  isCapped: boolean;
+  mode: FindBarMode;
+  pulseNonce?: number;
+  onQueryChange: (q: string) => void;
+  onNext: () => void;
+  onPrev: () => void;
   onClose: () => void;
-  contentRef: React.RefObject<HTMLDivElement | null>;
 }
 
-export function FindBar({ visible, onClose, contentRef }: FindBarProps) {
-  const [query, setQuery] = useState('');
-  const [matchCount, setMatchCount] = useState(0);
-  const [currentMatch, setCurrentMatch] = useState(0);
+export function FindBar({
+  visible,
+  query,
+  currentIndex,
+  totalMatches,
+  isCapped,
+  mode,
+  pulseNonce,
+  onQueryChange,
+  onNext,
+  onPrev,
+  onClose,
+}: FindBarProps) {
+  const { mounted, active } = useTransition(visible);
   const inputRef = useRef<HTMLInputElement>(null);
+  const previousFocusRef = useRef<Element | null>(null);
+  const { announce } = useAnnounce();
+  const [pulsing, setPulsing] = useState(false);
+  const [inputValue, setInputValue] = useState(query);
+  const lastExternalQueryRef = useRef(query);
 
-  const clearHighlights = useCallback(() => {
-    if (!contentRef.current) return;
-    const marks = contentRef.current.querySelectorAll('mark[data-find]');
-    marks.forEach((mark) => {
-      const parent = mark.parentNode;
-      if (parent) {
-        parent.replaceChild(document.createTextNode(mark.textContent || ''), mark);
-        parent.normalize();
-      }
+  useEffect(() => {
+    if (query !== lastExternalQueryRef.current) {
+      lastExternalQueryRef.current = query;
+      setInputValue(query);
+    }
+  }, [query]);
+
+  useEffect(() => {
+    if (!visible) return;
+    previousFocusRef.current = document.activeElement;
+    const frame = requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      const end = el.value.length;
+      el.setSelectionRange(end, end);
     });
-  }, [contentRef]);
+    return () => cancelAnimationFrame(frame);
+  }, [visible]);
 
-  const highlightMatches = useCallback((searchText: string) => {
-    clearHighlights();
-    if (!searchText.trim() || !contentRef.current) {
-      setMatchCount(0);
-      setCurrentMatch(0);
+  useEffect(() => {
+    if (visible) return;
+    const prev = previousFocusRef.current;
+    previousFocusRef.current = null;
+    if (prev instanceof HTMLElement && document.contains(prev)) {
+      prev.focus();
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible) return;
+    if (mode === 'zero' || totalMatches === 0) {
+      announce('No matches');
       return;
     }
-
-    const walker = document.createTreeWalker(
-      contentRef.current,
-      NodeFilter.SHOW_TEXT,
-      null,
-    );
-
-    const textNodes: Text[] = [];
-    let node: Text | null;
-    while ((node = walker.nextNode() as Text)) {
-      textNodes.push(node);
-    }
-
-    let count = 0;
-    const lowerQuery = searchText.toLowerCase();
-
-    for (const textNode of textNodes) {
-      const text = textNode.textContent || '';
-      const lowerText = text.toLowerCase();
-      let idx = lowerText.indexOf(lowerQuery);
-
-      if (idx === -1) continue;
-
-      const frag = document.createDocumentFragment();
-      let lastIdx = 0;
-
-      while (idx !== -1) {
-        if (idx > lastIdx) {
-          frag.appendChild(document.createTextNode(text.slice(lastIdx, idx)));
-        }
-        const mark = document.createElement('mark');
-        mark.setAttribute('data-find', String(count));
-        mark.textContent = text.slice(idx, idx + searchText.length);
-        mark.style.background = 'var(--accent)';
-        mark.style.color = 'white';
-        mark.style.borderRadius = '2px';
-        mark.style.padding = '0 1px';
-        frag.appendChild(mark);
-        count++;
-        lastIdx = idx + searchText.length;
-        idx = lowerText.indexOf(lowerQuery, lastIdx);
-      }
-
-      if (lastIdx < text.length) {
-        frag.appendChild(document.createTextNode(text.slice(lastIdx)));
-      }
-
-      textNode.parentNode?.replaceChild(frag, textNode);
-    }
-
-    setMatchCount(count);
-    setCurrentMatch(count > 0 ? 1 : 0);
-
-    // Scroll to first match
-    if (count > 0) {
-      scrollToMatch(0);
-    }
-  }, [contentRef, clearHighlights]);
-
-  const scrollToMatch = (index: number) => {
-    if (!contentRef.current) return;
-    const marks = contentRef.current.querySelectorAll('mark[data-find]');
-    marks.forEach((m, i) => {
-      (m as HTMLElement).style.background = i === index ? 'var(--accent)' : 'var(--accent-warm)';
-      (m as HTMLElement).style.opacity = i === index ? '1' : '0.5';
-    });
-    if (marks[index]) {
-      marks[index].scrollIntoView({ block: 'center', behavior: 'smooth' });
-    }
-  };
-
-  const goToNext = useCallback(() => {
-    if (matchCount === 0) return;
-    const next = currentMatch < matchCount ? currentMatch : 1;
-    setCurrentMatch(next);
-    scrollToMatch(next - 1);
-  }, [matchCount, currentMatch]);
-
-  const goToPrev = useCallback(() => {
-    if (matchCount === 0) return;
-    const prev = currentMatch > 1 ? currentMatch - 1 : matchCount;
-    setCurrentMatch(prev);
-    scrollToMatch(prev - 1);
-  }, [matchCount, currentMatch]);
+    const term = query.trim();
+    const description = term ? `for ${term}` : '';
+    announce(`Find bar opened. ${totalMatches} matches ${description}`.trim() + '.');
+  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (visible && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-    if (!visible) {
-      clearHighlights();
-      setQuery('');
-      setMatchCount(0);
-      setCurrentMatch(0);
-    }
-  }, [visible, clearHighlights]);
+    if (pulseNonce === undefined || pulseNonce === 0) return;
+    setPulsing(true);
+    const timer = setTimeout(() => setPulsing(false), 200);
+    return () => clearTimeout(timer);
+  }, [pulseNonce]);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => highlightMatches(query), 150);
-    return () => clearTimeout(timeout);
-  }, [query, highlightMatches]);
+  if (!mounted) return null;
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
+  const cycleDisabled = totalMatches <= 1 || mode === 'zero';
+  const phase = !visible ? 'exiting' : !active ? 'entering' : '';
+
+  const showCappedCounter = isCapped || mode === 'over-cap';
+  const counterText = (() => {
+    if (mode === 'zero' || totalMatches === 0) return 'No matches';
+    const display = currentIndex + 1;
+    if (showCappedCounter) return `${display} of 1,000+`;
+    return `${display} of ${totalMatches}`;
+  })();
+  const counterTooltip = showCappedCounter
+    ? 'Showing first 1,000 matches. Refine your search to see more.'
+    : undefined;
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (cycleDisabled) return;
+      if (e.shiftKey) onPrev();
+      else onNext();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
       onClose();
-    } else if (e.key === 'Enter') {
-      if (e.shiftKey) goToPrev();
-      else goToNext();
     }
   };
 
-  if (!visible) return null;
+  const handleBarKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      onClose();
+    }
+  };
 
   return (
-    <div className="find-bar">
-      <input
-        ref={inputRef}
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Find in document..."
-        className="find-input"
-      />
-      <span className="find-count">
-        {matchCount > 0 ? `${currentMatch}/${matchCount}` : query ? 'No matches' : ''}
-      </span>
-      <button className="find-btn" onClick={goToPrev} title="Previous (Shift+Enter)">
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M2 7l3-4 3 4" />
-        </svg>
-      </button>
-      <button className="find-btn" onClick={goToNext} title="Next (Enter)">
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M2 3l3 4 3-4" />
-        </svg>
-      </button>
-      <button className="find-btn" onClick={onClose} title="Close (Esc)">
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M2 2l6 6M8 2l-6 6" />
-        </svg>
-      </button>
+    <div className="find-bar-wrapper">
+      <div
+        className={`find-bar${phase ? ` ${phase}` : ''}`}
+        role="search"
+        aria-label="Find in document"
+        onKeyDown={handleBarKeyDown}
+      >
+        <input
+          ref={inputRef}
+          type="text"
+          className="find-bar-input"
+          value={inputValue}
+          placeholder="Find in document"
+          aria-label="Find in document"
+          aria-describedby="find-bar-counter"
+          onChange={(e) => {
+            const v = e.target.value;
+            setInputValue(v);
+            lastExternalQueryRef.current = v;
+            onQueryChange(v);
+          }}
+          onKeyDown={handleInputKeyDown}
+        />
+        <span
+          id="find-bar-counter"
+          className={`find-bar-counter${pulsing ? ' pulse' : ''}`}
+          aria-live="polite"
+          aria-atomic="true"
+          title={counterTooltip}
+        >
+          {counterText}
+        </span>
+        <div className="find-bar-nav">
+          <button
+            type="button"
+            className="find-bar-btn"
+            aria-label="Previous match"
+            onClick={onPrev}
+            disabled={cycleDisabled}
+          >
+            <ChevronUp size={16} strokeWidth={1.5} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="find-bar-btn"
+            aria-label="Next match"
+            onClick={onNext}
+            disabled={cycleDisabled}
+          >
+            <ChevronDown size={16} strokeWidth={1.5} aria-hidden="true" />
+          </button>
+        </div>
+        <button
+          type="button"
+          className="find-bar-btn"
+          aria-label="Close find bar"
+          onClick={onClose}
+        >
+          <X size={16} strokeWidth={1.5} aria-hidden="true" />
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,24 +1,30 @@
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
 import { perfMark, perfMeasure } from '../lib/perf';
 
 interface MinimapProps {
   visible: boolean;
   contentRef: React.RefObject<HTMLDivElement | null>;
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+  matchPositions?: number[];
+  currentMatchIndex?: number | null;
 }
 
-export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProps) {
+export function Minimap({
+  visible,
+  contentRef,
+  scrollContainerRef,
+  matchPositions = [],
+  currentMatchIndex = null,
+}: MinimapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cloneWrapperRef = useRef<HTMLDivElement>(null);
   const cloneRef = useRef<HTMLDivElement>(null);
   const [viewportTop, setViewportTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [viewportReady, setViewportReady] = useState(false);
+  const [scale, setScale] = useState(0.12);
   const isDragging = useRef(false);
-  // Dynamic scale: derived from minimap width / original content width
-  const scaleRef = useRef(0.12);
 
-  // Clone the markdown body content into the minimap
   const syncContent = useCallback(() => {
     perfMark('minimap-sync-start');
     const content = contentRef.current;
@@ -28,13 +34,10 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     const minimap = containerRef.current;
     if (!content || !container || !clone || !wrapper || !minimap) return;
 
-    // Find the .markdown-body inside the content ref
     const markdownBody = content.querySelector('.markdown-body') as HTMLElement | null;
     if (!markdownBody) return;
 
-    // Measure original content width to derive scale
     const originalWidth = markdownBody.offsetWidth;
-    // Minimap inner width = minimap content box minus padding
     const minimapStyle = getComputedStyle(minimap);
     const minimapInnerWidth = minimap.clientWidth
       - parseFloat(minimapStyle.paddingLeft)
@@ -42,26 +45,28 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
 
     if (originalWidth <= 0 || minimapInnerWidth <= 0) return;
 
-    const scale = minimapInnerWidth / originalWidth;
-    scaleRef.current = scale;
+    // Scale against the natural max content width rather than the actual
+    // rendered width. Keeps the thumbnail — both text size and text width —
+    // stable as the window resizes. Falls back to actual if the content
+    // happens to be narrower than the reference.
+    const REFERENCE_WIDTH = 680; // matches --content-max-width
+    const refWidth = Math.max(originalWidth, REFERENCE_WIDTH);
+    const nextScale = minimapInnerWidth / refWidth;
+    setScale(nextScale);
 
-    // Set clone width to match original so text wraps identically
-    clone.style.transform = `scale(${scale})`;
+    clone.style.transform = `scale(${nextScale})`;
     clone.style.transformOrigin = 'top left';
-    clone.style.width = `${originalWidth}px`;
+    clone.style.width = `${refWidth}px`;
 
-    // Clone via DOM methods (safe — this is our own rendered content)
     while (clone.firstChild) clone.removeChild(clone.firstChild);
     const cloned = markdownBody.cloneNode(true) as HTMLElement;
     clone.appendChild(cloned);
 
-    // Set wrapper height based on scroll container height at the derived scale
     const sourceHeight = container.scrollHeight;
-    wrapper.style.height = `${sourceHeight * scale}px`;
+    wrapper.style.height = `${sourceHeight * nextScale}px`;
     perfMeasure('minimap-sync', 'minimap-sync-start');
   }, [contentRef, scrollContainerRef]);
 
-  // Sync viewport indicator and minimap scroll position
   const syncViewport = useCallback(() => {
     const container = scrollContainerRef.current;
     const content = contentRef.current;
@@ -74,7 +79,6 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     const scrollTop = container.scrollTop;
     const minimapContentHeight = wrapper.offsetHeight;
 
-    // Map viewport proportionally: the minimap represents the full scrollable area
     const vpHeight = (clientHeight / scrollHeight) * minimapContentHeight;
     const scrollRange = scrollHeight - clientHeight;
     const vpTop = scrollRange > 0
@@ -84,8 +88,6 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     setViewportTop(vpTop);
     setViewportHeight(vpHeight);
 
-    // Auto-scroll minimap to keep viewport indicator visible
-    // Skip during drag to prevent feedback loop (drag → scroll → auto-scroll → amplified drag)
     if (!isDragging.current) {
       const minimapVisibleHeight = minimap.clientHeight;
       const vpCenter = vpTop + vpHeight / 2;
@@ -94,12 +96,10 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     }
   }, [scrollContainerRef, contentRef]);
 
-  // Reset viewport readiness when minimap is hidden
   useEffect(() => {
     if (!visible) setViewportReady(false);
   }, [visible]);
 
-  // Sync content on mount and when DOM changes
   useEffect(() => {
     if (!visible) return;
     syncContent();
@@ -107,12 +107,31 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     const content = contentRef.current;
     if (!content) return;
 
-    const observer = new MutationObserver(syncContent);
-    observer.observe(content, { childList: true, subtree: true, characterData: true });
+    // Only re-sync when structural content changes. Skip mutations caused by
+    // the find walker (inserting/removing <mark> wrappers, and the text-node
+    // splits those mutations entail) — those don't change what the minimap
+    // should render, and cloning a 62k-word body on every keystroke is brutal.
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type !== 'childList') continue;
+        for (const node of m.addedNodes) {
+          if (node instanceof HTMLElement && node.tagName !== 'MARK') {
+            syncContent();
+            return;
+          }
+        }
+        for (const node of m.removedNodes) {
+          if (node instanceof HTMLElement && node.tagName !== 'MARK') {
+            syncContent();
+            return;
+          }
+        }
+      }
+    });
+    observer.observe(content, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, [visible, syncContent, contentRef]);
 
-  // Sync viewport on scroll/resize — wait for slide-in transition before first sync
   useEffect(() => {
     if (!visible) return;
 
@@ -129,10 +148,6 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
       setViewportReady(true);
     };
 
-    // Wait for the minimap width transition to finish before first sync,
-    // so viewport coordinates are calculated at final dimensions.
-    // Fallback timeout covers the case where the minimap was already open at mount
-    // (no transition fires).
     let fallback: ReturnType<typeof setTimeout> | undefined;
     const onTransitionEnd = (e: TransitionEvent) => {
       if (e.propertyName === 'width') {
@@ -163,7 +178,22 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     };
   }, [visible, syncViewport, syncContent, scrollContainerRef, contentRef]);
 
-  // Click/drag to navigate — centers the viewport on the click position
+  const ticks = useMemo(() => {
+    if (matchPositions.length === 0 || scale <= 0) return [];
+    const scaled = matchPositions.map((p, i) => ({
+      y: p * scale,
+      isCurrent: i === currentMatchIndex,
+    }));
+    const sorted = scaled.slice().sort((a, b) => a.y - b.y);
+    const out: typeof sorted = [];
+    for (const t of sorted) {
+      const last = out[out.length - 1];
+      if (last && t.y - last.y < 4 && !t.isCurrent) continue;
+      out.push(t);
+    }
+    return out;
+  }, [matchPositions, currentMatchIndex, scale]);
+
   const scrollToY = useCallback((clientY: number) => {
     const container = scrollContainerRef.current;
     const minimap = containerRef.current;
@@ -175,9 +205,7 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
     const minimapContentHeight = wrapper.offsetHeight;
     if (minimapContentHeight <= 0) return;
 
-    // Viewport height in minimap coordinates
     const vpHeight = (container.clientHeight / container.scrollHeight) * minimapContentHeight;
-    // Center viewport on click, then map to scroll position (inverse of syncViewport)
     const adjustedY = y - vpHeight / 2;
     const usableHeight = minimapContentHeight - vpHeight;
     const scrollRange = container.scrollHeight - container.clientHeight;
@@ -224,6 +252,17 @@ export function Minimap({ visible, contentRef, scrollContainerRef }: MinimapProp
           className="minimap-content"
           ref={cloneRef}
         />
+        {ticks.length > 0 && (
+          <div className="minimap-match-layer">
+            {ticks.map((t, i) => (
+              <div
+                key={i}
+                className={`minimap-tick${t.isCurrent ? ' current' : ''}`}
+                style={{ top: `${t.y}px`, height: t.isCurrent ? '3px' : '2px' }}
+              />
+            ))}
+          </div>
+        )}
       </div>
       {viewportReady && (
         <div

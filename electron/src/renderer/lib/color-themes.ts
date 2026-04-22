@@ -39,6 +39,8 @@ export interface ColorScale {
   minimapLink: string;
   minimapViewport: string;
   glowColor: string;
+  highlightSubtle: string;
+  highlightStrong: string;
 }
 
 export interface ColorTheme {
@@ -84,6 +86,8 @@ export const warm: ColorTheme = {
     minimapLink: '#D47418',
     minimapViewport: '#5F6B2D',
     glowColor: 'transparent',
+    highlightSubtle: '#F4DDB5',
+    highlightStrong: '#EFC576',
   },
   dark: {
     bgPrimary: '#1C1A16',
@@ -121,6 +125,8 @@ export const warm: ColorTheme = {
     minimapLink: '#D47418',
     minimapViewport: '#8FA83E',
     glowColor: 'transparent',
+    highlightSubtle: '#7A5D30',
+    highlightStrong: '#B8874A',
   },
 };
 
@@ -162,6 +168,8 @@ export const cool: ColorTheme = {
     minimapLink: '#2A7A8A',
     minimapViewport: '#3A8A6A',
     glowColor: 'transparent',
+    highlightSubtle: '#DCE7F2',
+    highlightStrong: '#B5CCE3',
   },
   dark: {
     bgPrimary: '#1A1A19',
@@ -199,6 +207,8 @@ export const cool: ColorTheme = {
     minimapLink: '#40A0B0',
     minimapViewport: '#50C080',
     glowColor: 'transparent',
+    highlightSubtle: '#4A6278',
+    highlightStrong: '#6A8AB0',
   },
 };
 
@@ -240,6 +250,8 @@ export const neutral: ColorTheme = {
     minimapLink: '#007AFF',
     minimapViewport: '#007AFF',
     glowColor: 'transparent',
+    highlightSubtle: '#FFEB80',
+    highlightStrong: '#FFD43B',
   },
   dark: {
     bgPrimary: '#1C1C1E',
@@ -277,6 +289,8 @@ export const neutral: ColorTheme = {
     minimapLink: '#0A84FF',
     minimapViewport: '#0A84FF',
     glowColor: 'transparent',
+    highlightSubtle: '#7A6228',
+    highlightStrong: '#B8923A',
   },
 };
 
@@ -318,6 +332,8 @@ export const fresh: ColorTheme = {
     minimapLink: '#2B5CE6',
     minimapViewport: '#FF6B00',
     glowColor: 'transparent',
+    highlightSubtle: '#FFE8C4',
+    highlightStrong: '#FFCE82',
   },
   dark: {
     bgPrimary: '#0A1628',
@@ -355,6 +371,8 @@ export const fresh: ColorTheme = {
     minimapLink: '#5A8EFF',
     minimapViewport: '#FF6B00',
     glowColor: 'transparent',
+    highlightSubtle: '#4A6088',
+    highlightStrong: '#6A8AB8',
   },
 };
 
@@ -396,6 +414,8 @@ export const neon: ColorTheme = {
     minimapLink: '#B020E0',
     minimapViewport: '#CC1488',
     glowColor: 'transparent',
+    highlightSubtle: '#F4E4FF',
+    highlightStrong: '#D8B8F0',
   },
   dark: {
     bgPrimary: '#050510',
@@ -433,6 +453,8 @@ export const neon: ColorTheme = {
     minimapLink: '#00FFCC',
     minimapViewport: '#FF2BD2',
     glowColor: 'transparent',
+    highlightSubtle: '#5A2060',
+    highlightStrong: '#9A2DB8',
   },
 };
 
