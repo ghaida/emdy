@@ -20,6 +20,7 @@ import { useDisplaySettings } from './hooks/useDisplaySettings';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useFileWatcher } from './hooks/useFileWatcher';
 import type { FileEntry, NudgeState } from './lib/types';
+import { CONTENT_WIDTHS } from './lib/types';
 import { perfMark, perfMeasure } from './lib/perf';
 
 type FindMode = 'multi-persistent' | 'zero' | 'over-cap';
@@ -600,8 +601,8 @@ export function App() {
   const markdownStyle = useMemo(() => ({
     fontFamily: fontFamilyVar,
     fontSize: `${display.zoom}rem`,
-    maxWidth: `min(${680 * display.zoom}px, 100%)`,
-  }), [fontFamilyVar, display.zoom]);
+    maxWidth: `min(${CONTENT_WIDTHS[display.contentWidth] * display.zoom}px, 100%)`,
+  }), [fontFamilyVar, display.zoom, display.contentWidth]);
 
   const renderContent = () => {
     // Spinner wins for its minimum display time, even if content has already arrived.
@@ -712,6 +713,8 @@ export function App() {
             onZoomOut={display.zoomOut}
             onZoomReset={display.resetZoom}
             onFontChange={display.setFontFamily}
+            contentWidth={display.contentWidth}
+            onContentWidthChange={display.setContentWidth}
             sidebarVisible={sidebarVisible}
             hasSidebar={dirEntries !== null}
             onToggleSidebar={() => setSidebarVisible((v) => !v)}

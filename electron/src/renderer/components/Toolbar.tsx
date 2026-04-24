@@ -10,8 +10,10 @@ import {
   Copy,
   MoreHorizontal,
   Settings,
+  ChevronsRightLeft,
+  ChevronsLeftRight,
 } from 'lucide-react';
-import type { FontFamily } from '../lib/types';
+import type { FontFamily, ContentWidth } from '../lib/types';
 
 const ICON = { size: 16, strokeWidth: 1.5 } as const;
 const COLLAPSE_WIDTH = 700;
@@ -26,6 +28,8 @@ interface ToolbarProps {
   onZoomOut: () => void;
   onZoomReset: () => void;
   onFontChange: (font: FontFamily) => void;
+  contentWidth: ContentWidth;
+  onContentWidthChange: (w: ContentWidth) => void;
   sidebarVisible: boolean;
   hasSidebar: boolean;
   onToggleSidebar: () => void;
@@ -54,6 +58,8 @@ export function Toolbar({
   onZoomOut,
   onZoomReset,
   onFontChange,
+  contentWidth,
+  onContentWidthChange,
   sidebarVisible,
   hasSidebar,
   onToggleSidebar,
@@ -210,6 +216,30 @@ export function Toolbar({
               </button>
             </div>
 
+            {/* Content width */}
+            <div className="toolbar-width-group" role="group" aria-label="Reading width">
+              <button
+                className={`toolbar-btn width-seg${contentWidth === 'default' ? ' active' : ''}`}
+                onClick={() => onContentWidthChange('default')}
+                data-tooltip="Default reading width"
+                aria-label="Default reading width"
+                aria-pressed={contentWidth === 'default'}
+                data-toolbar-btn
+              >
+                <ChevronsRightLeft {...ICON} />
+              </button>
+              <button
+                className={`toolbar-btn width-seg${contentWidth === 'wide' ? ' active' : ''}`}
+                onClick={() => onContentWidthChange('wide')}
+                data-tooltip="Wide reading width"
+                aria-label="Wide reading width"
+                aria-pressed={contentWidth === 'wide'}
+                data-toolbar-btn
+              >
+                <ChevronsLeftRight {...ICON} />
+              </button>
+            </div>
+
             {/* Search */}
             {hasSidebar && (
               <button className="toolbar-btn" onClick={onSearch} data-tooltip="Search  ⌘F" aria-label="Search files" data-toolbar-btn>
@@ -314,6 +344,24 @@ export function Toolbar({
                         {f.label}
                       </button>
                     ))}
+                  </div>
+                  <div className="toolbar-overflow-divider" />
+                  <div className="toolbar-overflow-group">
+                    <span className="toolbar-overflow-label">Width</span>
+                    <button
+                      className={`toolbar-dropdown-item${contentWidth === 'default' ? ' active' : ''}`}
+                      onClick={() => { onContentWidthChange('default'); setOverflowOpen(false); }}
+                      role="menuitem"
+                    >
+                      Default
+                    </button>
+                    <button
+                      className={`toolbar-dropdown-item${contentWidth === 'wide' ? ' active' : ''}`}
+                      onClick={() => { onContentWidthChange('wide'); setOverflowOpen(false); }}
+                      role="menuitem"
+                    >
+                      Wide
+                    </button>
                   </div>
                   <div className="toolbar-overflow-divider" />
                   <button className="toolbar-dropdown-item" onClick={() => { onExportPDF(); setOverflowOpen(false); }} role="menuitem">

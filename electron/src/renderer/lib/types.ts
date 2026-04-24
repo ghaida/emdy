@@ -8,12 +8,19 @@ export interface FileEntry {
 export type FontFamily = 'sans' | 'serif' | 'mono';
 export type AppTheme = 'light' | 'dark' | 'system';
 export type ColorThemeName = 'warm' | 'cool' | 'neutral' | 'fresh' | 'neon';
+export type ContentWidth = 'default' | 'wide';
+
+export const CONTENT_WIDTHS: Record<ContentWidth, number> = {
+  default: 680,
+  wide: 960,
+};
 
 export interface DisplaySettings {
   fontFamily: FontFamily;
   theme: AppTheme;
   colorTheme: ColorThemeName;
   zoom: number;
+  contentWidth: ContentWidth;
 }
 
 export interface NudgeState {
