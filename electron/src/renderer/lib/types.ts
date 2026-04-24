@@ -39,7 +39,9 @@ export type OpenDialogResult =
   | null;
 
 export interface ElectronAPI {
+  checkPendingOpen: () => Promise<boolean>;
   openDialog: () => Promise<OpenDialogResult>;
+  openDialogInNewWindow: () => Promise<{ opened: true } | null>;
   openFileDialog: () => Promise<{ filePath: string; content: string } | null>;
   openDirDialog: () => Promise<{ dirPath: string; entries: FileEntry[] } | null>;
   readFile: (filePath: string) => Promise<string>;
@@ -62,6 +64,7 @@ export interface ElectronAPI {
   onAccentColorChanged: (callback: (color: string) => void) => () => void;
   toggleMaximize: () => Promise<void>;
   getSettings: () => Promise<DisplaySettings>;
+  getSettingsSync: () => DisplaySettings;
   setSetting: (key: string, value: unknown) => Promise<void>;
   onMenuEvent: (callback: (event: string) => void) => () => void;
   onFileOpen: (callback: (filePath: string, content: string) => void) => () => void;

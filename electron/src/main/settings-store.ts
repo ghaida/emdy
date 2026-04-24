@@ -56,6 +56,10 @@ export function registerSettingsHandlers() {
     return { ...current };
   });
 
+  ipcMain.on('settings:get-sync', (event) => {
+    event.returnValue = { ...current };
+  });
+
   ipcMain.handle('settings:set', (_event, key: string, value: unknown) => {
     if (typeof key !== 'string' || !validateSetting(key, value)) return;
     (current as unknown as Record<string, unknown>)[key] = value;

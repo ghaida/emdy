@@ -1,8 +1,10 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  checkPendingOpen: () => ipcRenderer.invoke('window:is-pending-open'),
   // File operations
   openDialog: () => ipcRenderer.invoke('open:dialog'),
+  openDialogInNewWindow: () => ipcRenderer.invoke('open:dialog-in-new-window'),
   openFileDialog: () => ipcRenderer.invoke('file:open-dialog'),
   openDirDialog: () => ipcRenderer.invoke('dir:open-dialog'),
   readFile: (filePath: string) => ipcRenderer.invoke('file:read', filePath),
@@ -43,6 +45,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
+  getSettingsSync: () => ipcRenderer.sendSync('settings:get-sync'),
   setSetting: (key: string, value: unknown) => ipcRenderer.invoke('settings:set', key, value),
 
   // System

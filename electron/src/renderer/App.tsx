@@ -64,6 +64,31 @@ export function App() {
   const [aboutVisible, setAboutVisible] = useState(false);
   const [updateVisible, setUpdateVisible] = useState(false);
   const [updateReady, setUpdateReady] = useState<{ version: string; notes: string | null } | null>(null);
+  // 'checking' while awaiting main's reply; resolves to true (new window) or false (main window).
+  const [pendingOpen, setPendingOpen] = useState<'checking' | boolean>('checking');
+  const pendingShownAtRef = useRef<number>(Date.now());
+  const MIN_SPINNER_MS = 400;
+
+  useEffect(() => {
+    let cancelled = false;
+    window.electronAPI.checkPendingOpen().then((v) => {
+      if (cancelled) return;
+      setPendingOpen(v === true);
+    }).catch(() => {
+      if (!cancelled) setPendingOpen(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Clear pending after a minimum display time so the spinner is visible.
+  const clearPendingWithMinTime = useCallback(() => {
+    const elapsed = Date.now() - pendingShownAtRef.current;
+    if (elapsed >= MIN_SPINNER_MS) {
+      setPendingOpen(false);
+    } else {
+      setTimeout(() => setPendingOpen(false), MIN_SPINNER_MS - elapsed);
+    }
+  }, []);
 
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -294,6 +319,11 @@ export function App() {
 
   const handleOpen = useCallback(async () => {
     try {
+      const hasContent = content !== null || dirPath !== null;
+      if (hasContent) {
+        await window.electronAPI.openDialogInNewWindow();
+        return;
+      }
       const result = await window.electronAPI.openDialog();
       if (!result) return;
       closeFind();
@@ -328,7 +358,7 @@ export function App() {
     } catch {
       addToast('Failed to open', 'error');
     }
-  }, [addToast, closeFind]);
+  }, [addToast, closeFind, content, dirPath]);
 
   const handleFileSelect = useCallback(async (path: string) => {
     try {
@@ -522,6 +552,7 @@ export function App() {
       setFilePath(path);
       setFileDeleted(false);
       setFileError(null);
+      clearPendingWithMinTime();
       if (scrollContainerRef.current) {
         scrollContainerRef.current.scrollTop = 0;
       }
@@ -532,6 +563,7 @@ export function App() {
       setDirEntries(entries);
       setDirPath(dirOpenPath);
       setSidebarVisible(true);
+      clearPendingWithMinTime();
       if (entries.length === 0) {
         addToast('No Markdown files found in this directory', 'info');
       } else {
@@ -572,6 +604,14 @@ export function App() {
   }), [fontFamilyVar, display.zoom]);
 
   const renderContent = () => {
+    // Spinner wins for its minimum display time, even if content has already arrived.
+    if (pendingOpen === 'checking' || pendingOpen === true) {
+      return (
+        <main id="main-content" className="empty-state">
+          <span className="loading-spinner" role="progressbar" aria-label="Loading" />
+        </main>
+      );
+    }
     if (fileDeleted) {
       return (
         <main id="main-content">

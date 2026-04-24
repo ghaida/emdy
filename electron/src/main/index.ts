@@ -1,15 +1,16 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, protocol, net, session, systemPreferences, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol, net, session, systemPreferences, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import started from 'electron-squirrel-startup';
-import { registerFileHandlers, scanDirectory, setCurrentPaths } from './ipc-handlers';
-import { registerSettingsHandlers, registerNudgeHandlers, nudgeTrackAppLaunch, getSettings } from './settings-store';
+import { registerFileHandlers, scanDirectory, setCurrentPaths, openPathInNewWindow } from './ipc-handlers';
+import { registerSettingsHandlers, registerNudgeHandlers, nudgeTrackAppLaunch } from './settings-store';
 import { registerFileWatcher } from './file-watcher';
 import { registerExportHandlers } from './pdf-export';
 import { buildMenu } from './menu';
 import { addAllowedRoot, isPathAllowed, hardenWindow } from './allowed-paths';
 import { setupAutoUpdater, registerAutoUpdaterIPC } from './auto-updater';
+import { getWindowBackgroundColor } from './window-theme';
 
 if (started) {
   app.quit();
@@ -21,28 +22,16 @@ app.commandLine.appendSwitch('use-mock-keychain');
 
 let mainWindow: BrowserWindow | null = null;
 let pendingFilePath: string | null = null;
-
-// Background colors per theme to avoid white flash on launch
-const BG_COLORS: Record<string, { light: string; dark: string }> = {
-  warm:    { light: '#F5F3EF', dark: '#1C1A16' },
-  cool:    { light: '#F5F5F4', dark: '#1A1A19' },
-  neutral: { light: '#F0F0F0', dark: '#1C1C1E' },
-  fresh:   { light: '#FFFBF0', dark: '#0A1628' },
-  neon:    { light: '#F4F2F8', dark: '#050510' },
-};
+let hasOpenedAnyPath = false;
 
 const createWindow = () => {
-  const settings = getSettings();
-  const isDark = settings.theme === 'dark' || (settings.theme === 'system' && nativeTheme.shouldUseDarkColors);
-  const palette = BG_COLORS[settings.colorTheme] || BG_COLORS.warm;
-
   mainWindow = new BrowserWindow({
     width: 1000,
     height: 700,
     minWidth: 600,
     minHeight: 400,
     show: false,
-    backgroundColor: isDark ? palette.dark : palette.light,
+    backgroundColor: getWindowBackgroundColor(),
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 16, y: 16 },
     webPreferences: {
@@ -187,27 +176,36 @@ app.on('activate', () => {
 app.on('open-file', async (event, filePath) => {
   event.preventDefault();
   const win = mainWindow || BrowserWindow.getAllWindows()[0];
-  if (win && win.webContents && !win.webContents.isLoading()) {
-    try {
-      const stat = await fs.stat(filePath);
-      if (stat.isDirectory()) {
-        addAllowedRoot(filePath);
-        setCurrentPaths({ dirPath: filePath });
-        const entries = await scanDirectory(filePath);
-        win.webContents.send('dir:open', filePath, entries);
-      } else {
-        addAllowedRoot(path.dirname(filePath));
-        setCurrentPaths({ filePath });
-        const content = await fs.readFile(filePath, 'utf-8');
-        win.webContents.send('file:open', filePath, content);
-        app.addRecentDocument(filePath);
-      }
-    } catch {
-      // File/directory can't be read
-    }
-  } else {
+  if (!win || !win.webContents || win.webContents.isLoading()) {
     // App is still launching — queue the path for when the window is ready
     pendingFilePath = filePath;
+    return;
+  }
+  if (hasOpenedAnyPath) {
+    try {
+      await openPathInNewWindow(filePath);
+    } catch {
+      // File/directory can't be opened
+    }
+    return;
+  }
+  try {
+    const stat = await fs.stat(filePath);
+    if (stat.isDirectory()) {
+      addAllowedRoot(filePath);
+      setCurrentPaths({ dirPath: filePath });
+      const entries = await scanDirectory(filePath);
+      win.webContents.send('dir:open', filePath, entries);
+    } else {
+      addAllowedRoot(path.dirname(filePath));
+      setCurrentPaths({ filePath });
+      const content = await fs.readFile(filePath, 'utf-8');
+      win.webContents.send('file:open', filePath, content);
+      app.addRecentDocument(filePath);
+    }
+    hasOpenedAnyPath = true;
+  } catch {
+    // File/directory can't be read
   }
 });
 
@@ -215,6 +213,7 @@ let hasFileOpen = false;
 
 ipcMain.handle('menu:set-has-file', (_event, hasFile: unknown) => {
   const value = Boolean(hasFile);
+  if (value) hasOpenedAnyPath = true;
   if (value !== hasFileOpen) {
     hasFileOpen = value;
     buildMenu(sendMenuEvent, hasFileOpen);

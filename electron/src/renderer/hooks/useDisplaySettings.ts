@@ -7,29 +7,63 @@ const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 3.0;
 const ZOOM_STEP = 0.1;
 
+function resolveAppearance(theme: string): 'light' | 'dark' {
+  if (theme === 'system') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return theme === 'dark' ? 'dark' : 'light';
+}
+
 export function useDisplaySettings() {
-  const [settings, setSettings] = useState<DisplaySettings>({
-    fontFamily: 'sans',
-    theme: 'system',
-    colorTheme: 'warm',
-    zoom: 1.0,
+  const [settings, setSettings] = useState<DisplaySettings>(() => {
+    let saved: Partial<DisplaySettings> = {};
+    try {
+      saved = window.electronAPI.getSettingsSync() || {};
+    } catch (e) {
+      console.error('getSettingsSync failed', e);
+    }
+    const next: DisplaySettings = {
+      fontFamily: saved.fontFamily || 'sans',
+      theme: saved.theme || 'system',
+      colorTheme: saved.colorTheme || 'warm',
+      zoom: saved.zoom || 1.0,
+    };
+    // Apply theme synchronously so the first paint uses the correct colors
+    applyTheme(next.colorTheme, resolveAppearance(next.theme));
+    return next;
   });
-  const [resolvedAppearance, setResolvedAppearance] = useState<'light' | 'dark'>('light');
-  const [resolvedColors, setResolvedColors] = useState<ColorScale>(
-    getResolvedColors('warm', 'light')
+  const [resolvedAppearance, setResolvedAppearance] = useState<'light' | 'dark'>(() =>
+    resolveAppearance(settings.theme)
+  );
+  const [resolvedColors, setResolvedColors] = useState<ColorScale>(() =>
+    getResolvedColors(settings.colorTheme, resolveAppearance(settings.theme))
   );
   const [systemAccentColor, setSystemAccentColor] = useState<string | undefined>();
 
-  // Load saved settings and system accent color on mount
+  // Fallback: if sync IPC failed and state still has defaults, try async path
   useEffect(() => {
     window.electronAPI.getSettings().then((saved) => {
-      setSettings({
-        fontFamily: saved.fontFamily || 'sans',
-        theme: saved.theme || 'system',
-        colorTheme: saved.colorTheme || 'warm',
-        zoom: saved.zoom || 1.0,
+      setSettings((prev) => {
+        // Only apply if values differ — avoids an extra re-render if sync worked
+        const next: DisplaySettings = {
+          fontFamily: saved.fontFamily || 'sans',
+          theme: saved.theme || 'system',
+          colorTheme: saved.colorTheme || 'warm',
+          zoom: saved.zoom || 1.0,
+        };
+        if (
+          prev.fontFamily === next.fontFamily &&
+          prev.theme === next.theme &&
+          prev.colorTheme === next.colorTheme &&
+          prev.zoom === next.zoom
+        ) return prev;
+        return next;
       });
     });
+  }, []);
+
+  // Subscribe to system accent color changes
+  useEffect(() => {
     window.electronAPI.getAccentColor().then(setSystemAccentColor);
     return window.electronAPI.onAccentColorChanged(setSystemAccentColor);
   }, []);

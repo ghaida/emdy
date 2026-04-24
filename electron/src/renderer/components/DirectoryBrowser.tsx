@@ -93,11 +93,20 @@ function FileItem({ entry, activePath, nested, onSelect, onContextMenu }: {
   onSelect: (path: string) => void;
   onContextMenu: (e: React.MouseEvent, path: string) => void;
 }) {
+  const handleClick = (e: React.MouseEvent) => {
+    const modifierPressed = e.metaKey || e.ctrlKey;
+    if (modifierPressed) {
+      e.preventDefault();
+      window.electronAPI.openInNewWindow(entry.path);
+      return;
+    }
+    onSelect(entry.path);
+  };
   return (
     <li role="treeitem" aria-current={entry.path === activePath ? 'page' : undefined}>
       <button
         className={`tree-item${nested ? ' tree-item-nested' : ''}${entry.path === activePath ? ' active' : ''}`}
-        onClick={() => onSelect(entry.path)}
+        onClick={handleClick}
         onContextMenu={(e) => onContextMenu(e, entry.path)}
         title={entry.path}
       >
