@@ -83,6 +83,7 @@ export interface ElectronAPI {
   getUpdateStatus: () => Promise<{ status: string; version?: string; notes?: string | null; error?: string }>;
   installUpdate: () => Promise<void>;
   skipUpdate: (version: string) => Promise<void>;
+  getSkippedVersion: () => Promise<string | null>;
   onUpdateReady: (callback: (info: { version: string; notes: string | null }) => void) => () => void;
   onUpdateStatus: (callback: (status: string) => void) => () => void;
   openExternal: (url: string) => Promise<void>;

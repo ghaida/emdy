@@ -91,6 +91,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getUpdateStatus: () => ipcRenderer.invoke('update:get-status'),
   installUpdate: () => ipcRenderer.invoke('update:install'),
   skipUpdate: (version: string) => ipcRenderer.invoke('update:skip', version),
+  getSkippedVersion: () => ipcRenderer.invoke('update:get-skipped-version'),
   onUpdateReady: (callback: (info: { version: string; notes: string | null }) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, info: { version: string; notes: string | null }) => callback(info);
     ipcRenderer.on('update:ready', handler);

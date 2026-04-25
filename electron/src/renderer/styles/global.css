@@ -1172,7 +1172,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   background: var(--bg-primary);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
-  width: 320px;
+  width: var(--update-width);
   text-align: left;
   transform: scale(0.97);
   opacity: 0;
@@ -1216,11 +1216,14 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 }
 .update-notes li {
   padding: var(--space-1) 0;
+  display: flex;
+  align-items: flex-start;
 }
 .update-notes li::before {
   content: "·";
   margin-right: var(--space-2);
   color: var(--text-muted);
+  flex-shrink: 0;
 }
 .update-actions {
   display: flex;
@@ -1228,6 +1231,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   justify-content: space-between;
   margin-top: var(--space-4);
 }
+.update-actions.single { justify-content: flex-end; }
 .update-download-btn {
   padding: var(--space-2) var(--space-5);
   background: var(--accent);

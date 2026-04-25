@@ -65,6 +65,7 @@ export function UpdateDialog({ visible, onClose, readyVersion }: UpdateDialogPro
   const modalRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<DialogState>('checking');
   const [currentVersion, setCurrentVersion] = useState('');
+  const [skippedVersion, setSkippedVersion] = useState<string | null>(null);
   useFocusTrap(modalRef, visible);
 
   useEffect(() => {
@@ -74,6 +75,7 @@ export function UpdateDialog({ visible, onClose, readyVersion }: UpdateDialogPro
     let removeReady: (() => void) | undefined;
 
     window.electronAPI.getAppVersion().then(setCurrentVersion);
+    window.electronAPI.getSkippedVersion().then(setSkippedVersion);
 
     if (readyVersion) {
       setState(readyVersion);
@@ -131,22 +133,24 @@ export function UpdateDialog({ visible, onClose, readyVersion }: UpdateDialogPro
           <>
             <p className="update-message">Emdy {state.version} is ready to install. You have {currentVersion}.</p>
             {state.notes && <UpdateNotes notes={state.notes} />}
-            <div className="update-actions">
+            <div className={`update-actions${skippedVersion === state.version ? ' single' : ''}`}>
               <button
                 className="update-download-btn"
                 onClick={() => window.electronAPI.installUpdate()}
               >
                 Restart to Update
               </button>
-              <button
-                className="update-skip-btn"
-                onClick={() => {
-                  window.electronAPI.skipUpdate(state.version);
-                  onClose();
-                }}
-              >
-                Skip this version
-              </button>
+              {skippedVersion !== state.version && (
+                <button
+                  className="update-skip-btn"
+                  onClick={() => {
+                    window.electronAPI.skipUpdate(state.version);
+                    onClose();
+                  }}
+                >
+                  Skip this version
+                </button>
+              )}
             </div>
           </>
         )}

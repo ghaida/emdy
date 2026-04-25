@@ -64,6 +64,7 @@ export const layout = {
   commandPaletteWidth: '520px',
   commandPaletteMaxHeight: '420px',
   settingsWidth: '360px',
+  updateWidth: '420px',
   dropdownMinWidth: '120px',
   toastBottom: '36px',
 } as const;
