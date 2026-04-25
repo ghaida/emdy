@@ -673,6 +673,7 @@ export function App() {
             visible={minimapVisible}
             contentRef={contentRef}
             scrollContainerRef={scrollContainerRef}
+            contentWidth={display.contentWidth}
             matchPositions={matchPositions}
             currentMatchIndex={findState?.currentIndex ?? null}
           />

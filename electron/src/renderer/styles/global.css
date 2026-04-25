@@ -1334,7 +1334,6 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 /* ---- Markdown view ---- */
 
 .markdown-view {
-  max-width: var(--content-max-width);
   margin: 72px auto;
   padding: 0 var(--space-8);
 }

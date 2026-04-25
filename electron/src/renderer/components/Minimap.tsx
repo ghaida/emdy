@@ -1,18 +1,26 @@
-import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { perfMark, perfMeasure } from '../lib/perf';
+import { CONTENT_WIDTHS, type ContentWidth } from '../lib/types';
 
 interface MinimapProps {
   visible: boolean;
   contentRef: React.RefObject<HTMLDivElement | null>;
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+  contentWidth: ContentWidth;
   matchPositions?: number[];
   currentMatchIndex?: number | null;
+}
+
+interface TickInfo {
+  y: number;
+  isCurrent: boolean;
 }
 
 export function Minimap({
   visible,
   contentRef,
   scrollContainerRef,
+  contentWidth,
   matchPositions = [],
   currentMatchIndex = null,
 }: MinimapProps) {
@@ -22,39 +30,62 @@ export function Minimap({
   const [viewportTop, setViewportTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [viewportReady, setViewportReady] = useState(false);
-  const [scale, setScale] = useState(0.12);
+  const [ticks, setTicks] = useState<TickInfo[]>([]);
   const isDragging = useRef(false);
+
+  // Clone at the content-width reference (fixed per setting). Clone never re-wraps
+  // based on real window width — wrapping and visual positions are stable. Match ticks
+  // are read from the clone's own <mark> elements so they always land on cloned text.
+  const refWidth = CONTENT_WIDTHS[contentWidth];
+
+  const readTicksFromClone = useCallback(() => {
+    const clone = cloneRef.current;
+    if (!clone) return;
+    const wrapper = clone.firstElementChild as HTMLElement | null;
+    if (!wrapper) {
+      setTicks([]);
+      return;
+    }
+    const marks = Array.from(wrapper.querySelectorAll('mark')) as HTMLElement[];
+    if (marks.length === 0) {
+      setTicks([]);
+      return;
+    }
+    const wrapperTop = wrapper.getBoundingClientRect().top;
+    const collected: TickInfo[] = marks.map((mark, i) => ({
+      y: mark.getBoundingClientRect().top - wrapperTop,
+      isCurrent: i === currentMatchIndex,
+    }));
+    collected.sort((a, b) => a.y - b.y);
+    const out: TickInfo[] = [];
+    for (const t of collected) {
+      const last = out[out.length - 1];
+      if (last && t.y - last.y < 4 && !t.isCurrent) continue;
+      out.push(t);
+    }
+    setTicks(out);
+  }, [currentMatchIndex]);
 
   const syncContent = useCallback(() => {
     perfMark('minimap-sync-start');
     const content = contentRef.current;
-    const container = scrollContainerRef.current;
     const clone = cloneRef.current;
     const wrapper = cloneWrapperRef.current;
     const minimap = containerRef.current;
-    if (!content || !container || !clone || !wrapper || !minimap) return;
+    if (!content || !clone || !wrapper || !minimap) return;
 
     const markdownBody = content.querySelector('.markdown-body') as HTMLElement | null;
     if (!markdownBody) return;
 
-    const originalWidth = markdownBody.offsetWidth;
     const minimapStyle = getComputedStyle(minimap);
     const minimapInnerWidth = minimap.clientWidth
       - parseFloat(minimapStyle.paddingLeft)
       - parseFloat(minimapStyle.paddingRight);
+    if (minimapInnerWidth <= 0) return;
 
-    if (originalWidth <= 0 || minimapInnerWidth <= 0) return;
+    const scale = minimapInnerWidth / refWidth;
 
-    // Scale against the natural max content width rather than the actual
-    // rendered width. Keeps the thumbnail — both text size and text width —
-    // stable as the window resizes. Falls back to actual if the content
-    // happens to be narrower than the reference.
-    const REFERENCE_WIDTH = 680; // matches --content-max-width
-    const refWidth = Math.max(originalWidth, REFERENCE_WIDTH);
-    const nextScale = minimapInnerWidth / refWidth;
-    setScale(nextScale);
-
-    clone.style.transform = `scale(${nextScale})`;
+    clone.style.transform = `scale(${scale})`;
     clone.style.transformOrigin = 'top left';
     clone.style.width = `${refWidth}px`;
 
@@ -62,22 +93,24 @@ export function Minimap({
     const cloned = markdownBody.cloneNode(true) as HTMLElement;
     clone.appendChild(cloned);
 
-    const sourceHeight = container.scrollHeight;
-    wrapper.style.height = `${sourceHeight * nextScale}px`;
+    const clonedLayoutHeight = cloned.offsetHeight;
+    wrapper.style.height = `${clonedLayoutHeight * scale}px`;
+
+    readTicksFromClone();
     perfMeasure('minimap-sync', 'minimap-sync-start');
-  }, [contentRef, scrollContainerRef]);
+  }, [contentRef, refWidth, readTicksFromClone]);
 
   const syncViewport = useCallback(() => {
     const container = scrollContainerRef.current;
-    const content = contentRef.current;
     const minimap = containerRef.current;
     const wrapper = cloneWrapperRef.current;
-    if (!container || !content || !minimap || !wrapper) return;
+    if (!container || !minimap || !wrapper) return;
 
     const scrollHeight = container.scrollHeight;
     const clientHeight = container.clientHeight;
     const scrollTop = container.scrollTop;
     const minimapContentHeight = wrapper.offsetHeight;
+    if (scrollHeight <= 0 || minimapContentHeight <= 0) return;
 
     const vpHeight = (clientHeight / scrollHeight) * minimapContentHeight;
     const scrollRange = scrollHeight - clientHeight;
@@ -94,7 +127,7 @@ export function Minimap({
       const targetScroll = vpCenter - minimapVisibleHeight / 2;
       minimap.scrollTop = Math.max(0, targetScroll);
     }
-  }, [scrollContainerRef, contentRef]);
+  }, [scrollContainerRef]);
 
   useEffect(() => {
     if (!visible) setViewportReady(false);
@@ -107,26 +140,16 @@ export function Minimap({
     const content = contentRef.current;
     if (!content) return;
 
-    // Only re-sync when structural content changes. Skip mutations caused by
-    // the find walker (inserting/removing <mark> wrappers, and the text-node
-    // splits those mutations entail) — those don't change what the minimap
-    // should render, and cloning a 62k-word body on every keystroke is brutal.
     const observer = new MutationObserver((mutations) => {
+      let changed = false;
       for (const m of mutations) {
         if (m.type !== 'childList') continue;
-        for (const node of m.addedNodes) {
-          if (node instanceof HTMLElement && node.tagName !== 'MARK') {
-            syncContent();
-            return;
-          }
+        for (const node of [...m.addedNodes, ...m.removedNodes]) {
+          if (node instanceof HTMLElement) { changed = true; break; }
         }
-        for (const node of m.removedNodes) {
-          if (node instanceof HTMLElement && node.tagName !== 'MARK') {
-            syncContent();
-            return;
-          }
-        }
+        if (changed) break;
       }
+      if (changed) syncContent();
     });
     observer.observe(content, { childList: true, subtree: true });
     return () => observer.disconnect();
@@ -134,7 +157,16 @@ export function Minimap({
 
   useEffect(() => {
     if (!visible) return;
+    readTicksFromClone();
+  }, [visible, currentMatchIndex, readTicksFromClone]);
 
+  useEffect(() => {
+    if (!visible) return;
+    syncContent();
+  }, [visible, matchPositions.length, syncContent]);
+
+  useEffect(() => {
+    if (!visible) return;
     const minimap = containerRef.current;
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -168,7 +200,7 @@ export function Minimap({
       requestAnimationFrame(syncViewport);
     });
     resizeObserver.observe(container);
-    if (contentRef.current) resizeObserver.observe(contentRef.current);
+    if (minimap) resizeObserver.observe(minimap);
 
     return () => {
       clearTimeout(fallback);
@@ -176,23 +208,7 @@ export function Minimap({
       container.removeEventListener('scroll', onScroll);
       resizeObserver.disconnect();
     };
-  }, [visible, syncViewport, syncContent, scrollContainerRef, contentRef]);
-
-  const ticks = useMemo(() => {
-    if (matchPositions.length === 0 || scale <= 0) return [];
-    const scaled = matchPositions.map((p, i) => ({
-      y: p * scale,
-      isCurrent: i === currentMatchIndex,
-    }));
-    const sorted = scaled.slice().sort((a, b) => a.y - b.y);
-    const out: typeof sorted = [];
-    for (const t of sorted) {
-      const last = out[out.length - 1];
-      if (last && t.y - last.y < 4 && !t.isCurrent) continue;
-      out.push(t);
-    }
-    return out;
-  }, [matchPositions, currentMatchIndex, scale]);
+  }, [visible, syncViewport, syncContent, scrollContainerRef]);
 
   const scrollToY = useCallback((clientY: number) => {
     const container = scrollContainerRef.current;
@@ -217,18 +233,15 @@ export function Minimap({
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     isDragging.current = true;
     scrollToY(e.clientY);
-
     const onMouseMove = (moveEvent: MouseEvent) => {
       if (!isDragging.current) return;
       scrollToY(moveEvent.clientY);
     };
-
     const onMouseUp = () => {
       isDragging.current = false;
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
   }, [scrollToY]);
@@ -248,10 +261,7 @@ export function Minimap({
       onWheel={handleWheel}
     >
       <div className="minimap-scaler" ref={cloneWrapperRef}>
-        <div
-          className="minimap-content"
-          ref={cloneRef}
-        />
+        <div className="minimap-content" ref={cloneRef} />
         {ticks.length > 0 && (
           <div className="minimap-match-layer">
             {ticks.map((t, i) => (
