@@ -1204,6 +1204,9 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   color: var(--text-primary);
   margin: 0 0 var(--space-2);
 }
+.update-notes-heading:not(:first-child) {
+  margin-top: var(--space-3);
+}
 .update-notes {
   list-style: none;
   margin: 0;

@@ -14,6 +14,52 @@ interface UpdateDialogProps {
   readyVersion?: { version: string; notes: string | null } | null;
 }
 
+type NotesBlock =
+  | { kind: 'heading'; text: string }
+  | { kind: 'list'; items: string[] };
+
+function parseNotes(notes: string): NotesBlock[] {
+  const blocks: NotesBlock[] = [];
+  let current: string[] = [];
+  const flush = () => {
+    if (current.length > 0) {
+      blocks.push({ kind: 'list', items: current });
+      current = [];
+    }
+  };
+  for (const raw of notes.split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    const m = line.match(/^[-*]\s+(.+)$/);
+    if (m) {
+      current.push(m[1].trim());
+    } else {
+      flush();
+      blocks.push({ kind: 'heading', text: line });
+    }
+  }
+  flush();
+  return blocks;
+}
+
+function UpdateNotes({ notes }: { notes: string }) {
+  const blocks = parseNotes(notes);
+  if (blocks.length === 0) return null;
+  return (
+    <div className="update-notes-section">
+      {blocks.map((block, i) =>
+        block.kind === 'heading' ? (
+          <h3 key={i} className="update-notes-heading">{block.text}</h3>
+        ) : (
+          <ul key={i} className="update-notes">
+            {block.items.map((item, j) => <li key={j}>{item}</li>)}
+          </ul>
+        )
+      )}
+    </div>
+  );
+}
+
 export function UpdateDialog({ visible, onClose, readyVersion }: UpdateDialogProps) {
   const { mounted, active } = useTransition(visible);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -84,6 +130,7 @@ export function UpdateDialog({ visible, onClose, readyVersion }: UpdateDialogPro
         {typeof state === 'object' && (
           <>
             <p className="update-message">Emdy {state.version} is ready to install. You have {currentVersion}.</p>
+            {state.notes && <UpdateNotes notes={state.notes} />}
             <div className="update-actions">
               <button
                 className="update-download-btn"
