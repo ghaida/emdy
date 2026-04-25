@@ -1,8 +1,10 @@
 {
-  "version": "1.4.2",
+  "version": "1.5.0",
   "url": "https://github.com/ghaida/emdy/releases/latest",
   "notes": [
-    "Auto-update feature",
-    "Performance improvements and bug fixes"
+    "In-document find (Cmd+F)",
+    "Adjustable content width (Default / Wide)",
+    "Multi-window improvements",
+    "Bug fixes and performance improvements"
   ]
 }
