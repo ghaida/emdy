@@ -6,16 +6,9 @@ import { nudgeTrackFileOpen } from './settings-store';
 import { addAllowedRoot, isPathAllowed, hardenWindow } from './allowed-paths';
 import { getWindowBackgroundColor } from './window-theme';
 
-let currentDirPath: string | null = null;
-let currentFilePath: string | null = null;
 const pendingWindowIds = new Set<number>();
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-
-export function setCurrentPaths(opts: { dirPath?: string; filePath?: string }) {
-  if (opts.dirPath !== undefined) currentDirPath = opts.dirPath;
-  if (opts.filePath !== undefined) currentFilePath = opts.filePath;
-}
 
 export function registerFileHandlers() {
   // Combined open dialog — allows selecting either a file or a directory
@@ -30,12 +23,10 @@ export function registerFileHandlers() {
     const selected = result.filePaths[0];
     const stat = await fs.stat(selected);
     if (stat.isDirectory()) {
-      currentDirPath = selected;
       addAllowedRoot(selected);
       return { type: 'directory' as const, dirPath: selected, entries: await scanDirectory(selected) };
     }
     const content = await fs.readFile(selected, 'utf-8');
-    currentFilePath = selected;
     addAllowedRoot(path.dirname(selected));
     app.addRecentDocument(selected);
     return { type: 'file' as const, filePath: selected, content };
@@ -51,7 +42,6 @@ export function registerFileHandlers() {
     if (result.canceled || result.filePaths.length === 0) return null;
     const filePath = result.filePaths[0];
     const content = await fs.readFile(filePath, 'utf-8');
-    currentFilePath = filePath;
     addAllowedRoot(path.dirname(filePath));
     app.addRecentDocument(filePath);
     return { filePath, content };
@@ -74,7 +64,6 @@ export function registerFileHandlers() {
     });
     if (result.canceled || result.filePaths.length === 0) return null;
     const dirPath = result.filePaths[0];
-    currentDirPath = dirPath;
     addAllowedRoot(dirPath);
     return { dirPath, entries: await scanDirectory(dirPath) };
   });
@@ -116,11 +105,10 @@ export function registerFileHandlers() {
     return { opened: true };
   });
 
-  ipcMain.handle('search:everything', async (_event, query: string) => {
+  ipcMain.handle('search:everything', async (_event, query: string, rootPath: string) => {
     if (typeof query !== 'string' || !query.trim()) return [];
-    const searchDir = currentDirPath || (currentFilePath ? path.dirname(currentFilePath) : null);
-    if (!searchDir) return [];
-    return searchEverything(searchDir, query.toLowerCase());
+    if (typeof rootPath !== 'string' || !isPathAllowed(rootPath)) return [];
+    return searchEverything(rootPath, query.toLowerCase());
   });
 }
 
@@ -142,8 +130,9 @@ export async function openPathInNewWindow(pathToOpen: string): Promise<void> {
       sandbox: true,
     },
   });
-  pendingWindowIds.add(win.webContents.id);
-  win.on('closed', () => pendingWindowIds.delete(win.webContents.id));
+  const wcId = win.webContents.id;
+  pendingWindowIds.add(wcId);
+  win.on('closed', () => pendingWindowIds.delete(wcId));
   let shown = false;
   const showOnce = () => {
     if (shown || win.isDestroyed()) return;
@@ -163,7 +152,6 @@ export async function openPathInNewWindow(pathToOpen: string): Promise<void> {
 
   if (stat.isDirectory()) {
     addAllowedRoot(pathToOpen);
-    currentDirPath = pathToOpen;
     const entries = await scanDirectory(pathToOpen);
     win.webContents.once('did-finish-load', () => {
       win.webContents.send('dir:open', pathToOpen, entries);
@@ -172,7 +160,6 @@ export async function openPathInNewWindow(pathToOpen: string): Promise<void> {
   } else {
     if (!isPathAllowed(pathToOpen)) addAllowedRoot(path.dirname(pathToOpen));
     const content = await fs.readFile(pathToOpen, 'utf-8');
-    currentFilePath = pathToOpen;
     app.addRecentDocument(pathToOpen);
     win.webContents.once('did-finish-load', () => {
       win.webContents.send('file:open', pathToOpen, content);

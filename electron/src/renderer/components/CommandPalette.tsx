@@ -117,10 +117,15 @@ export function CommandPalette({
       setResults([]);
       return;
     }
+    const effectiveRoot = rootPath || (currentFilePath ? dirname(currentFilePath) : null);
+    if (!effectiveRoot) {
+      setResults([]);
+      return;
+    }
     setSearching(true);
     try {
       perfMark('search-start');
-      const searchResults = await window.electronAPI.searchEverything(q);
+      const searchResults = await window.electronAPI.searchEverything(q, effectiveRoot);
       perfMeasure('search', 'search-start');
       setResults(searchResults);
       setSelectedIndex(0);
@@ -129,7 +134,7 @@ export function CommandPalette({
     } finally {
       setSearching(false);
     }
-  }, []);
+  }, [rootPath, currentFilePath]);
 
   useEffect(() => {
     const timeout = setTimeout(() => search(query), 200);

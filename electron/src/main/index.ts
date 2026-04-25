@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import started from 'electron-squirrel-startup';
-import { registerFileHandlers, scanDirectory, setCurrentPaths, openPathInNewWindow } from './ipc-handlers';
+import { registerFileHandlers, scanDirectory, openPathInNewWindow } from './ipc-handlers';
 import { registerSettingsHandlers, registerNudgeHandlers, nudgeTrackAppLaunch } from './settings-store';
 import { registerFileWatcher } from './file-watcher';
 import { registerExportHandlers } from './pdf-export';
@@ -63,12 +63,10 @@ const createWindow = () => {
         const stat = await fs.stat(pendingFilePath);
         if (stat.isDirectory()) {
           addAllowedRoot(pendingFilePath);
-          setCurrentPaths({ dirPath: pendingFilePath });
           const entries = await scanDirectory(pendingFilePath);
           mainWindow?.webContents.send('dir:open', pendingFilePath, entries);
         } else {
           addAllowedRoot(path.dirname(pendingFilePath));
-          setCurrentPaths({ filePath: pendingFilePath });
           const content = await fs.readFile(pendingFilePath, 'utf-8');
           mainWindow?.webContents.send('file:open', pendingFilePath, content);
           app.addRecentDocument(pendingFilePath);
@@ -193,12 +191,10 @@ app.on('open-file', async (event, filePath) => {
     const stat = await fs.stat(filePath);
     if (stat.isDirectory()) {
       addAllowedRoot(filePath);
-      setCurrentPaths({ dirPath: filePath });
       const entries = await scanDirectory(filePath);
       win.webContents.send('dir:open', filePath, entries);
     } else {
       addAllowedRoot(path.dirname(filePath));
-      setCurrentPaths({ filePath });
       const content = await fs.readFile(filePath, 'utf-8');
       win.webContents.send('file:open', filePath, content);
       app.addRecentDocument(filePath);

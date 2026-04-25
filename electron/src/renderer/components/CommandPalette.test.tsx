@@ -14,7 +14,7 @@ interface TestResult {
 }
 
 function mockSearchResults(results: TestResult[]) {
-  (window as unknown as { electronAPI: { searchEverything: (q: string) => Promise<TestResult[]> } }).electronAPI = {
+  (window as unknown as { electronAPI: { searchEverything: (q: string, root: string) => Promise<TestResult[]> } }).electronAPI = {
     searchEverything: vi.fn().mockResolvedValue(results),
   };
 }
@@ -120,7 +120,7 @@ describe('CommandPalette grouping', () => {
       { filePath: '/root/doc2.md', fileName: 'doc2.md', lineNumber: 4, matchLine: 'alpha in doc2', type: 'content' },
     ]);
     const user = userEvent.setup();
-    renderPalette({ currentFilePath: null });
+    renderPalette({ currentFilePath: null, rootPath: '/root' });
     const input = await screen.findByPlaceholderText('Search files and content…');
     await user.type(input, 'alpha');
     await waitFor(() => {

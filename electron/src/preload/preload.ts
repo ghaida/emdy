@@ -36,7 +36,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Finder / search
   showItemInFolder: (filePath: string) => ipcRenderer.invoke('file:show-in-folder', filePath),
   openInNewWindow: (filePath: string) => ipcRenderer.invoke('file:open-new-window', filePath),
-  searchEverything: (query: string) => ipcRenderer.invoke('search:everything', query),
+  searchEverything: (query: string, rootPath: string) => ipcRenderer.invoke('search:everything', query, rootPath),
 
   // Export
   exportPDF: (opts: { html: string; title: string }) => ipcRenderer.invoke('export:pdf', opts),

@@ -55,7 +55,7 @@ export interface ElectronAPI {
   scanDirectory: (dirPath: string) => Promise<FileEntry[]>;
   showItemInFolder: (filePath: string) => Promise<void>;
   openInNewWindow: (filePath: string) => Promise<void>;
-  searchEverything: (query: string) => Promise<SearchResult[]>;
+  searchEverything: (query: string, rootPath: string) => Promise<SearchResult[]>;
   watchFile: (filePath: string) => Promise<void>;
   unwatchFile: () => Promise<void>;
   onFileChanged: (callback: (filePath: string) => void) => () => void;
