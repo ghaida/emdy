@@ -1,4 +1,7 @@
 import { parse as parseYaml } from 'yaml';
+import { unified } from 'unified';
+import remarkParse from 'remark-parse';
+import remarkGfm from 'remark-gfm';
 
 export type TokenCategory = 'colors' | 'typography' | 'spacing' | 'rounded' | 'components';
 
@@ -29,13 +32,24 @@ export interface ParsedDesignMd {
 
 const FRONT_MATTER_PATTERN = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
 
+// Cap the captured front-matter block before handing it to the YAML parser.
+// Measured hazard: a ~3MB valid front-matter block blocks the UI thread for
+// minutes inside parseYaml. Real design.md front matter is <10KB, so 100KB is a
+// generous ceiling that keeps the parser responsive while never rejecting a
+// legitimate file.
+const MAX_FRONT_MATTER_CHARS = 100 * 1024;
+
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
 export function parseDesignMd(content: string): ParsedDesignMd | null {
-  const match = FRONT_MATTER_PATTERN.exec(content);
+  // Strip a leading UTF-8 BOM so the front-matter fence is still recognized.
+  const text = content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
+
+  const match = FRONT_MATTER_PATTERN.exec(text);
   if (!match) return null;
+  if (match[1].length > MAX_FRONT_MATTER_CHARS) return null;
 
   let raw: unknown;
   try {
@@ -51,7 +65,7 @@ export function parseDesignMd(content: string): ParsedDesignMd | null {
   );
   if (!hasTokens) return null;
 
-  const body = content.slice(match[0].length);
+  const body = text.slice(match[0].length);
   return { body, tokens: normalizeTokens(raw) };
 }
 
@@ -69,15 +83,19 @@ function lookupPath(root: Record<string, unknown>, path: string): unknown {
 
 function resolveValue(value: unknown, root: Record<string, unknown>): string {
   let current = value;
-  for (let hop = 0; hop < MAX_REFERENCE_HOPS; hop++) {
-    if (typeof current !== 'string' && typeof current !== 'number') break;
+  let hops = 0;
+  while (typeof current === 'string' || typeof current === 'number') {
     const str = String(current);
     const ref = REFERENCE_PATTERN.exec(str);
-    if (!ref) return str;
+    if (!ref) return str; // current is a concrete value — fully resolved
+    if (hops >= MAX_REFERENCE_HOPS) break; // chain longer than the cap
     const next = lookupPath(root, ref[1]);
-    if (next === undefined || next === current) return str;
+    if (next === undefined || next === current) break; // dead end or self-reference
     current = next;
+    hops++;
   }
+  // Hops exhausted with current still a reference, or a dead end was hit:
+  // fall back to the original literal.
   return typeof value === 'string' || typeof value === 'number' ? String(value) : '';
 }
 
@@ -141,14 +159,15 @@ export function isValidCssColor(value: string): boolean {
   return HEX_COLOR.test(v) || FUNC_COLOR.test(v);
 }
 
-const LENGTH_PATTERN = /^([\d.]+)(px|rem|em)?$/;
+const LENGTH_PATTERN = /^(\d+(?:\.\d+)?)(px|rem|em)?$/i;
 
 export function cssLength(value: string): number | null {
   const m = LENGTH_PATTERN.exec(value.trim());
   if (!m) return null;
   const n = parseFloat(m[1]);
   if (Number.isNaN(n)) return null;
-  return m[2] === 'rem' || m[2] === 'em' ? n * 16 : n;
+  const unit = m[2]?.toLowerCase();
+  return unit === 'rem' || unit === 'em' ? n * 16 : n;
 }
 
 const SECTION_MAP: Record<string, TokenCategory> = {
@@ -172,29 +191,54 @@ export function categoryForHeading(text: string): TokenCategory | null {
   return SECTION_MAP[normalized] ?? null;
 }
 
-const H2_PATTERN = /^##\s+(.+?)\s*$/;
-const FENCE_PATTERN = /^(```|~~~)/;
+// Minimal structural view of an mdast node — enough to walk the tree and read
+// heading text/positions without pulling in the full @types/mdast surface.
+interface MdNode {
+  type: string;
+  depth?: number;
+  value?: string;
+  position?: { start: { line: number } };
+  children?: MdNode[];
+}
 
-// Map of 1-based body line number of a `## Heading` → category to inject there.
-// First matching heading per category wins; fenced code blocks are skipped.
+// Single reusable processor: buildInjectionMap runs on every content change, so
+// avoid re-instantiating the parser. No plugins beyond remarkParse + remarkGfm,
+// matching the CommonMark+GFM machinery the renderer (react-markdown) uses.
+const headingProcessor = unified().use(remarkParse).use(remarkGfm);
+
+// Concatenate the text/inlineCode descendants of a heading node — the same
+// characters react-markdown renders for that heading.
+function headingText(node: MdNode): string {
+  let out = '';
+  const walk = (n: MdNode): void => {
+    if (n.type === 'text' || n.type === 'inlineCode') out += n.value ?? '';
+    if (n.children) for (const child of n.children) walk(child);
+  };
+  walk(node);
+  return out;
+}
+
+// Map of 1-based body line number of a real h2 heading → category to inject
+// there. Parsing with the same CommonMark+GFM machinery as the renderer means
+// the map agrees with it by construction: headings inside code fences don't
+// exist in the mdast tree, while setext and 1-3-space-indented ATX headings do,
+// with correct positions. First matching heading per category wins; a category
+// with no (non-empty) tokens is skipped.
 export function buildInjectionMap(body: string, tokens: DesignTokens): Map<number, TokenCategory> {
   const map = new Map<number, TokenCategory>();
   const claimed = new Set<TokenCategory>();
-  let inFence = false;
-  const lines = body.split(/\r?\n/);
-  for (let i = 0; i < lines.length; i++) {
-    if (FENCE_PATTERN.test(lines[i])) {
-      inFence = !inFence;
-      continue;
+  const tree = headingProcessor.parse(body) as unknown as MdNode;
+
+  const visit = (node: MdNode): void => {
+    if (node.type === 'heading' && node.depth === 2 && node.position) {
+      const cat = categoryForHeading(headingText(node));
+      if (cat && !claimed.has(cat) && tokens[cat] && Object.keys(tokens[cat] as object).length > 0) {
+        claimed.add(cat);
+        map.set(node.position.start.line, cat);
+      }
     }
-    if (inFence) continue;
-    const h2 = H2_PATTERN.exec(lines[i]);
-    if (!h2) continue;
-    const cat = categoryForHeading(h2[1]);
-    if (!cat || claimed.has(cat)) continue;
-    if (!tokens[cat] || Object.keys(tokens[cat] as object).length === 0) continue;
-    claimed.add(cat);
-    map.set(i + 1, cat);
-  }
+    if (node.children) for (const child of node.children) visit(child);
+  };
+  visit(tree);
   return map;
 }

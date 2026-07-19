@@ -74,6 +74,23 @@ describe('parseDesignMd detection', () => {
     expect(result).not.toBeNull();
     expect(result!.body).toContain('Body');
   });
+
+  it('detects a file that starts with a UTF-8 BOM (F3)', () => {
+    const result = parseDesignMd('﻿---\nname: X\ncolors:\n  a: "#fff"\n---\nBody');
+    expect(result).not.toBeNull();
+    expect(result!.tokens.name).toBe('X');
+    expect(result!.body).toContain('Body');
+  });
+
+  it('returns null quickly for oversized front matter without parsing YAML (F8)', () => {
+    const huge = 'x'.repeat(200 * 1024);
+    const content = `---\nname: X\ncolors:\n  a: "#fff"\n  big: "${huge}"\n---\nBody`;
+    const start = Date.now();
+    const result = parseDesignMd(content);
+    const elapsed = Date.now() - start;
+    expect(result).toBeNull();
+    expect(elapsed).toBeLessThan(1000);
+  });
 });
 
 describe('parseDesignMd normalization', () => {
@@ -128,6 +145,33 @@ describe('parseDesignMd normalization', () => {
     );
     expect(r!.tokens.colors!.a).toBe('{colors.b}');
   });
+
+  // F2: a chain of N reference edges from the component value to the final
+  // literal. MAX_REFERENCE_HOPS is 8, so up to 8 edges must fully resolve.
+  const chainFrontMatter = (edges: number): string => {
+    // component.card.bg -> colors.c0 -> colors.c1 -> ... -> colors.c{edges-2} -> "#fff"
+    // That is `edges` dereferences total (bg->c0 is edge 1, ..., c{edges-2}->#fff is the last).
+    const lines: string[] = ['---', 'name: X', 'colors:'];
+    for (let i = 0; i < edges - 1; i++) lines.push(`  c${i}: "{colors.c${i + 1}}"`);
+    lines.push(`  c${edges - 1}: "#fff"`);
+    lines.push('components:', '  card:', '    bg: "{colors.c0}"', '---', '');
+    return lines.join('\n');
+  };
+
+  it('resolves a 7-edge reference chain to the final value', () => {
+    const r = parseDesignMd(chainFrontMatter(7));
+    expect(r!.tokens.components!.card.bg).toBe('#fff');
+  });
+
+  it('resolves an 8-edge reference chain to the final value (was off-by-one)', () => {
+    const r = parseDesignMd(chainFrontMatter(8));
+    expect(r!.tokens.components!.card.bg).toBe('#fff');
+  });
+
+  it('keeps a 9-edge reference chain literal (beyond the cap)', () => {
+    const r = parseDesignMd(chainFrontMatter(9));
+    expect(r!.tokens.components!.card.bg).toBe('{colors.c0}');
+  });
 });
 
 describe('isValidCssColor', () => {
@@ -152,6 +196,15 @@ describe('cssLength', () => {
   it('returns null for unparseable or negative values', () => {
     expect(cssLength('auto')).toBeNull();
     expect(cssLength('-4px')).toBeNull();
+  });
+  it('matches units case-insensitively (F4)', () => {
+    expect(cssLength('12PX')).toBe(12);
+    expect(cssLength('1.5REM')).toBe(24);
+    expect(cssLength('2Em')).toBe(32);
+  });
+  it('rejects multi-dot numbers (F4)', () => {
+    expect(cssLength('1.2.3')).toBeNull();
+    expect(cssLength('1.2.3px')).toBeNull();
   });
 });
 
@@ -205,5 +258,39 @@ describe('buildInjectionMap', () => {
     const map = buildInjectionMap(body, tokens);
     expect(map.size).toBe(1);
     expect(map.get(5)).toBe('colors');
+  });
+
+  // F1: fence handling must match CommonMark, not a naive line toggle.
+  it('does not claim a heading when a ~~~ line sits inside a ``` block (mixed markers)', () => {
+    const body = '```\n~~~\n## Colors\n```\n';
+    const map = buildInjectionMap(body, tokens);
+    expect(map.size).toBe(0);
+  });
+
+  it('does not claim a heading inside a 3-space-indented fence opener', () => {
+    const body = '   ```\n## Colors\n   ```\n';
+    const map = buildInjectionMap(body, tokens);
+    expect(map.size).toBe(0);
+  });
+
+  it('does not claim a heading inside a 4-backtick fence with a 3-backtick line inside', () => {
+    const body = '````\n```\n## Colors\n````\n';
+    const map = buildInjectionMap(body, tokens);
+    expect(map.size).toBe(0);
+  });
+
+  // F5: real headings the naive scanner missed.
+  it('claims a setext-style h2 (text + dashed underline)', () => {
+    const body = 'Colors\n------\n\ntext\n';
+    const map = buildInjectionMap(body, tokens);
+    expect(map.size).toBe(1);
+    expect(map.get(1)).toBe('colors');
+  });
+
+  it('claims a 1-3-space-indented ATX h2', () => {
+    const body = '  ## Colors\n\ntext\n';
+    const map = buildInjectionMap(body, tokens);
+    expect(map.size).toBe(1);
+    expect(map.get(1)).toBe('colors');
   });
 });
