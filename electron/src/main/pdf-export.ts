@@ -181,7 +181,12 @@ export function registerExportHandlers() {
       // awaits, but webContents.print is callback-based, so wrap it in a
       // promise the withPrintDocument teardown waits on.
       new Promise<boolean>((resolve) => {
-        printWin.webContents.print({}, (success, errorType) => {
+        // printBackground defaults to false for webContents.print, which drops
+        // CSS backgrounds (swatch colors, shaded blocks) — printToPDF passes
+        // printBackground: true, so match it here for parity. preferCSSPageSize
+        // has no webContents.print equivalent (page size comes from @page/the
+        // print dialog), so there's nothing else to align.
+        printWin.webContents.print({ printBackground: true }, (success, errorType) => {
           if (!success && errorType) {
             console.error('Print failed:', errorType);
           }
