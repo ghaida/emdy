@@ -53,24 +53,75 @@ interface Rgba {
   a: number;
 }
 
-/** Ask the browser to normalize any CSS color: setting `fillStyle` and reading
- * it back yields `#rrggbb` for opaque or `rgba(r, g, b, a)` otherwise. Returns
- * null when no 2D context is available (jsdom) so the regex fallback runs. */
-function normalizeViaCanvas(value: string): string | null {
+/** Minimal 2D-context surface this module needs. A real
+ * `CanvasRenderingContext2D` satisfies it; tests inject a fake. */
+interface Ctx2D {
+  fillStyle: string | CanvasGradient | CanvasPattern;
+  clearRect(x: number, y: number, w: number, h: number): void;
+  fillRect(x: number, y: number, w: number, h: number): void;
+  getImageData(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+  ): { data: Uint8ClampedArray | number[] };
+}
+
+/** Factory for a 2D context. Returns null when none is available (jsdom). */
+export type CtxFactory = () => Ctx2D | null;
+
+const realCtxFactory: CtxFactory = () => {
+  if (typeof document === 'undefined') return null;
+  const canvas = document.createElement('canvas');
+  return (canvas.getContext('2d') as unknown as Ctx2D | null) ?? null;
+};
+
+// Two DISTINCT sentinel colors. Assigning an invalid color to `fillStyle` is
+// ignored per spec, so it keeps its prior value. Setting the value after two
+// different sentinels yields equal readbacks only when the assignment actually
+// took (valid). Using two sentinels — rather than one — also correctly accepts a
+// value that happens to equal a single sentinel's own color.
+const SENTINEL_A = '#010203';
+const SENTINEL_B = '#fdfcfb';
+
+/** Use a real 2D canvas as the AUTHORITY for both a color's validity and its
+ * value. Validity: the double-sentinel readback test above (invalid → null, so
+ * no chip — this kills the former solid-black chip from ignored assignments).
+ * Value: draw the color into a 1×1 surface and read straight rgba back, which
+ * resolves EVERY form Chromium supports (oklch/lab/hsl/named/space-syntax)
+ * uniformly, alpha included, without parsing the normalized string. Returns null
+ * when no context is available (jsdom) so the regex fallback runs. */
+function normalizeViaCanvas(value: string, ctxFactory: CtxFactory): Rgba | null {
   try {
-    const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
-    const ctx = canvas?.getContext('2d');
+    const ctx = ctxFactory();
     if (!ctx) return null;
+
+    ctx.fillStyle = SENTINEL_A;
     ctx.fillStyle = value;
-    return ctx.fillStyle;
+    const readA = ctx.fillStyle;
+    ctx.fillStyle = SENTINEL_B;
+    ctx.fillStyle = value;
+    const readB = ctx.fillStyle;
+    if (readA !== readB) return null; // assignment ignored → invalid → no chip
+
+    ctx.clearRect(0, 0, 1, 1);
+    ctx.fillStyle = value;
+    ctx.fillRect(0, 0, 1, 1);
+    const data = ctx.getImageData(0, 0, 1, 1).data;
+    // getImageData alpha is 0-255 and un-premultiplied for these fills.
+    return { r: data[0], g: data[1], b: data[2], a: data[3] / 255 };
   } catch {
     return null;
   }
 }
 
-/** Parse a normalized/authored color string into r/g/b/a. Covers `#rgb`,
- * `#rgba`, `#rrggbb`, `#rrggbbaa`, `rgb()`, and `rgba()`. Returns null for
- * anything else (named colors, oklch, etc. under the jsdom fallback). */
+/** Parse an authored color string into r/g/b/a. This is the CANVAS-LESS
+ * fallback (jsdom); in production the canvas above handles every form. It covers
+ * only the sRGB forms it can do correctly: `#rgb`/`#rgba`/`#rrggbb`/`#rrggbbaa`
+ * and `rgb()`/`rgba()` — including percent channels (`50%` → 127.5), percent
+ * alpha (`50%` → 0.5), comma OR space separation, and the space-syntax slash
+ * alpha (`rgb(10 20 30 / .5)`). Alpha is clamped to [0,1]. Returns null for
+ * hsl/oklch/lab/named (the canvas handles those in production). */
 function parseRgba(value: string): Rgba | null {
   const s = value.trim();
 
@@ -99,13 +150,36 @@ function parseRgba(value: string): Rgba | null {
 
   const fn = /^rgba?\(([^)]+)\)$/i.exec(s);
   if (fn) {
-    const parts = fn[1].split(',').map((p) => p.trim());
+    let body = fn[1].trim();
+
+    // Space-syntax alpha: "r g b / a". Split the alpha off first.
+    let alphaStr: string | undefined;
+    const slash = body.split('/');
+    if (slash.length === 2) {
+      alphaStr = slash[1].trim();
+      body = slash[0].trim();
+    } else if (slash.length > 2) {
+      return null;
+    }
+
+    // Channels: comma- OR whitespace-separated.
+    const parts = body.split(/[\s,]+/).filter(Boolean);
     if (parts.length < 3) return null;
-    const r = parseFloat(parts[0]);
-    const g = parseFloat(parts[1]);
-    const b = parseFloat(parts[2]);
-    const a = parts.length >= 4 ? parseFloat(parts[3]) : 1;
+    if (alphaStr === undefined && parts.length >= 4) alphaStr = parts[3];
+
+    // A channel is either 0-255 or a percentage of 255.
+    const channel = (p: string): number =>
+      p.endsWith('%') ? (parseFloat(p) / 100) * 255 : parseFloat(p);
+
+    const r = channel(parts[0]);
+    const g = channel(parts[1]);
+    const b = channel(parts[2]);
+    let a = 1;
+    if (alphaStr !== undefined) {
+      a = alphaStr.endsWith('%') ? parseFloat(alphaStr) / 100 : parseFloat(alphaStr);
+    }
     if ([r, g, b, a].some((n) => Number.isNaN(n))) return null;
+    a = Math.max(0, Math.min(1, a)); // clamp alpha to [0,1]
     return { r, g, b, a };
   }
 
@@ -122,10 +196,11 @@ function toHex(r: number, g: number, b: number): string {
  * Flatten any CSS color to an opaque `#rrggbb` string safe for RTF cell shading.
  * Opaque colors are returned as-is (in hex); translucent colors are composited
  * over the dark neutral backdrop (#333333). Returns null if the color can't be
- * parsed (exported for tests).
+ * parsed (exported for tests). The canvas factory is injectable for tests;
+ * production uses a real 2D context.
  */
-export function flattenColor(value: string): string | null {
-  const rgba = parseRgba(normalizeViaCanvas(value) ?? value);
+export function flattenColor(value: string, ctxFactory: CtxFactory = realCtxFactory): string | null {
+  const rgba = normalizeViaCanvas(value, ctxFactory) ?? parseRgba(value);
   if (!rgba) return null;
   const { r, g, b, a } = rgba;
   if (a >= 1) return toHex(r, g, b);

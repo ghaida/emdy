@@ -348,3 +348,107 @@ describe('flattenColor', () => {
     expect(flattenColor('rebeccapurple')).toBeNull();
   });
 });
+
+// Canvas path is exercised via an injected fake 2D context (jsdom has no canvas).
+// Two fakes model the two behaviors that matter: an assignment the browser
+// IGNORES (invalid color → fillStyle keeps its prior value, per spec), and a
+// valid assignment whose color we read back from a 1×1 pixel.
+function ignoredAssignmentCtx() {
+  // Only recognizes 6-digit hex (the sentinels). Anything else is dropped, so
+  // fillStyle keeps whatever sentinel was set last — exactly Chromium's behavior
+  // for a malformed value like `oklch(garbage`.
+  let fill = '#000000';
+  return {
+    get fillStyle() {
+      return fill;
+    },
+    set fillStyle(v: string) {
+      if (/^#[0-9a-f]{6}$/i.test(v)) fill = v.toLowerCase();
+    },
+    clearRect() {},
+    fillRect() {},
+    getImageData() {
+      return { data: [0, 0, 0, 255] };
+    },
+  };
+}
+
+function validCtx(pixel: number[]) {
+  // Accepts any assignment (valid color) and reports a fixed pixel readback.
+  let fill = '#000000';
+  return {
+    get fillStyle() {
+      return fill;
+    },
+    set fillStyle(v: string) {
+      fill = v;
+    },
+    clearRect() {},
+    fillRect() {},
+    getImageData() {
+      return { data: pixel };
+    },
+  };
+}
+
+const hexChan = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+
+describe('flattenColor — canvas sentinel + pixel readback', () => {
+  it('returns null when a malformed function-prefix value is silently ignored (no black chip)', () => {
+    // `oklch(garbage` passes a prefix check but the canvas assignment is ignored;
+    // the sentinel readbacks diverge → no chip (previously rendered solid black).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(flattenColor('oklch(garbage', (() => ignoredAssignmentCtx()) as any)).toBeNull();
+  });
+
+  it('reads a valid modern color from the pixel and composites its alpha over #333', () => {
+    // A valid assignment: the pixel [255,255,255,26] ≈ white @ 0.102 alpha.
+    // Composited over #333333 that lands on ~#474747 (±1 per-channel rounding).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const out = flattenColor('oklch(62% 0.18 250)', (() => validCtx([255, 255, 255, 26])) as any);
+    expect(out).not.toBeNull();
+    for (const i of [0, 1, 2]) expect(Math.abs(hexChan(out as string, i) - 71)).toBeLessThanOrEqual(1);
+  });
+
+  it('reads an opaque valid color straight from the pixel', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const out = flattenColor('lab(50% 40 30)', (() => validCtx([18, 52, 86, 255])) as any);
+    expect(out).toBe('#123456');
+  });
+});
+
+// The regex fallback runs only in canvas-less environments (jsdom here). In
+// production Chromium's canvas handles hsl/oklch/named uniformly; the fallback
+// only needs to cover the sRGB rgb()/rgba() forms robustly.
+describe('flattenColor — regex fallback (no canvas)', () => {
+  it('parses percent channels (rgb 50% → 128)', () => {
+    expect(flattenColor('rgb(50%, 50%, 50%)')).toBe('#808080');
+  });
+
+  it('parses space-separated channels', () => {
+    expect(flattenColor('rgb(10 20 30)')).toBe('#0a141e');
+  });
+
+  it('parses space-separated channels with a slash alpha', () => {
+    // 10*0.5 + 51*0.5 = 30.5 → 31 → 0x1f; 20*0.5+51*0.5=35.5→36→0x24; 30*0.5+51*0.5=40.5→41→0x29
+    expect(flattenColor('rgb(10 20 30 / 0.5)')).toBe('#1f2429');
+  });
+
+  it('treats percent alpha as a fraction (white 50% over #333 → #999)', () => {
+    // 255*0.5 + 51*0.5 = 153 → 0x99
+    expect(flattenColor('rgba(255, 255, 255, 50%)')).toBe('#999999');
+  });
+
+  it('clamps a negative alpha to 0 (fully backdrop)', () => {
+    expect(flattenColor('rgba(255, 255, 255, -1)')).toBe('#333333');
+  });
+
+  it('clamps an over-range alpha to 1 (fully opaque)', () => {
+    expect(flattenColor('rgba(200, 100, 50, 2)')).toBe('#c86432');
+  });
+
+  it('still returns null for hsl/named forms (canvas handles those in production)', () => {
+    expect(flattenColor('hsl(200 50% 50%)')).toBeNull();
+    expect(flattenColor('rebeccapurple')).toBeNull();
+  });
+});

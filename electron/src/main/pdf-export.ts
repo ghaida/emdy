@@ -162,6 +162,8 @@ ${html}
 
   ipcMain.handle('clipboard:write-html', async (_event, html: string) => {
     if (typeof html !== 'string') return;
+    // Guard-rail: reject absurdly large payloads (>20 MB) before writing.
+    if (html.length > 20_000_000) return;
     const { clipboard } = await import('electron');
     clipboard.writeHTML(html);
   });
