@@ -14,6 +14,8 @@ const PRINT_CSS = `
   height: auto !important;
   max-height: none !important;
   break-inside: auto !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
 }
 span, a, strong, em, del, code, kbd, sub, sup, abbr {
   display: inline !important;
