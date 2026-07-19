@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import { hardenWindow, escapeHtml } from './allowed-paths';
+import { buildDesignPrintCss } from '../shared/design-print-styles';
 
 const PRINT_CSS = `
 @page { margin: 20mm; }
@@ -84,28 +85,7 @@ input[type="checkbox"] { margin-right: 8px; }
 .task-list-item { list-style: none; }
 .task-list-text { display: inline !important; }
 .table-wrapper { overflow: visible; }
-.design-block { background: #F0F0F0; border-radius: 6px; padding: 16px; margin-bottom: 1em; break-inside: avoid !important; }
-.design-header { margin-bottom: 1.5em; }
-.design-header-desc { color: #666666; }
-.design-token-name { font-family: 'IBM Plex Mono', monospace; font-size: 0.85em; color: #2C2C2C; }
-.design-token-value { font-family: 'IBM Plex Mono', monospace; font-size: 0.8em; color: #666666; }
-.design-swatch-item { display: inline-block !important; width: 120px; margin: 0 12px 12px 0; vertical-align: top; }
-.design-swatch { height: 40px !important; border-radius: 4px; border: 1px solid #DDDDDD; margin-bottom: 8px; }
-.design-specimen-row { padding: 12px 0; border-bottom: 1px solid #DDDDDD; }
-.design-specimen-row:last-child { border-bottom: none; }
-.design-specimen { margin-bottom: 4px; }
-.design-fallback-note { display: none !important; }
-.design-scale-row { display: grid !important; grid-template-columns: 200px 80px 1fr; column-gap: 12px; align-items: center; padding: 4px 0; }
-.design-spacing-bar { height: 12px !important; background: #2C2C2C; border-radius: 4px; }
-.design-scale--radius { display: flex !important; gap: 24px; flex-wrap: wrap; }
-.design-radius-item { text-align: center; }
-.design-radius-square { width: 48px; height: 48px !important; background: #E4E4E4; border: 1px solid #DDDDDD; margin: 0 auto 8px; }
-.design-component { margin-bottom: 20px; }
-.design-component-name { font-family: 'IBM Plex Mono', monospace; font-size: 0.85em; font-weight: 600; margin-bottom: 8px; }
-.design-component-table { width: 100%; table-layout: fixed; }
-.design-component-table td:first-child { width: 200px; }
-.design-component-table td { border: none; padding: 4px 16px 4px 0; }
-.design-mini-swatch { display: inline-block !important; width: 12px; height: 12px !important; border-radius: 2px; border: 1px solid #DDDDDD; margin-right: 8px; vertical-align: baseline; }
+${buildDesignPrintCss()}
 `;
 
 export function registerExportHandlers() {

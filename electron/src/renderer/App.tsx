@@ -23,7 +23,7 @@ import type { FileEntry, NudgeState } from './lib/types';
 import { CONTENT_WIDTHS } from './lib/types';
 import { perfMark, perfMeasure } from './lib/perf';
 import { parseDesignMd } from './lib/design-md';
-import { inlineDesignStyles } from './lib/inline-design-styles';
+import { buildCopyHtml } from './lib/copy-html';
 
 type FindMode = 'multi-persistent' | 'zero' | 'over-cap';
 
@@ -449,7 +449,7 @@ export function App() {
 
   const handleCopyHTML = useCallback(async () => {
     if (!contentRef.current) return;
-    const html = inlineDesignStyles(contentRef.current);
+    const html = buildCopyHtml(contentRef.current);
     await window.electronAPI.writeClipboardHTML(html);
     addToast('Copied to clipboard', 'success');
   }, [addToast]);
