@@ -22,6 +22,7 @@ import { useFileWatcher } from './hooks/useFileWatcher';
 import type { FileEntry, NudgeState } from './lib/types';
 import { CONTENT_WIDTHS } from './lib/types';
 import { perfMark, perfMeasure } from './lib/perf';
+import { parseDesignMd } from './lib/design-md';
 
 type FindMode = 'multi-persistent' | 'zero' | 'over-cap';
 
@@ -598,6 +599,8 @@ export function App() {
     display.fontFamily === 'serif' ? 'var(--font-serif)' :
     'var(--font-mono)';
 
+  const designParsed = useMemo(() => (content !== null ? parseDesignMd(content) : null), [content]);
+
   const markdownStyle = useMemo(() => ({
     fontFamily: fontFamilyVar,
     fontSize: `${display.zoom}rem`,
@@ -660,7 +663,8 @@ export function App() {
           <div className={`content-area${minimapVisible ? ' hide-scrollbar' : ''}`} ref={scrollContainerRef}>
             <MarkdownView
               ref={markdownViewRef}
-              content={content}
+              content={designParsed ? designParsed.body : content}
+              designTokens={designParsed?.tokens ?? null}
               colors={display.resolvedColors}
               filePath={filePath}
               style={markdownStyle}
