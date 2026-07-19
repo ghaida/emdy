@@ -1,6 +1,7 @@
 import { app, autoUpdater, ipcMain, BrowserWindow } from 'electron';
 import fsSync from 'node:fs';
 import path from 'node:path';
+import { RECHECK_INTERVAL_MS, shouldCheckOnFocus } from './update-schedule';
 
 const isDev = !app.isPackaged;
 
@@ -41,9 +42,11 @@ let downloadedVersion: string | null = null;
 let downloadedNotes: string | null = null;
 let updateError: string | null = null;
 
-const RECHECK_INTERVAL_MS = 12 * 60 * 60 * 1000; // 12 hours
-
 let lastFocusedWindow: BrowserWindow | null = null;
+
+// Timestamp of the most recent checkForUpdates() invocation, used to decide
+// whether a window-focus event should trigger a fresh (stale) check.
+let lastCheckAt: number | null = null;
 
 // When a user clicks "Check for Updates" before autoUpdater has finished
 // downloading, we hold their webContents here so the eventual download
@@ -73,14 +76,31 @@ function targetWindow(): BrowserWindow | null {
   return null;
 }
 
+// Single entry point for kicking off a check — records the timestamp so
+// the on-focus staleness logic has an accurate "last checked" reference.
+function triggerCheck() {
+  lastCheckAt = Date.now();
+  autoUpdater.checkForUpdates();
+}
+
 export function setupAutoUpdater() {
   if (isDev) return; // autoUpdater throws when app is not packaged
 
   // Track the most recently focused window so we can route the
   // update:ready notification to the right place even if the app
-  // is unfocused at the moment the download finishes.
+  // is unfocused at the moment the download finishes. Also opportunistically
+  // trigger a stale check on focus, which catches machines waking from sleep
+  // where the setInterval timer may not have fired.
   app.on('browser-window-focus', (_event, win) => {
     lastFocusedWindow = win;
+
+    // Only check when we're idle (or recovering from an error) — never while a
+    // check/download is already in flight ('checking'/'available') or when an
+    // update is already downloaded and waiting to install ('downloaded').
+    const canCheck = updateStatus === 'idle' || updateStatus === 'error';
+    if (canCheck && shouldCheckOnFocus(lastCheckAt, Date.now())) {
+      triggerCheck();
+    }
   });
 
   const feedURL = `https://update.electronjs.org/ghaida/emdy/${process.platform}-${process.arch}/${app.getVersion()}`;
@@ -148,8 +168,8 @@ export function setupAutoUpdater() {
   isSetUp = true;
 
   // Check on launch, then periodically
-  autoUpdater.checkForUpdates();
-  setInterval(() => autoUpdater.checkForUpdates(), RECHECK_INTERVAL_MS);
+  triggerCheck();
+  setInterval(() => triggerCheck(), RECHECK_INTERVAL_MS);
 }
 
 export function registerAutoUpdaterIPC() {
@@ -164,7 +184,7 @@ export function registerAutoUpdaterIPC() {
 
     updateError = null;
     manualCheckSender = event.sender;
-    autoUpdater.checkForUpdates();
+    triggerCheck();
     return { status: 'checking' };
   });
 
