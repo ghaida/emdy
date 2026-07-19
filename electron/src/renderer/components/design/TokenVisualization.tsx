@@ -6,16 +6,20 @@ import { RadiusScale } from './RadiusScale';
 import { ComponentTable } from './ComponentTable';
 
 export function TokenVisualization({ category, tokens }: { category: TokenCategory; tokens: DesignTokens }) {
-  switch (category) {
-    case 'colors':
-      return tokens.colors ? <SwatchGrid colors={tokens.colors} /> : null;
-    case 'typography':
-      return tokens.typography ? <TypeSpecimens typography={tokens.typography} /> : null;
-    case 'spacing':
-      return tokens.spacing ? <SpacingScale spacing={tokens.spacing} /> : null;
-    case 'rounded':
-      return tokens.rounded ? <RadiusScale rounded={tokens.rounded} /> : null;
-    case 'components':
-      return tokens.components ? <ComponentTable components={tokens.components} /> : null;
-  }
+  const inner = (() => {
+    switch (category) {
+      case 'colors':
+        return tokens.colors ? <SwatchGrid colors={tokens.colors} /> : null;
+      case 'typography':
+        return tokens.typography ? <TypeSpecimens typography={tokens.typography} /> : null;
+      case 'spacing':
+        return tokens.spacing ? <SpacingScale spacing={tokens.spacing} /> : null;
+      case 'rounded':
+        return tokens.rounded ? <RadiusScale rounded={tokens.rounded} /> : null;
+      case 'components':
+        return tokens.components ? <ComponentTable components={tokens.components} /> : null;
+    }
+  })();
+
+  return inner ? <div className="design-block">{inner}</div> : null;
 }

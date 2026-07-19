@@ -170,7 +170,9 @@ describe('MarkdownView design.md rendering', () => {
   it('injects the swatch grid under the matching Colors heading', () => {
     renderDesign();
     const heading = screen.getByRole('heading', { name: 'Colors' });
-    expect(heading.nextElementSibling?.classList.contains('design-swatches')).toBe(true);
+    const sibling = heading.nextElementSibling;
+    expect(sibling?.classList.contains('design-block')).toBe(true);
+    expect(sibling?.querySelector('.design-swatches')).not.toBeNull();
   });
 
   it('appends unmatched categories at the end', () => {

@@ -1717,6 +1717,12 @@ input:focus:not(:focus-visible),
 }
 
 /* design.md styleguide */
+.design-block {
+  background: var(--bg-code);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin: var(--space-4) 0 var(--space-6);
+}
 .design-header {
   margin-bottom: var(--space-8);
 }
@@ -1728,7 +1734,7 @@ input:focus:not(:focus-visible),
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: var(--space-4);
-  margin: var(--space-4) 0 var(--space-6);
+  margin: 0;
 }
 .design-swatch {
   height: var(--space-10);
@@ -1747,7 +1753,7 @@ input:focus:not(:focus-visible),
   color: var(--text-muted);
 }
 .design-specimens {
-  margin: var(--space-4) 0 var(--space-6);
+  margin: 0;
 }
 .design-specimen-row {
   padding: var(--space-3) 0;
@@ -1764,7 +1770,7 @@ input:focus:not(:focus-visible),
   color: var(--text-muted);
 }
 .design-scale {
-  margin: var(--space-4) 0 var(--space-6);
+  margin: 0;
 }
 .design-scale-row {
   display: flex;
@@ -1798,7 +1804,7 @@ input:focus:not(:focus-visible),
   margin: 0 auto var(--space-2);
 }
 .design-components {
-  margin: var(--space-4) 0 var(--space-6);
+  margin: 0;
 }
 .design-component {
   margin-bottom: var(--space-5);

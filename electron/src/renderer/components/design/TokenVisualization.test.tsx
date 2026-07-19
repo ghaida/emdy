@@ -45,6 +45,13 @@ describe('TokenVisualization', () => {
     expect(document.querySelectorAll('.design-mini-swatch')).toHaveLength(1);
   });
 
+  it('wraps the visualization in a design-block container', () => {
+    render(<TokenVisualization category="colors" tokens={tokens} />);
+    const block = document.querySelector('.design-block');
+    expect(block).not.toBeNull();
+    expect(block!.querySelector('.design-swatches')).not.toBeNull();
+  });
+
   it('returns null when the category has no tokens', () => {
     const { container } = render(<TokenVisualization category="colors" tokens={{ name: 'X' }} />);
     expect(container.firstChild).toBeNull();
