@@ -1717,6 +1717,13 @@ input:focus:not(:focus-visible),
 }
 
 /* design.md styleguide */
+.design-header {
+  margin-bottom: var(--space-8);
+}
+.design-header-desc {
+  color: var(--text-muted);
+  margin-top: var(--space-2);
+}
 .design-swatches {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
