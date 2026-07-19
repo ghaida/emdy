@@ -40,7 +40,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Export
   exportPDF: (opts: { html: string; title: string }) => ipcRenderer.invoke('export:pdf', opts),
-  print: () => ipcRenderer.invoke('export:print'),
+  print: (opts: { html: string; title: string }) => ipcRenderer.invoke('export:print', opts),
   writeClipboardHTML: (html: string) => ipcRenderer.invoke('clipboard:write-html', html),
 
   // Settings
