@@ -206,6 +206,11 @@ describe('cssLength', () => {
     expect(cssLength('1.2.3')).toBeNull();
     expect(cssLength('1.2.3px')).toBeNull();
   });
+  it('accepts leading-dot decimals (F4 amendment)', () => {
+    expect(cssLength('.5rem')).toBe(8);
+    expect(cssLength('.5px')).toBe(0.5);
+    expect(cssLength('.25em')).toBe(4);
+  });
 });
 
 describe('categoryForHeading', () => {

@@ -159,7 +159,7 @@ export function isValidCssColor(value: string): boolean {
   return HEX_COLOR.test(v) || FUNC_COLOR.test(v);
 }
 
-const LENGTH_PATTERN = /^(\d+(?:\.\d+)?)(px|rem|em)?$/i;
+const LENGTH_PATTERN = /^(\d+(?:\.\d+)?|\.\d+)(px|rem|em)?$/i;
 
 export function cssLength(value: string): number | null {
   const m = LENGTH_PATTERN.exec(value.trim());
