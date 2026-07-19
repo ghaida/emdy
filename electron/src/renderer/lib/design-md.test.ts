@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseDesignMd, isValidCssColor, cssLength } from './design-md';
+import { categoryForHeading, buildInjectionMap, type DesignTokens } from './design-md';
 
 const HERITAGE = `---
 name: Heritage
@@ -151,5 +152,58 @@ describe('cssLength', () => {
   it('returns null for unparseable or negative values', () => {
     expect(cssLength('auto')).toBeNull();
     expect(cssLength('-4px')).toBeNull();
+  });
+});
+
+describe('categoryForHeading', () => {
+  it('maps spec section names and aliases', () => {
+    expect(categoryForHeading('Colors')).toBe('colors');
+    expect(categoryForHeading('typography')).toBe('typography');
+    expect(categoryForHeading('Layout')).toBe('spacing');
+    expect(categoryForHeading('Layout & Spacing')).toBe('spacing');
+    expect(categoryForHeading('Spacing')).toBe('spacing');
+    expect(categoryForHeading('Shapes')).toBe('rounded');
+    expect(categoryForHeading('Components:')).toBe('components');
+  });
+  it('returns null for non-token sections', () => {
+    expect(categoryForHeading('Overview')).toBeNull();
+    expect(categoryForHeading("Do's and Don'ts")).toBeNull();
+    expect(categoryForHeading('Elevation & Depth')).toBeNull();
+    expect(categoryForHeading('Random Section')).toBeNull();
+  });
+});
+
+describe('buildInjectionMap', () => {
+  const tokens: DesignTokens = {
+    name: 'X',
+    colors: { a: '#fff' },
+    spacing: { sm: '8px' },
+  };
+
+  it('maps first matching heading line per category', () => {
+    const body = '## Overview\n\ntext\n\n## Colors\n\ntext\n\n## Layout\n\ntext\n';
+    const map = buildInjectionMap(body, tokens);
+    expect(map.get(5)).toBe('colors');
+    expect(map.get(9)).toBe('spacing');
+    expect(map.size).toBe(2);
+  });
+
+  it('ignores headings for categories the file has no tokens for', () => {
+    const map = buildInjectionMap('## Typography\n\n## Colors\n', tokens);
+    expect(map.size).toBe(1);
+    expect(map.get(3)).toBe('colors');
+  });
+
+  it('only the first matching heading per category is used', () => {
+    const map = buildInjectionMap('## Colors\n\n## Colors\n', tokens);
+    expect(map.size).toBe(1);
+    expect(map.get(1)).toBe('colors');
+  });
+
+  it('skips headings inside fenced code blocks', () => {
+    const body = '```\n## Colors\n```\n\n## Colors\n';
+    const map = buildInjectionMap(body, tokens);
+    expect(map.size).toBe(1);
+    expect(map.get(5)).toBe('colors');
   });
 });

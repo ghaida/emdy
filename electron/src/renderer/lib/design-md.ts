@@ -150,3 +150,51 @@ export function cssLength(value: string): number | null {
   if (Number.isNaN(n)) return null;
   return m[2] === 'rem' || m[2] === 'em' ? n * 16 : n;
 }
+
+const SECTION_MAP: Record<string, TokenCategory> = {
+  colors: 'colors',
+  typography: 'typography',
+  layout: 'spacing',
+  'layout and spacing': 'spacing',
+  spacing: 'spacing',
+  shapes: 'rounded',
+  components: 'components',
+};
+
+export function categoryForHeading(text: string): TokenCategory | null {
+  const normalized = text
+    .trim()
+    .toLowerCase()
+    .replace(/:+$/, '')
+    .replace(/\s*&\s*/g, ' and ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return SECTION_MAP[normalized] ?? null;
+}
+
+const H2_PATTERN = /^##\s+(.+?)\s*$/;
+const FENCE_PATTERN = /^(```|~~~)/;
+
+// Map of 1-based body line number of a `## Heading` → category to inject there.
+// First matching heading per category wins; fenced code blocks are skipped.
+export function buildInjectionMap(body: string, tokens: DesignTokens): Map<number, TokenCategory> {
+  const map = new Map<number, TokenCategory>();
+  const claimed = new Set<TokenCategory>();
+  let inFence = false;
+  const lines = body.split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++) {
+    if (FENCE_PATTERN.test(lines[i])) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+    const h2 = H2_PATTERN.exec(lines[i]);
+    if (!h2) continue;
+    const cat = categoryForHeading(h2[1]);
+    if (!cat || claimed.has(cat)) continue;
+    if (!tokens[cat] || Object.keys(tokens[cat] as object).length === 0) continue;
+    claimed.add(cat);
+    map.set(i + 1, cat);
+  }
+  return map;
+}
