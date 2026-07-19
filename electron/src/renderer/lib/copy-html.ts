@@ -201,33 +201,50 @@ function pxFromWidth(width: string | undefined): number | null {
   return Number.isNaN(n) ? null : n;
 }
 
-/** Spacing scale → a table: name (200px) | value (80px) | bar. The bar is a
- * SHADED <td> whose own width is the original bar's inline width (capped at
- * COPY_BAR_MAX_PX) and whose background is the neutral bar color — no inner div,
- * since RTF drops sized divs. */
+/**
+ * Spacing scale → ONE single-row table PER token (not one shared table).
+ *
+ * A single shared table can't work: a column has one width, but each bar cell
+ * needs a *different* width. WebKit's RTF converter normalizes all cells in a
+ * column to one width, so shared-table bars collapse to a uniform slab pushed to
+ * the right edge. Emitting a separate one-row table per token gives every bar
+ * cell its own width, while fixed name/value column widths keep the values
+ * vertically aligned across the sibling tables.
+ *
+ * Per row-table columns: name (200px) | value (80px) | bar (shaded, explicit
+ * width = the token's pixel value capped at COPY_BAR_MAX_PX) | filler (no width,
+ * no shading — absorbs leftover space so the bar cell isn't stretched). The
+ * table itself is NOT width:100%; the filler cell does that job. The bar cell's
+ * height follows its line box, so it gets a 12px line-height / 4px font-size /
+ * zero padding and a non-breaking-space so RTF renders a ~12px-tall bar rather
+ * than a full-row slab. Tokens with an unparseable value (no bar element, e.g.
+ * `auto`) keep the name + value cells and get an empty unshaded cell instead of
+ * a shaded bar. */
 function rebuildScale(container: Element, doc: Document): void {
-  const table = doc.createElement('table');
-  table.style.cssText = 'border-collapse: collapse; margin-bottom: 1em;';
-  const tbody = doc.createElement('tbody');
+  const tables: HTMLTableElement[] = [];
 
   container.querySelectorAll('.design-scale-row').forEach((row) => {
     const name = row.querySelector('.design-token-name')?.textContent ?? '';
     const value = row.querySelector('.design-token-value')?.textContent ?? '';
     const bar = row.querySelector<HTMLElement>('.design-spacing-bar');
+
+    const table = doc.createElement('table');
+    table.style.cssText = 'border-collapse: collapse; margin: 0;';
+    const tbody = doc.createElement('tbody');
     const tr = doc.createElement('tr');
 
     const nameTd = doc.createElement('td');
     nameTd.className = 'design-token-name';
     nameTd.textContent = name;
     nameTd.style.setProperty('width', COPY_NAME_WIDTH);
-    nameTd.style.setProperty('padding', '4px 12px 4px 0');
+    nameTd.style.setProperty('padding', '2px 8px 2px 0');
     tr.appendChild(nameTd);
 
     const valueTd = doc.createElement('td');
     valueTd.className = 'design-token-value';
     valueTd.textContent = value;
     valueTd.style.setProperty('width', COPY_VALUE_WIDTH);
-    valueTd.style.setProperty('padding', '4px 12px 4px 0');
+    valueTd.style.setProperty('padding', '2px 8px 2px 0');
     tr.appendChild(valueTd);
 
     const barTd = doc.createElement('td');
@@ -236,14 +253,25 @@ function rebuildScale(container: Element, doc: Document): void {
       const capped = Math.min(px, COPY_BAR_MAX_PX);
       barTd.style.setProperty('width', `${capped}px`);
       barTd.style.setProperty('background', COPY_BAR_COLOR);
+      barTd.style.setProperty('height', '12px');
+      barTd.style.setProperty('line-height', '12px');
+      barTd.style.setProperty('font-size', '4px');
+      barTd.style.setProperty('padding', '0');
+      barTd.textContent = ' '; // &nbsp; — gives the bar cell a line box
     }
     tr.appendChild(barTd);
 
+    // Trailing filler: no width, no shading. Absorbs leftover width so the bar
+    // cell keeps its explicit width instead of stretching across the table.
+    const fillerTd = doc.createElement('td');
+    tr.appendChild(fillerTd);
+
     tbody.appendChild(tr);
+    table.appendChild(tbody);
+    tables.push(table);
   });
 
-  table.appendChild(tbody);
-  container.replaceWith(table);
+  container.replaceWith(...tables);
 }
 
 /** Radius scale → a plain [name (200px) | value] table, left-aligned. The sized

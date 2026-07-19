@@ -94,7 +94,7 @@ describe('buildCopyHtml', () => {
     expect(firstTd?.getAttribute('style') || '').not.toContain('background-color');
   });
 
-  it('replaces the spacing scale with a table whose bar is a shaded td with an explicit width', () => {
+  it('replaces the spacing scale with one single-row table whose bar is a shaded td with an explicit width', () => {
     host.innerHTML =
       '<div class="markdown-body"><div class="design-block">' +
       '<div class="design-scale">' +
@@ -105,17 +105,56 @@ describe('buildCopyHtml', () => {
       '</div></div></div></div>';
 
     const parsed = new DOMParser().parseFromString(buildCopyHtml(host), 'text/html');
+    // One token → exactly one table, one row.
+    const tables = parsed.querySelectorAll('.design-block table');
+    expect(tables.length).toBe(1);
     const row = parsed.querySelector('.design-block table tr');
     expect(row).toBeTruthy();
     expect(row?.textContent).toContain('sm');
     expect(row?.textContent).toContain('8px');
     // No inner bar div survives — the bar is the cell itself.
     expect(parsed.querySelector('.design-block table tr td div')).toBeNull();
-    // The third cell (the bar) carries the width and the neutral shade.
-    const barTd = parsed.querySelectorAll('.design-block table tr td')[2] as HTMLElement;
+    // The table must NOT be full width — the filler cell absorbs slack instead.
+    expect(tables[0]?.getAttribute('style') || '').not.toContain('width: 100%');
+    // name | value | bar | filler = four cells.
+    const cells = parsed.querySelectorAll('.design-block table tr td');
+    expect(cells.length).toBe(4);
+    // The third cell (the bar) carries its OWN width and the neutral shade.
+    const barTd = cells[2] as HTMLElement;
     const style = barTd?.getAttribute('style') || '';
     expect(style).toContain('width: 8px');
     expect(style).toContain('rgb(44, 44, 44)'); // #2C2C2C normalized by the DOM
+    // The trailing filler cell has no width and no shading.
+    const fillerStyle = (cells[3] as HTMLElement)?.getAttribute('style') || '';
+    expect(fillerStyle).not.toContain('width');
+    expect(fillerStyle).not.toContain('background');
+  });
+
+  it('emits one table per spacing token, each bar carrying its own width', () => {
+    host.innerHTML =
+      '<div class="markdown-body"><div class="design-block">' +
+      '<div class="design-scale">' +
+      '<div class="design-scale-row">' +
+      '<div class="design-token-name">xs</div>' +
+      '<div class="design-token-value">4px</div>' +
+      '<div class="design-spacing-bar" style="width: 4px;"></div>' +
+      '</div>' +
+      '<div class="design-scale-row">' +
+      '<div class="design-token-name">sm</div>' +
+      '<div class="design-token-value">8px</div>' +
+      '<div class="design-spacing-bar" style="width: 8px;"></div>' +
+      '</div></div></div></div>';
+
+    const parsed = new DOMParser().parseFromString(buildCopyHtml(host), 'text/html');
+    // Two tokens → two separate sibling tables (individual bar widths).
+    const tables = parsed.querySelectorAll('.design-block table');
+    expect(tables.length).toBe(2);
+    const widths = Array.from(tables).map((t) => {
+      const bar = t.querySelectorAll('td')[2] as HTMLElement;
+      return bar?.getAttribute('style') || '';
+    });
+    expect(widths[0]).toContain('width: 4px');
+    expect(widths[1]).toContain('width: 8px');
   });
 
   it('caps the spacing bar cell width so long bars do not blow up the paste', () => {
@@ -124,13 +163,33 @@ describe('buildCopyHtml', () => {
       '<div class="design-scale">' +
       '<div class="design-scale-row">' +
       '<div class="design-token-name">xl</div>' +
-      '<div class="design-token-value">640px</div>' +
-      '<div class="design-spacing-bar" style="width: 640px;"></div>' +
+      '<div class="design-token-value">9999px</div>' +
+      '<div class="design-spacing-bar" style="width: 9999px;"></div>' +
       '</div></div></div></div>';
 
     const parsed = new DOMParser().parseFromString(buildCopyHtml(host), 'text/html');
     const barTd = parsed.querySelectorAll('.design-block table tr td')[2] as HTMLElement;
     expect(barTd?.getAttribute('style') || '').toContain('width: 300px');
+  });
+
+  it('gives an unparseable spacing value (auto) name + value cells and no shaded bar', () => {
+    // An `auto` token renders no .design-spacing-bar in the viewer.
+    host.innerHTML =
+      '<div class="markdown-body"><div class="design-block">' +
+      '<div class="design-scale">' +
+      '<div class="design-scale-row">' +
+      '<div class="design-token-name">auto</div>' +
+      '<div class="design-token-value">auto</div>' +
+      '</div></div></div></div>';
+
+    const parsed = new DOMParser().parseFromString(buildCopyHtml(host), 'text/html');
+    const row = parsed.querySelector('.design-block table tr');
+    expect(row?.textContent).toContain('auto');
+    // No cell in this row carries the neutral bar shade as a background.
+    const shaded = Array.from(parsed.querySelectorAll('.design-block table td')).some((td) =>
+      (td.getAttribute('style') || '').includes('background: rgb(44, 44, 44)'),
+    );
+    expect(shaded).toBe(false);
   });
 
   it('replaces the radius scale with a name/value table and no text-align center', () => {
