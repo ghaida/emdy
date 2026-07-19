@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { buildCopyHtml } from './copy-html';
+import { buildCopyHtml, flattenColor } from './copy-html';
 
 describe('buildCopyHtml', () => {
   let host: HTMLElement;
@@ -217,5 +217,75 @@ describe('buildCopyHtml', () => {
 
     const parsed = new DOMParser().parseFromString(buildCopyHtml(host), 'text/html');
     expect(parsed.querySelector('.design-header')?.getAttribute('style')).toBeTruthy();
+  });
+
+  // The swatch bg is flattened before it reaches the cell, so a translucent
+  // token pastes as its composite-over-#333 shade instead of a blank white cell.
+  it('flattens a translucent swatch color over the dark neutral backdrop', () => {
+    host.innerHTML =
+      '<div class="markdown-body"><div class="design-block">' +
+      '<div class="design-swatches">' +
+      '<div class="design-swatch-item">' +
+      '<div class="design-swatch" style="background-color: rgba(255, 255, 255, 0.1);"></div>' +
+      '<div class="design-token-name">glass</div>' +
+      '<div class="design-token-value">rgba(255, 255, 255, 0.1)</div>' +
+      '</div></div></div></div>';
+
+    const parsed = new DOMParser().parseFromString(buildCopyHtml(host), 'text/html');
+    // #474747 = white@0.1 composited over #333333, normalized by the DOM.
+    const shaded = Array.from(parsed.querySelectorAll('td')).find((td) =>
+      (td.getAttribute('style') || '').includes('rgb(71, 71, 71)'),
+    );
+    expect(shaded).toBeTruthy();
+    // The raw translucent value never reaches any cell's inline style (it may
+    // still appear as the token-value TEXT, which is fine).
+    const anyAlphaBg = Array.from(parsed.querySelectorAll('td')).some((td) =>
+      (td.getAttribute('style') || '').includes('rgba('),
+    );
+    expect(anyAlphaBg).toBe(false);
+  });
+
+  it('passes an opaque swatch color through the flatten (unchanged shade)', () => {
+    host.innerHTML =
+      '<div class="markdown-body"><div class="design-block">' +
+      '<div class="design-swatches">' +
+      '<div class="design-swatch-item">' +
+      '<div class="design-swatch" style="background-color: rgb(184, 66, 46);"></div>' +
+      '<div class="design-token-name">tertiary</div>' +
+      '<div class="design-token-value">#B8422E</div>' +
+      '</div></div></div></div>';
+
+    const parsed = new DOMParser().parseFromString(buildCopyHtml(host), 'text/html');
+    const shaded = Array.from(parsed.querySelectorAll('td')).find((td) =>
+      (td.getAttribute('style') || '').includes('184, 66, 46'),
+    );
+    expect(shaded).toBeTruthy();
+  });
+});
+
+describe('flattenColor', () => {
+  it('returns an opaque hex color unchanged in value', () => {
+    expect(flattenColor('#2f3131')).toBe('#2f3131');
+  });
+
+  it('composites white at 0.1 alpha over #333333', () => {
+    // 255*0.1 + 51*0.9 = 71.4 -> 71 -> 0x47
+    expect(flattenColor('rgba(255, 255, 255, 0.1)')).toBe('#474747');
+  });
+
+  it('composites white at 0.2 alpha over #333333', () => {
+    // 255*0.2 + 51*0.8 = 91.8 -> 92 -> 0x5c
+    expect(flattenColor('rgba(255,255,255,0.2)')).toBe('#5c5c5c');
+  });
+
+  it('flattens the #rrggbbaa hex form too', () => {
+    // #ffffff1a = white at 26/255 ≈ 0.10196 alpha.
+    // 255*0.10196 + 51*0.89804 = 26 + 45.8 = 71.8 -> 72 -> 0x48
+    expect(flattenColor('#ffffff1a')).toBe('#484848');
+  });
+
+  it('returns null for an unparseable color', () => {
+    expect(flattenColor('oklch(0.7 0.1 200)')).toBeNull();
+    expect(flattenColor('rebeccapurple')).toBeNull();
   });
 });

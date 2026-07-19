@@ -39,6 +39,100 @@ const COPY_VALUE_WIDTH = '80px';
 // modest spacing. The PDF keeps its 1px separators via DESIGN_PRINT_STYLES.
 const COPY_SPECIMEN_ROW_CSS = 'padding-bottom: 8px;';
 
+// WebKit's HTML→RTF conversion only honors OPAQUE cell shading — an alpha color
+// gets dropped and the cell pastes blank white. So every FILE color that lands
+// as a chip/swatch background is flattened first: translucent tokens are
+// composited over a dark neutral (#333333) so glass/overlay tokens still read
+// the way they do against the app's dark surface, and opaque colors pass through.
+const NEUTRAL_BACKDROP = 51; // #333333 per channel
+
+interface Rgba {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+}
+
+/** Ask the browser to normalize any CSS color: setting `fillStyle` and reading
+ * it back yields `#rrggbb` for opaque or `rgba(r, g, b, a)` otherwise. Returns
+ * null when no 2D context is available (jsdom) so the regex fallback runs. */
+function normalizeViaCanvas(value: string): string | null {
+  try {
+    const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+    const ctx = canvas?.getContext('2d');
+    if (!ctx) return null;
+    ctx.fillStyle = value;
+    return ctx.fillStyle;
+  } catch {
+    return null;
+  }
+}
+
+/** Parse a normalized/authored color string into r/g/b/a. Covers `#rgb`,
+ * `#rgba`, `#rrggbb`, `#rrggbbaa`, `rgb()`, and `rgba()`. Returns null for
+ * anything else (named colors, oklch, etc. under the jsdom fallback). */
+function parseRgba(value: string): Rgba | null {
+  const s = value.trim();
+
+  const hex = /^#([0-9a-fA-F]+)$/.exec(s);
+  if (hex) {
+    const h = hex[1];
+    const dbl = (c: string) => parseInt(c + c, 16);
+    if (h.length === 3) return { r: dbl(h[0]), g: dbl(h[1]), b: dbl(h[2]), a: 1 };
+    if (h.length === 4) return { r: dbl(h[0]), g: dbl(h[1]), b: dbl(h[2]), a: dbl(h[3]) / 255 };
+    if (h.length === 6)
+      return {
+        r: parseInt(h.slice(0, 2), 16),
+        g: parseInt(h.slice(2, 4), 16),
+        b: parseInt(h.slice(4, 6), 16),
+        a: 1,
+      };
+    if (h.length === 8)
+      return {
+        r: parseInt(h.slice(0, 2), 16),
+        g: parseInt(h.slice(2, 4), 16),
+        b: parseInt(h.slice(4, 6), 16),
+        a: parseInt(h.slice(6, 8), 16) / 255,
+      };
+    return null;
+  }
+
+  const fn = /^rgba?\(([^)]+)\)$/i.exec(s);
+  if (fn) {
+    const parts = fn[1].split(',').map((p) => p.trim());
+    if (parts.length < 3) return null;
+    const r = parseFloat(parts[0]);
+    const g = parseFloat(parts[1]);
+    const b = parseFloat(parts[2]);
+    const a = parts.length >= 4 ? parseFloat(parts[3]) : 1;
+    if ([r, g, b, a].some((n) => Number.isNaN(n))) return null;
+    return { r, g, b, a };
+  }
+
+  return null;
+}
+
+function toHex(r: number, g: number, b: number): string {
+  const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
+  const h = (n: number) => clamp(n).toString(16).padStart(2, '0');
+  return `#${h(r)}${h(g)}${h(b)}`;
+}
+
+/**
+ * Flatten any CSS color to an opaque `#rrggbb` string safe for RTF cell shading.
+ * Opaque colors are returned as-is (in hex); translucent colors are composited
+ * over the dark neutral backdrop (#333333). Returns null if the color can't be
+ * parsed (exported for tests).
+ */
+export function flattenColor(value: string): string | null {
+  const rgba = parseRgba(normalizeViaCanvas(value) ?? value);
+  if (!rgba) return null;
+  const { r, g, b, a } = rgba;
+  if (a >= 1) return toHex(r, g, b);
+  const composite = (c: number) => c * a + NEUTRAL_BACKDROP * (1 - a);
+  return toHex(composite(r), composite(g), composite(b));
+}
+
 /** Parse a CSS declaration string and apply it via setProperty, preserving any
  * inline styles already on the element (e.g. a swatch's background-color). */
 function applyDecls(el: HTMLElement, decls: string | undefined): void {
@@ -59,7 +153,8 @@ function applyDecls(el: HTMLElement, decls: string | undefined): void {
 }
 
 /** Swatch grid → a table with one row per color: a fixed-width swatch cell (the
- * token's inline background-color carried over; empty/unshaded for invalid
+ * token's inline background-color flattened to an opaque shade — translucent
+ * tokens composited over the dark neutral; empty/unshaded for missing/invalid
  * colors), a name cell, and a value cell. */
 function rebuildSwatches(container: Element, doc: Document): void {
   const table = doc.createElement('table');
@@ -76,7 +171,8 @@ function rebuildSwatches(container: Element, doc: Document): void {
     swatchTd.style.setProperty('width', COPY_SWATCH_WIDTH);
     swatchTd.style.setProperty('border', '1px solid #DDDDDD');
     const bg = swatch?.style.backgroundColor;
-    if (bg) swatchTd.style.setProperty('background-color', bg);
+    const flat = bg ? flattenColor(bg) : null;
+    if (flat) swatchTd.style.setProperty('background-color', flat);
     tr.appendChild(swatchTd);
 
     const nameTd = doc.createElement('td');
@@ -184,7 +280,9 @@ function rebuildRadius(container: Element, doc: Document): void {
 }
 
 /** Component table → 3 columns per row: property (200px) | chip (16px, shaded
- * with the value's color only when it's a valid CSS color) | value. The color
+ * with the value's flattened color only when it's a valid CSS color) | value.
+ * Translucent colors are composited over the dark neutral so they stay visible
+ * through the RTF conversion. The color
  * indicator moves from a sized <span> (which RTF drops) into a shaded cell, and
  * the fixed 200px/16px columns are identical across every component so values
  * align document-wide. */
@@ -206,8 +304,9 @@ function rebuildComponentTable(table: Element, doc: Document): void {
     const chipTd = doc.createElement('td');
     chipTd.style.setProperty('width', COPY_CHIP_WIDTH);
     chipTd.style.setProperty('padding', '0');
-    if (isValidCssColor(value)) {
-      chipTd.style.setProperty('background-color', value);
+    const chipColor = isValidCssColor(value) ? flattenColor(value) : null;
+    if (chipColor) {
+      chipTd.style.setProperty('background-color', chipColor);
       chipTd.style.setProperty('border', COPY_CHIP_BORDER);
     }
 
