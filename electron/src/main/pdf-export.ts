@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import { hardenWindow, escapeHtml } from './allowed-paths';
+import { buildDesignPrintCss } from '../shared/design-print-styles';
 
 const PRINT_CSS = `
 @page { margin: 20mm; }
@@ -13,6 +14,8 @@ const PRINT_CSS = `
   height: auto !important;
   max-height: none !important;
   break-inside: auto !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
 }
 span, a, strong, em, del, code, kbd, sub, sup, abbr {
   display: inline !important;
@@ -84,7 +87,68 @@ input[type="checkbox"] { margin-right: 8px; }
 .task-list-item { list-style: none; }
 .task-list-text { display: inline !important; }
 .table-wrapper { overflow: visible; }
+${buildDesignPrintCss()}
 `;
+
+/**
+ * Build a hidden, hardened BrowserWindow that renders the neutral,
+ * print-styled document (same PRINT_CSS + CSP + tmp-dir layout used by both
+ * "Export as PDF" and "Print"), run `action` against it once settled, then
+ * ALWAYS close the window and remove the tmp dir.
+ *
+ * `action` owns the lifetime of the work: the window is only torn down after
+ * the returned promise settles. For printToPDF this is a plain await; for
+ * webContents.print the promise must not resolve until the print callback
+ * fires, or the window would close mid-print.
+ */
+async function withPrintDocument<T>(
+  html: string,
+  title: string,
+  action: (printWin: BrowserWindow) => Promise<T>
+): Promise<T> {
+  const tmpDir = path.join(os.tmpdir(), `emdy-print-${Date.now()}`);
+  let printWin: BrowserWindow | null = null;
+  try {
+    printWin = new BrowserWindow({
+      show: false,
+      width: 800,
+      height: 600,
+      webPreferences: {
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+        javascript: false,
+      },
+    });
+    hardenWindow(printWin);
+
+    // Write CSS and HTML as separate files to avoid escaping issues
+    await fs.mkdir(tmpDir, { recursive: true });
+
+    const safeTitle = escapeHtml(title);
+    await fs.writeFile(path.join(tmpDir, 'print.css'), PRINT_CSS, 'utf-8');
+    await fs.writeFile(path.join(tmpDir, 'index.html'), `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'">
+<title>${safeTitle}</title>
+<link rel="stylesheet" href="print.css">
+</head>
+<body>
+${html}
+</body>
+</html>`, 'utf-8');
+
+    await printWin.loadFile(path.join(tmpDir, 'index.html'));
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    return await action(printWin);
+  } finally {
+    if (printWin && !printWin.isDestroyed()) printWin.close();
+    await fs.rm(tmpDir, { recursive: true }).catch(() => {});
+  }
+}
 
 export function registerExportHandlers() {
   ipcMain.handle('export:pdf', async (event, { html, title }: { html: string; title: string }) => {
@@ -98,68 +162,46 @@ export function registerExportHandlers() {
 
     if (savePath.canceled || !savePath.filePath) return false;
 
-    const tmpDir = path.join(os.tmpdir(), `emdy-print-${Date.now()}`);
-    let printWin: BrowserWindow | null = null;
-    try {
-      printWin = new BrowserWindow({
-        show: false,
-        width: 800,
-        height: 600,
-        webPreferences: {
-          contextIsolation: true,
-          nodeIntegration: false,
-          sandbox: true,
-          javascript: false,
-        },
-      });
-      hardenWindow(printWin);
-
-      // Write CSS and HTML as separate files to avoid escaping issues
-      await fs.mkdir(tmpDir, { recursive: true });
-
-      const safeTitle = escapeHtml(title);
-      await fs.writeFile(path.join(tmpDir, 'print.css'), PRINT_CSS, 'utf-8');
-      await fs.writeFile(path.join(tmpDir, 'index.html'), `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'">
-<title>${safeTitle}</title>
-<link rel="stylesheet" href="print.css">
-</head>
-<body>
-${html}
-</body>
-</html>`, 'utf-8');
-
-      await printWin.loadFile(path.join(tmpDir, 'index.html'));
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
+    return withPrintDocument(html, title, async (printWin) => {
       const pdfData = await printWin.webContents.printToPDF({
         printBackground: true,
         preferCSSPageSize: false,
       });
-
-      await fs.writeFile(savePath.filePath, pdfData);
+      await fs.writeFile(savePath.filePath!, pdfData);
       return true;
-    } finally {
-      if (printWin && !printWin.isDestroyed()) printWin.close();
-      await fs.rm(tmpDir, { recursive: true }).catch(() => {});
-    }
+    });
   });
 
-  ipcMain.handle('export:print', async (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (!win) return;
-    win.webContents.print({}, (success, errorType) => {
-      if (!success && errorType) {
-        console.error('Print failed:', errorType);
-      }
-    });
+  ipcMain.handle('export:print', async (_event, { html, title }: { html: string; title: string }) => {
+    // Validate payload — reject non-strings and absurdly large HTML (>20 MB)
+    // before spinning up a window (mirrors the clipboard guard-rail).
+    if (typeof html !== 'string' || typeof title !== 'string') return false;
+    if (html.length > 20_000_000) return false;
+
+    return withPrintDocument(html, title, (printWin) =>
+      // Keep the window alive until the print callback fires — printToPDF
+      // awaits, but webContents.print is callback-based, so wrap it in a
+      // promise the withPrintDocument teardown waits on.
+      new Promise<boolean>((resolve) => {
+        // printBackground defaults to false for webContents.print, which drops
+        // CSS backgrounds (swatch colors, shaded blocks) — printToPDF passes
+        // printBackground: true, so match it here for parity. preferCSSPageSize
+        // has no webContents.print equivalent (page size comes from @page/the
+        // print dialog), so there's nothing else to align.
+        printWin.webContents.print({ printBackground: true }, (success, errorType) => {
+          if (!success && errorType) {
+            console.error('Print failed:', errorType);
+          }
+          resolve(success);
+        });
+      })
+    );
   });
 
   ipcMain.handle('clipboard:write-html', async (_event, html: string) => {
     if (typeof html !== 'string') return;
+    // Guard-rail: reject absurdly large payloads (>20 MB) before writing.
+    if (html.length > 20_000_000) return;
     const { clipboard } = await import('electron');
     clipboard.writeHTML(html);
   });

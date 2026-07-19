@@ -22,6 +22,9 @@ import { useFileWatcher } from './hooks/useFileWatcher';
 import type { FileEntry, NudgeState } from './lib/types';
 import { CONTENT_WIDTHS } from './lib/types';
 import { perfMark, perfMeasure } from './lib/perf';
+import { parseDesignMd } from './lib/design-md';
+import { buildCopyHtml } from './lib/copy-html';
+import { buildPrintPayload } from './lib/print-payload';
 
 type FindMode = 'multi-persistent' | 'zero' | 'over-cap';
 
@@ -418,27 +421,17 @@ export function App() {
   );
 
   const handleExportPDF = useCallback(async () => {
-    if (!contentRef.current || !filePath) return;
-    const markdownBody = contentRef.current.querySelector('.markdown-body');
-    if (!markdownBody) return;
-
-    // Clone and sanitize for print — strip flex layouts and fixed heights
-    const clone = markdownBody.cloneNode(true) as HTMLElement;
-    clone.querySelectorAll('*').forEach((el) => {
-      const s = (el as HTMLElement).style;
-      if (s.display === 'flex' || s.display === 'inline-flex') s.display = 'block';
-      if (s.height) s.height = 'auto';
-      if (s.maxHeight) s.maxHeight = 'none';
-      if (s.overflow === 'hidden') s.overflow = 'visible';
-    });
-    // Remove copy buttons from code blocks
-    clone.querySelectorAll('.code-block-copy').forEach((el) => el.remove());
-
-    const html = clone.innerHTML;
-    const title = filePath.split('/').pop() || 'document';
-    const ok = await window.electronAPI.exportPDF({ html, title });
+    const payload = buildPrintPayload(contentRef.current, filePath);
+    if (!payload) return;
+    const ok = await window.electronAPI.exportPDF(payload);
     if (ok) addToast('PDF exported', 'success');
   }, [addToast, filePath]);
+
+  const handlePrint = useCallback(() => {
+    const payload = buildPrintPayload(contentRef.current, filePath);
+    if (!payload) return;
+    window.electronAPI.print(payload);
+  }, [filePath]);
 
   const handleFileContextMenu = useCallback((e: React.MouseEvent, path: string) => {
     e.preventDefault();
@@ -447,7 +440,7 @@ export function App() {
 
   const handleCopyHTML = useCallback(async () => {
     if (!contentRef.current) return;
-    const html = contentRef.current.innerHTML;
+    const html = buildCopyHtml(contentRef.current);
     await window.electronAPI.writeClipboardHTML(html);
     addToast('Copied to clipboard', 'success');
   }, [addToast]);
@@ -524,7 +517,7 @@ export function App() {
       switch (event) {
         case 'open': handleOpen(); break;
         case 'export-pdf': handleExportPDF(); break;
-        case 'print': window.electronAPI.print(); break;
+        case 'print': handlePrint(); break;
         case 'find': handleOpenPalette(); break;
         case 'find-next': cycleMatchNext(); break;
         case 'find-previous': cycleMatchPrev(); break;
@@ -587,7 +580,7 @@ export function App() {
     });
 
     return () => { removeMenu(); removeFileOpen(); removeDirOpen(); };
-  }, [handleOpen, handleExportPDF, display, addToast, closeFind, handleOpenPalette, cycleMatchNext, cycleMatchPrev]);
+  }, [handleOpen, handleExportPDF, handlePrint, display, addToast, closeFind, handleOpenPalette, cycleMatchNext, cycleMatchPrev]);
 
   // Welcome = nothing loaded at all. Once a folder or file is open, show toolbar.
   const isWelcome = content === null && dirEntries === null;
@@ -597,6 +590,8 @@ export function App() {
     display.fontFamily === 'sans' ? 'var(--font-sans)' :
     display.fontFamily === 'serif' ? 'var(--font-serif)' :
     'var(--font-mono)';
+
+  const designParsed = useMemo(() => (content !== null ? parseDesignMd(content) : null), [content]);
 
   const markdownStyle = useMemo(() => ({
     fontFamily: fontFamilyVar,
@@ -660,7 +655,8 @@ export function App() {
           <div className={`content-area${minimapVisible ? ' hide-scrollbar' : ''}`} ref={scrollContainerRef}>
             <MarkdownView
               ref={markdownViewRef}
-              content={content}
+              content={designParsed ? designParsed.body : content}
+              designTokens={designParsed?.tokens ?? null}
               colors={display.resolvedColors}
               filePath={filePath}
               style={markdownStyle}

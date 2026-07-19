@@ -1,8 +1,9 @@
 import React, { createRef } from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, waitFor, act } from '@testing-library/react';
+import { render, waitFor, act, screen } from '@testing-library/react';
 import { MarkdownView, type MarkdownViewHandle, type HighlightState } from './MarkdownView';
 import { warm } from '../lib/color-themes';
+import { parseDesignMd } from '../lib/design-md';
 
 const colors = warm.light;
 
@@ -128,5 +129,64 @@ describe('MarkdownView highlight integration', () => {
     });
     // Content renders as one block (a single paragraph). Line 1 → block 0 → first match.
     expect(ref.current?.focusMatchAtLine(1)).toBe(0);
+  });
+});
+
+const DESIGN_FILE = `---
+name: Heritage
+description: Warm editorial identity
+colors:
+  primary: "#1A1C1E"
+typography:
+  h1:
+    fontSize: 3rem
+---
+
+## Overview
+
+Intro text.
+
+## Colors
+
+Color rationale.
+`;
+
+function renderView(props: Partial<React.ComponentProps<typeof MarkdownView>> & { content: string }) {
+  return render(<MarkdownView colors={colors} {...props} />);
+}
+
+describe('MarkdownView design.md rendering', () => {
+  function renderDesign() {
+    const parsed = parseDesignMd(DESIGN_FILE)!;
+    return renderView({ content: parsed.body, designTokens: parsed.tokens });
+  }
+
+  it('renders the front-matter name and description as a header', () => {
+    renderDesign();
+    expect(screen.getByText('Heritage')).toBeInTheDocument();
+    expect(screen.getByText('Warm editorial identity')).toBeInTheDocument();
+  });
+
+  it('injects the swatch grid under the matching Colors heading', () => {
+    renderDesign();
+    const heading = screen.getByRole('heading', { name: 'Colors' });
+    const sibling = heading.nextElementSibling;
+    expect(sibling?.classList.contains('design-block')).toBe(true);
+    expect(sibling?.querySelector('.design-swatches')).not.toBeNull();
+  });
+
+  it('appends unmatched categories at the end', () => {
+    renderDesign();
+    // typography tokens exist but there is no ## Typography heading
+    const appendix = document.querySelector('.design-appendix');
+    expect(appendix).not.toBeNull();
+    expect(appendix!.querySelector('.design-specimens')).not.toBeNull();
+    expect(screen.getByRole('heading', { name: 'Typography' })).toBeInTheDocument();
+  });
+
+  it('renders plain markdown unchanged when designTokens is absent', () => {
+    renderView({ content: '## Colors\n\nJust a doc.' });
+    expect(document.querySelector('.design-swatches')).toBeNull();
+    expect(document.querySelector('.design-appendix')).toBeNull();
   });
 });

@@ -65,7 +65,7 @@ export interface ElectronAPI {
   onDirEntriesUpdated: (callback: (entries: FileEntry[]) => void) => () => void;
   setMenuHasFile: (hasFile: boolean) => Promise<void>;
   exportPDF: (opts: { html: string; title: string }) => Promise<boolean>;
-  print: () => Promise<void>;
+  print: (opts: { html: string; title: string }) => Promise<boolean>;
   writeClipboardHTML: (html: string) => Promise<void>;
   getAccentColor: () => Promise<string>;
   onAccentColorChanged: (callback: (color: string) => void) => () => void;

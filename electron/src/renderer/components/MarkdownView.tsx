@@ -7,9 +7,19 @@ import { buildPrismTheme } from '../lib/prism-theme';
 import type { ColorScale } from '../lib/color-themes';
 import { findMatches, clearMatches } from '../lib/find-walker';
 import { findScrollParent } from '../lib/find-scroller';
+import { buildInjectionMap, TOKEN_CATEGORIES, type DesignTokens, type TokenCategory } from '../lib/design-md';
+import { TokenVisualization } from './design/TokenVisualization';
 
 const REMARK_PLUGINS = [remarkGfm];
 const MemoMarkdown = React.memo(Markdown);
+
+const CATEGORY_LABELS: Record<TokenCategory, string> = {
+  colors: 'Colors',
+  typography: 'Typography',
+  spacing: 'Spacing',
+  rounded: 'Rounded',
+  components: 'Components',
+};
 
 export type HighlightMode = 'multi-persistent' | 'none';
 
@@ -34,6 +44,7 @@ interface MarkdownViewProps {
   contentRef?: React.RefObject<HTMLDivElement | null>;
   highlight?: HighlightState | null;
   onMatchesChanged?: (count: number, isCapped: boolean, positions: number[]) => void;
+  designTokens?: DesignTokens | null;
 }
 
 const MAX_MATCHES = 1000;
@@ -41,10 +52,23 @@ const LANGUAGE_PATTERN = /language-(\w+)/;
 
 export const MarkdownView = React.memo(
   React.forwardRef<MarkdownViewHandle, MarkdownViewProps>(function MarkdownView(
-    { content, colors, filePath, style, contentRef, highlight, onMatchesChanged },
+    { content, colors, filePath, style, contentRef, highlight, onMatchesChanged, designTokens },
     ref
   ) {
     const codeTheme = useMemo(() => buildPrismTheme(colors), [colors]);
+
+    const injectionMap = useMemo(
+      () => (designTokens ? buildInjectionMap(content, designTokens) : null),
+      [content, designTokens]
+    );
+
+    const appendixCategories = useMemo(() => {
+      if (!designTokens || !injectionMap) return [];
+      const injected = new Set(injectionMap.values());
+      return TOKEN_CATEGORIES.filter(
+        (cat) => !injected.has(cat) && designTokens[cat] && Object.keys(designTokens[cat] as object).length > 0
+      );
+    }, [designTokens, injectionMap]);
     const bodyRef = useRef<HTMLElement | null>(null);
     const matchElementsRef = useRef<HTMLElement[]>([]);
     const onMatchesChangedRef = useRef(onMatchesChanged);
@@ -133,6 +157,19 @@ export const MarkdownView = React.memo(
     );
 
     const components = useMemo<Components>(() => ({
+      h2({ node, children, ...props }) {
+        const line = node?.position?.start.line;
+        const category = line !== undefined && injectionMap ? injectionMap.get(line) : undefined;
+        if (category && designTokens) {
+          return (
+            <>
+              <h2 {...props}>{children}</h2>
+              <TokenVisualization category={category} tokens={designTokens} />
+            </>
+          );
+        }
+        return <h2 {...props}>{children}</h2>;
+      },
       li({ children, ...props }) {
         const childArray = React.Children.toArray(children);
         const hasCheckbox = childArray.some(
@@ -199,14 +236,30 @@ export const MarkdownView = React.memo(
           </div>
         );
       },
-    }), [filePath, codeTheme]);
+    }), [filePath, codeTheme, injectionMap, designTokens]);
 
     return (
       <div className="markdown-view" style={style} ref={contentRef}>
         <article className="markdown-body" ref={bodyRef}>
+          {designTokens && (
+            <header className="design-header">
+              <h1>{designTokens.name}</h1>
+              {designTokens.description && <p className="design-header-desc">{designTokens.description}</p>}
+            </header>
+          )}
           <MemoMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>
             {content}
           </MemoMarkdown>
+          {appendixCategories.length > 0 && designTokens && (
+            <section className="design-appendix">
+              {appendixCategories.map((cat) => (
+                <div key={cat}>
+                  <h2>{CATEGORY_LABELS[cat]}</h2>
+                  <TokenVisualization category={cat} tokens={designTokens} />
+                </div>
+              ))}
+            </section>
+          )}
         </article>
       </div>
     );
