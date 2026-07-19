@@ -1773,20 +1773,17 @@ input:focus:not(:focus-visible),
   margin: 0;
 }
 .design-scale-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 200px var(--space-20) 1fr;
+  column-gap: var(--space-3);
   align-items: center;
-  gap: var(--space-3);
   padding: var(--space-1) 0;
-}
-.design-scale-row .design-token-name {
-  min-width: var(--space-20);
 }
 .design-spacing-bar {
   height: var(--space-3);
   max-width: 100%;
   background: var(--accent);
   border-radius: var(--radius-sm);
-  flex-shrink: 0;
 }
 .design-scale--radius {
   display: flex;
@@ -1814,6 +1811,13 @@ input:focus:not(:focus-visible),
   font-size: var(--fs-sm);
   color: var(--text-heading);
   margin-bottom: var(--space-2);
+}
+.design-component-table {
+  width: 100%;
+  table-layout: fixed;
+}
+.design-component-table td:first-child {
+  width: 200px;
 }
 .design-component-table td {
   padding: var(--space-1) var(--space-4) var(--space-1) 0;

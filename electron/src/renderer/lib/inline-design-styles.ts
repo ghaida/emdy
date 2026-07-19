@@ -5,6 +5,10 @@
 
 const COPIED_PROPERTIES = [
   'display',
+  'grid-template-columns',
+  'column-gap',
+  'gap',
+  'table-layout',
   'background-color',
   'color',
   'font-family',
