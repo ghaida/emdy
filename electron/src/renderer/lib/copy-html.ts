@@ -18,6 +18,8 @@
 //
 // For plain (non-design) markdown, this is a no-op that returns the source
 // innerHTML unchanged, preserving the exact pre-feature clipboard behavior.
+// The one exception is Mermaid diagrams: RTF drops SVG entirely, so they're
+// swapped for PNG images (see renderCopyImages).
 
 import {
   DESIGN_PRINT_STYLES,
@@ -25,6 +27,7 @@ import {
   DESIGN_COMPONENT_TD_FIRST_WIDTH,
 } from '../../shared/design-print-styles';
 import { isValidCssColor } from './design-md';
+import { DIAGRAM_BLOCK_SELECTOR, inlineDiagramsForCopy, type DiagramImage } from './diagram-export';
 
 // Neutral bar/chip colors and column widths for the rebuilt tables. All literal
 // print values — never `var(--…)`, never viewer-computed.
@@ -422,19 +425,30 @@ function rebuildComponentTable(table: Element, doc: Document): void {
 
 /**
  * Given the live content element, return HTML for the clipboard. Plain markdown
- * returns `source.innerHTML` unchanged; design.md content is cloned and its
- * constructs transformed into RTF-safe markup with inline neutral print styles.
+ * returns `source.innerHTML` unchanged; diagrams become the PNGs in
+ * `diagramImages` (or their source, when missing); design.md content is cloned
+ * and its constructs transformed into RTF-safe markup with inline neutral print
+ * styles.
  */
-export function buildCopyHtml(source: HTMLElement): string {
+export function buildCopyHtml(
+  source: HTMLElement,
+  diagramImages: Map<string, DiagramImage | null> = new Map()
+): string {
   const hasDesignContent =
     source.querySelector('.design-block') !== null ||
     source.querySelector('.design-header') !== null;
+  const hasDiagrams = source.querySelector(DIAGRAM_BLOCK_SELECTOR) !== null;
 
-  if (!hasDesignContent) {
+  if (!hasDesignContent && !hasDiagrams) {
     return source.innerHTML;
   }
 
   const clone = source.cloneNode(true) as HTMLElement;
+  inlineDiagramsForCopy(clone, diagramImages);
+  if (!hasDesignContent) {
+    return clone.innerHTML;
+  }
+
   const doc = clone.ownerDocument;
 
   // Drop viewer chrome that shouldn't reach the paste target.

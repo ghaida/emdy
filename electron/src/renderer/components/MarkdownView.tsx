@@ -8,7 +8,9 @@ import type { ColorScale } from '../lib/color-themes';
 import { findMatches, clearMatches } from '../lib/find-walker';
 import { findScrollParent } from '../lib/find-scroller';
 import { buildInjectionMap, TOKEN_CATEGORIES, type DesignTokens, type TokenCategory } from '../lib/design-md';
+import { buildDiagramTheme } from '../lib/mermaid-theme';
 import { TokenVisualization } from './design/TokenVisualization';
+import { MermaidBlock } from './MermaidBlock';
 
 const REMARK_PLUGINS = [remarkGfm];
 const MemoMarkdown = React.memo(Markdown);
@@ -50,12 +52,36 @@ interface MarkdownViewProps {
 const MAX_MATCHES = 1000;
 const LANGUAGE_PATTERN = /language-(\w+)/;
 
+// Structural slice of a hast node, enough to read a fenced block's language and text.
+interface HastNode {
+  type: string;
+  tagName?: string;
+  value?: string;
+  properties?: Record<string, unknown>;
+  children?: HastNode[];
+}
+
+function textContent(node: HastNode): string {
+  if (node.type === 'text') return node.value ?? '';
+  return (node.children ?? []).map(textContent).join('');
+}
+
+/** The source of a ```mermaid fence, or null for any other <pre>. */
+function mermaidSource(pre: HastNode | undefined): string | null {
+  const code = pre?.children?.find((child) => child.type === 'element');
+  if (code?.tagName !== 'code') return null;
+  const classes = code.properties?.className;
+  const isMermaid = Array.isArray(classes) && classes.some((c) => String(c).toLowerCase() === 'language-mermaid');
+  return isMermaid ? textContent(code).replace(/\n$/, '') : null;
+}
+
 export const MarkdownView = React.memo(
   React.forwardRef<MarkdownViewHandle, MarkdownViewProps>(function MarkdownView(
     { content, colors, filePath, style, contentRef, highlight, onMatchesChanged, designTokens },
     ref
   ) {
     const codeTheme = useMemo(() => buildPrismTheme(colors), [colors]);
+    const diagramTheme = useMemo(() => buildDiagramTheme(colors), [colors]);
 
     const injectionMap = useMemo(
       () => (designTokens ? buildInjectionMap(content, designTokens) : null),
@@ -189,6 +215,25 @@ export const MarkdownView = React.memo(
         }
         return <li {...props}>{children}</li>;
       },
+      pre({ node, children, ...props }) {
+        const source = mermaidSource(node);
+        if (source !== null) {
+          return (
+            <MermaidBlock
+              source={source}
+              theme={diagramTheme}
+              fallback={
+                <pre {...props}>
+                  <CodeBlock language="mermaid" codeTheme={codeTheme}>
+                    {source}
+                  </CodeBlock>
+                </pre>
+              }
+            />
+          );
+        }
+        return <pre {...props}>{children}</pre>;
+      },
       code({ className, children, ...props }) {
         const match = (className || '').match(LANGUAGE_PATTERN);
         const codeString = String(children).replace(/\n$/, '');
@@ -236,7 +281,7 @@ export const MarkdownView = React.memo(
           </div>
         );
       },
-    }), [filePath, codeTheme, injectionMap, designTokens]);
+    }), [filePath, codeTheme, diagramTheme, injectionMap, designTokens]);
 
     return (
       <div className="markdown-view" style={style} ref={contentRef}>

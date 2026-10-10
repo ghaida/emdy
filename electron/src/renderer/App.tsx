@@ -25,6 +25,7 @@ import { perfMark, perfMeasure } from './lib/perf';
 import { parseDesignMd } from './lib/design-md';
 import { buildCopyHtml } from './lib/copy-html';
 import { buildPrintPayload } from './lib/print-payload';
+import { renderCopyImages, renderExportDiagrams } from './lib/diagram-export';
 
 type FindMode = 'multi-persistent' | 'zero' | 'over-cap';
 
@@ -421,14 +422,16 @@ export function App() {
   );
 
   const handleExportPDF = useCallback(async () => {
-    const payload = buildPrintPayload(contentRef.current, filePath);
+    const diagrams = await renderExportDiagrams(contentRef.current);
+    const payload = buildPrintPayload(contentRef.current, filePath, diagrams);
     if (!payload) return;
     const ok = await window.electronAPI.exportPDF(payload);
     if (ok) addToast('PDF exported', 'success');
   }, [addToast, filePath]);
 
-  const handlePrint = useCallback(() => {
-    const payload = buildPrintPayload(contentRef.current, filePath);
+  const handlePrint = useCallback(async () => {
+    const diagrams = await renderExportDiagrams(contentRef.current);
+    const payload = buildPrintPayload(contentRef.current, filePath, diagrams);
     if (!payload) return;
     window.electronAPI.print(payload);
   }, [filePath]);
@@ -440,7 +443,9 @@ export function App() {
 
   const handleCopyHTML = useCallback(async () => {
     if (!contentRef.current) return;
-    const html = buildCopyHtml(contentRef.current);
+    const diagramImages = await renderCopyImages(contentRef.current);
+    if (!contentRef.current) return;
+    const html = buildCopyHtml(contentRef.current, diagramImages);
     await window.electronAPI.writeClipboardHTML(html);
     addToast('Copied to clipboard', 'success');
   }, [addToast]);

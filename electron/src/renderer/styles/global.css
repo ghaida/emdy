@@ -1488,6 +1488,69 @@ input:focus:not(:focus-visible),
 
 .markdown-body pre code { background: none; padding: 0; border-radius: 0; color: inherit; }
 
+/* Keyboard focus reveals the hover-only copy buttons. */
+.code-block-copy:focus-visible { opacity: 1; }
+
+/* ---- Mermaid diagrams ---- */
+
+/* Same surface as a code block's pre: background, radius, padding, spacing. */
+.markdown-body .mermaid-block {
+  position: relative;
+  background: var(--bg-code);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+/* Hover actions sit where a code block's copy button does. */
+.code-block-actions {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 1;
+  display: flex;
+  gap: var(--space-1);
+}
+.code-block-actions .code-block-copy { position: static; }
+.mermaid-block:hover .code-block-copy { opacity: 1; }
+.mermaid-block:hover .code-block-copy:disabled { opacity: 0.4; cursor: default; }
+
+.mermaid-diagram {
+  max-width: 100%;
+  margin: 0 auto;
+  /* Mermaid measures labels in a scratch node on <body>. Match that context so
+     text styles inherited from .markdown-body can't resize labels after layout. */
+  line-height: 1.5;
+  white-space: normal;
+}
+
+.mermaid-diagram > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Mermaid's inline max-width is in px and would stop zoom from scaling the diagram up. */
+  max-width: none !important;
+}
+
+/* Keep .markdown-body element styles out of HTML labels. */
+.markdown-body .mermaid-diagram p { margin: 0; }
+.markdown-body .mermaid-diagram strong { color: inherit; }
+.markdown-body .mermaid-diagram code { background: none; padding: 0; border-radius: 0; color: inherit; font-size: inherit; }
+.markdown-body .mermaid-diagram img { border-radius: 0; }
+
+.mermaid-loading { min-height: 8em; }
+
+.mermaid-error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: calc(-1 * var(--space-2)) 0 var(--space-4);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+.mermaid-error-title { color: var(--error); }
+.mermaid-error-detail { font-family: var(--font-mono); white-space: pre-wrap; }
+
 .markdown-body blockquote {
   border-left: var(--space-half) solid var(--border);
   padding-left: var(--space-4);

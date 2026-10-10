@@ -87,6 +87,14 @@ input[type="checkbox"] { margin-right: 8px; }
 .task-list-item { list-style: none; }
 .task-list-text { display: inline !important; }
 .table-wrapper { overflow: visible; }
+.mermaid-block {
+  background: #F0F0F0;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 1em;
+  text-align: center;
+  break-inside: avoid !important;
+}
 ${buildDesignPrintCss()}
 `;
 
@@ -204,5 +212,18 @@ export function registerExportHandlers() {
     if (html.length > 20_000_000) return;
     const { clipboard } = await import('electron');
     clipboard.writeHTML(html);
+  });
+
+  ipcMain.handle('clipboard:write-image', async (_event, png: unknown) => {
+    // Same guard-rail as the HTML clipboard: bytes only, nothing absurd.
+    if (!(png instanceof Uint8Array) || png.byteLength === 0 || png.byteLength > 20_000_000) return false;
+    const { clipboard, nativeImage } = await import('electron');
+    // Diagram PNGs are rendered at 2x; mark them so they paste at their logical size.
+    const image = nativeImage.createFromBuffer(Buffer.from(png.buffer, png.byteOffset, png.byteLength), {
+      scaleFactor: 2,
+    });
+    if (image.isEmpty()) return false;
+    clipboard.writeImage(image);
+    return true;
   });
 }

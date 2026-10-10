@@ -32,6 +32,13 @@ describe('findMatches', () => {
     expect(isCapped).toBe(false);
   });
 
+  it('skips text inside SVG, where an HTML <mark> would hide the match', () => {
+    const root = setup('<p>alpha</p><svg><text>alpha</text><foreignObject><div>alpha</div></foreignObject></svg>');
+    const { marks } = findMatches(root, 'alpha', 1000);
+    expect(marks.length).toBe(1);
+    expect(root.querySelector('svg mark')).toBeNull();
+  });
+
   it('returns empty when no matches found', () => {
     const root = setup('<p>Hello world</p>');
     const { marks, isCapped } = findMatches(root, 'xyz', 1000);

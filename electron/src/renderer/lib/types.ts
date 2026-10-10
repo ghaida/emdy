@@ -67,6 +67,7 @@ export interface ElectronAPI {
   exportPDF: (opts: { html: string; title: string }) => Promise<boolean>;
   print: (opts: { html: string; title: string }) => Promise<boolean>;
   writeClipboardHTML: (html: string) => Promise<void>;
+  writeClipboardImage: (png: Uint8Array) => Promise<boolean>;
   getAccentColor: () => Promise<string>;
   onAccentColorChanged: (callback: (color: string) => void) => () => void;
   toggleMaximize: () => Promise<void>;

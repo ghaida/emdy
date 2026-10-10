@@ -42,6 +42,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   exportPDF: (opts: { html: string; title: string }) => ipcRenderer.invoke('export:pdf', opts),
   print: (opts: { html: string; title: string }) => ipcRenderer.invoke('export:print', opts),
   writeClipboardHTML: (html: string) => ipcRenderer.invoke('clipboard:write-html', html),
+  writeClipboardImage: (png: Uint8Array) => ipcRenderer.invoke('clipboard:write-image', png),
 
   // Settings
   getSettings: () => ipcRenderer.invoke('settings:get'),

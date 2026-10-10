@@ -268,6 +268,30 @@ describe('buildCopyHtml', () => {
     expect(chipStyle).not.toContain('background');
   });
 
+  it('swaps diagrams for PNG paragraphs and leaves the rest of plain markdown as is', () => {
+    host.innerHTML =
+      '<div class="markdown-body"><p>Before</p>' +
+      '<div class="mermaid-block" data-mermaid-source="graph TD"><div class="mermaid-diagram"><svg></svg></div></div>' +
+      '<p>After</p></div>';
+    const image = { src: 'data:image/png;base64,AAAA', width: 100, height: 50, alt: 'Diagram' };
+
+    expect(buildCopyHtml(host, new Map([['graph TD', image]]))).toBe(
+      '<div class="markdown-body"><p>Before</p>' +
+      '<p><img src="data:image/png;base64,AAAA" width="100" height="50" alt="Diagram"></p>' +
+      '<p>After</p></div>'
+    );
+    // The live document is untouched.
+    expect(host.querySelector('.mermaid-block svg')).not.toBeNull();
+  });
+
+  it('pastes diagram source when no image was rendered', () => {
+    host.innerHTML =
+      '<div class="markdown-body"><div class="mermaid-block" data-mermaid-source="graph TD"><svg></svg></div></div>';
+    expect(buildCopyHtml(host)).toBe(
+      '<div class="markdown-body"><pre><code class="language-mermaid">graph TD</code></pre></div>'
+    );
+  });
+
   it('triggers on a bare design-header without a design-block', () => {
     host.innerHTML =
       '<div class="markdown-body">' +

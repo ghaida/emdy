@@ -14,6 +14,7 @@ export const IPC = {
   EXPORT_PDF: 'export:pdf',
   EXPORT_PRINT: 'export:print',
   CLIPBOARD_WRITE_HTML: 'clipboard:write-html',
+  CLIPBOARD_WRITE_IMAGE: 'clipboard:write-image',
   APP_ADD_RECENT: 'app:add-recent',
   MENU_EVENT: 'menu:event',
 } as const;

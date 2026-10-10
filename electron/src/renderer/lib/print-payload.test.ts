@@ -74,6 +74,30 @@ describe('buildPrintPayload', () => {
     expect(el.style.overflow).toBe('visible');
   });
 
+  it('swaps diagrams for their print renders', () => {
+    host.innerHTML =
+      '<div class="markdown-body">' +
+      '<div class="mermaid-block" data-mermaid-source="graph TD">' +
+      '<div class="code-block-actions"><button class="code-block-copy">Copy</button></div>' +
+      '<div class="mermaid-diagram" style="width: 10em"><svg id="live"></svg></div>' +
+      '</div></div>';
+    const printRender = {
+      ok: true as const,
+      id: 'emdy-mermaid-9',
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90"></svg>',
+      width: 160,
+      height: 90,
+    };
+
+    const html = buildPrintPayload(host, '/docs/readme.md', new Map([['graph TD', printRender]]))!.html;
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const img = doc.querySelector('.mermaid-block > img.mermaid-image') as HTMLImageElement;
+    expect(img.getAttribute('src')).toMatch(/^data:image\/svg\+xml/);
+    expect(img.width).toBe(160);
+    expect(doc.querySelector('#live')).toBeNull();
+    expect(html).not.toContain('Copy');
+  });
+
   it('derives the title from the file path basename', () => {
     host.innerHTML = '<div class="markdown-body"><p>Hi</p></div>';
     expect(buildPrintPayload(host, '/a/b/notes.md')!.title).toBe('notes.md');

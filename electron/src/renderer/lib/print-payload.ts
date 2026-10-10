@@ -1,9 +1,13 @@
+import type { DiagramResult } from './mermaid-render';
+import { inlineDiagramsForPrint } from './diagram-export';
+
 /**
  * Shared clone-and-sanitize logic for producing a neutral, print-styled
  * document from the live Markdown view. Used by BOTH "Export as PDF" and
  * "Print" so the two paths render the exact same document.
  *
- * Clones `.markdown-body`, strips inline flex layouts / fixed heights /
+ * Clones `.markdown-body`, swaps Mermaid diagrams for their print renders
+ * (see renderExportDiagrams), strips inline flex layouts / fixed heights /
  * hidden overflow that only make sense in the live themed viewer, removes
  * the code-block copy buttons, and returns the sanitized innerHTML plus a
  * title derived from the file path.
@@ -13,7 +17,8 @@
  */
 export function buildPrintPayload(
   contentRoot: HTMLElement | null,
-  filePath: string | null
+  filePath: string | null,
+  diagrams: Map<string, DiagramResult> = new Map()
 ): { html: string; title: string } | null {
   if (!contentRoot || !filePath) return null;
   const markdownBody = contentRoot.querySelector('.markdown-body');
@@ -21,6 +26,7 @@ export function buildPrintPayload(
 
   // Clone and sanitize for print — strip flex layouts and fixed heights
   const clone = markdownBody.cloneNode(true) as HTMLElement;
+  inlineDiagramsForPrint(clone, diagrams);
   clone.querySelectorAll('*').forEach((el) => {
     const s = (el as HTMLElement).style;
     if (s.display === 'flex' || s.display === 'inline-flex') s.display = 'block';
