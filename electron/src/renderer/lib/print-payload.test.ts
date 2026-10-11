@@ -122,6 +122,32 @@ describe('buildPrintPayload', () => {
     expect(payload.html).toContain('mermaid-image');
   });
 
+  it('prints code in the print palette, not the live theme\'s colors', () => {
+    // A JavaScript block as react-syntax-highlighter renders it in Warm dark:
+    // colors inlined, token types dropped, plain text in the theme's light gray.
+    host.innerHTML =
+      '<div class="markdown-body"><pre><div class="code-block-wrapper">' +
+      '<button class="code-block-copy">Copy</button>' +
+      '<div style="color: rgb(217, 210, 198);"><code class="language-js" style="color: rgb(217, 210, 198);">' +
+      '<span class="token" style="color: rgb(143, 168, 62); font-weight: 600;">const</span>' +
+      '<span> regular </span><span class="token" style="color: rgb(156, 148, 136);">=</span>' +
+      '<span> </span><span class="token" style="color: rgb(212, 116, 24);">\'code block\'</span>' +
+      '</code></div></div></pre></div>';
+
+    const html = buildPrintPayload(host, '/docs/readme.md')!.html;
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const code = doc.querySelector('.code-block-wrapper code') as HTMLElement;
+
+    expect(html).not.toContain('rgb(217, 210, 198)');
+    expect(code.textContent).toBe("const regular = 'code block'");
+    expect(code.style.color).toBe('rgb(44, 44, 44)'); // print text
+    const tokenColor = (text: string) =>
+      ([...code.querySelectorAll('span')].find((s) => s.textContent === text) as HTMLElement).style.color;
+    expect(tokenColor('const')).toBe('rgb(173, 61, 164)'); // print keyword
+    expect(tokenColor("'code block'")).toBe('rgb(192, 42, 23)'); // print string
+    expect(doc.querySelector('.code-block-copy')).toBeNull();
+  });
+
   it('derives the title from the file path basename', () => {
     host.innerHTML = '<div class="markdown-body"><p>Hi</p></div>';
     expect(buildPrintPayload(host, '/a/b/notes.md')!.title).toBe('notes.md');

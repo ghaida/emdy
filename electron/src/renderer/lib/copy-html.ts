@@ -17,9 +17,11 @@
 //     primitives (mini-swatches, radius squares, bar divs) that RTF discards.
 //
 // For plain (non-design) markdown, this is a no-op that returns the source
-// innerHTML unchanged, preserving the exact pre-feature clipboard behavior.
-// The one exception is Mermaid diagrams: RTF drops SVG entirely, so they're
-// swapped for PNG images (see renderCopyImages).
+// innerHTML unchanged, preserving the exact pre-feature clipboard behavior,
+// with two exceptions. Mermaid diagrams are swapped for PNG images, since RTF
+// drops SVG entirely (see renderCopyImages). Syntax-highlighted code is
+// re-highlighted in the print palette, since the live theme's colors paste as
+// light-gray text from a dark theme (see highlightCodeForExport).
 
 import {
   DESIGN_PRINT_STYLES,
@@ -28,6 +30,7 @@ import {
 } from '../../shared/design-print-styles';
 import { isValidCssColor } from './design-md';
 import { parseRgba, toHex, type Rgba } from './color';
+import { HIGHLIGHTED_CODE_SELECTOR, highlightCodeForExport } from './code-export';
 import {
   DIAGRAM_BLOCK_SELECTOR,
   DIAGRAM_ERROR_SELECTOR,
@@ -349,9 +352,9 @@ function rebuildComponentTable(table: Element, doc: Document): void {
 /**
  * Given the live content element, return HTML for the clipboard. Plain markdown
  * returns `source.innerHTML` unchanged; diagrams become the PNGs in
- * `diagramImages` (or their source, when missing); design.md content is cloned
- * and its constructs transformed into RTF-safe markup with inline neutral print
- * styles.
+ * `diagramImages` (or their source, when missing); highlighted code takes the
+ * print palette; design.md content is cloned and its constructs transformed
+ * into RTF-safe markup with inline neutral print styles.
  */
 export function buildCopyHtml(
   source: HTMLElement,
@@ -361,13 +364,15 @@ export function buildCopyHtml(
     source.querySelector('.design-block') !== null ||
     source.querySelector('.design-header') !== null;
   const hasDiagrams = source.querySelector(`${DIAGRAM_BLOCK_SELECTOR}, ${DIAGRAM_ERROR_SELECTOR}`) !== null;
+  const hasCode = source.querySelector(HIGHLIGHTED_CODE_SELECTOR) !== null;
 
-  if (!hasDesignContent && !hasDiagrams) {
+  if (!hasDesignContent && !hasDiagrams && !hasCode) {
     return source.innerHTML;
   }
 
   const clone = source.cloneNode(true) as HTMLElement;
   inlineDiagramsForCopy(clone, diagramImages);
+  highlightCodeForExport(clone);
   if (!hasDesignContent) {
     return clone.innerHTML;
   }

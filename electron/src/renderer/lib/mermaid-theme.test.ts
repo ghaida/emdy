@@ -6,9 +6,9 @@ import {
   DIAGRAM_FONT_FAMILY,
   flatten,
   mix,
-  PRINT_DIAGRAM_COLORS,
   SYSTEM_FONT_FAMILY,
 } from './mermaid-theme';
+import { PRINT_PALETTE } from './print-palette';
 
 const HEX6 = /^#[0-9a-f]{6}$/;
 const NON_COLOR_KEYS = new Set(['fontFamily', 'fontSize', 'dropShadow', 'pieStrokeWidth', 'pieOuterStrokeWidth', 'pieOpacity']);
@@ -97,7 +97,7 @@ describe('buildDiagramTheme', () => {
   });
 
   it('builds a light, neutral print theme', () => {
-    const theme = buildDiagramTheme(PRINT_DIAGRAM_COLORS, SYSTEM_FONT_FAMILY);
+    const theme = buildDiagramTheme(PRINT_PALETTE, SYSTEM_FONT_FAMILY);
     expect(theme.variables.darkMode).toBe(false);
     expect(theme.variables.primaryColor).toBe('#ffffff');
     expect(theme.variables.primaryTextColor).toBe('#2c2c2c');

@@ -10,9 +10,7 @@
 // the diagram background before it goes in.
 
 import type { ColorScale } from './color-themes';
-import { neutral } from './color-themes';
 import { parseRgba, toHex } from './color';
-import { PRINT_COLORS } from '../../shared/print-colors';
 
 /** Diagram labels always use the bundled IBM Plex Sans, whatever the reading
  * font — the same way code blocks are always mono. */
@@ -306,23 +304,3 @@ export function buildDiagramTheme(c: ColorScale, fontFamily: string = DIAGRAM_FO
 
   return { key: JSON.stringify([fontFamily, variables]), background, fontFamily, variables };
 }
-
-/** Neutral, print-friendly palette for diagrams that leave the app (PDF,
- * print, Copy RTF), matching the grays in the print stylesheet. Theme-
- * independent on purpose, like the rest of the print output. */
-export const PRINT_DIAGRAM_COLORS: ColorScale = {
-  ...neutral.light,
-  bgCode: PRINT_COLORS.block,
-  bgContent: '#FFFFFF',
-  bgSecondary: '#F5F5F5',
-  bgTertiary: '#E4E4E4',
-  border: '#999999',
-  borderSubtle: '#CCCCCC',
-  textMuted: '#777777',
-  textSecondary: '#555555',
-  textPrimary: PRINT_COLORS.text,
-  textHeading: PRINT_COLORS.heading,
-  accent: PRINT_COLORS.link,
-  highlightSubtle: '#FFF3C4',
-  highlightStrong: '#E0C870',
-};

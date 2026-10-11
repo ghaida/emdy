@@ -298,6 +298,31 @@ describe('buildCopyHtml', () => {
     );
   });
 
+  it('copies code in the print palette, not the live theme\'s colors', () => {
+    // A JavaScript block as react-syntax-highlighter renders it in Warm dark:
+    // colors inlined, token types dropped, plain text in the theme's light gray.
+    host.innerHTML =
+      '<div class="markdown-body"><p>Prose stays as is.</p><pre><div class="code-block-wrapper">' +
+      '<div style="color: rgb(217, 210, 198);"><code class="language-js" style="color: rgb(217, 210, 198);">' +
+      '<span class="token" style="color: rgb(143, 168, 62); font-weight: 600;">const</span>' +
+      '<span> regular </span><span class="token" style="color: rgb(156, 148, 136);">=</span>' +
+      '<span> </span><span class="token" style="color: rgb(212, 116, 24);">\'code block\'</span>' +
+      '</code></div></div></pre></div>';
+
+    const out = buildCopyHtml(host);
+    const doc = new DOMParser().parseFromString(out, 'text/html');
+    const code = doc.querySelector('.code-block-wrapper code') as HTMLElement;
+
+    expect(out).not.toContain('rgb(217, 210, 198)');
+    expect(out).toContain('<p>Prose stays as is.</p>');
+    expect(code.textContent).toBe("const regular = 'code block'");
+    expect(code.style.color).toBe('rgb(44, 44, 44)'); // print text
+    const keyword = [...code.querySelectorAll('span')].find((s) => s.textContent === 'const') as HTMLElement;
+    expect(keyword.style.color).toBe('rgb(173, 61, 164)'); // print keyword
+    // The live document keeps its theme colors.
+    expect(host.innerHTML).toContain('rgb(217, 210, 198)');
+  });
+
   it('drops the viewer-only error note under a failed diagram', () => {
     host.innerHTML =
       '<div class="markdown-body"><div class="mermaid-error-block"><pre><code>graph TD</code></pre>' +

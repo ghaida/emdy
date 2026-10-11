@@ -9,7 +9,8 @@
 // RTF converters drop SVG entirely.
 
 import { errorMessage, getCachedDiagram, hasSize, renderDiagram, type DiagramResult } from './mermaid-render';
-import { buildDiagramTheme, PRINT_DIAGRAM_COLORS, SYSTEM_FONT_FAMILY, type DiagramTheme } from './mermaid-theme';
+import { buildDiagramTheme, SYSTEM_FONT_FAMILY, type DiagramTheme } from './mermaid-theme';
+import { PRINT_PALETTE } from './print-palette';
 import { parseSvg, standaloneSvg, svgDataUrl, svgToPng, toBase64 } from './diagram-image';
 import { DIAGRAM_BLOCK_CLASS, DIAGRAM_ERROR_CLASS, DIAGRAM_SOURCE_ATTR } from '../../shared/diagram-markup';
 
@@ -26,7 +27,7 @@ const COPY_SCALE = 2;
 let exportTheme: DiagramTheme | null = null;
 
 export function getExportDiagramTheme(): DiagramTheme {
-  if (!exportTheme) exportTheme = buildDiagramTheme(PRINT_DIAGRAM_COLORS, SYSTEM_FONT_FAMILY);
+  if (!exportTheme) exportTheme = buildDiagramTheme(PRINT_PALETTE, SYSTEM_FONT_FAMILY);
   return exportTheme;
 }
 
