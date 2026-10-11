@@ -12,16 +12,30 @@ const ROOT_TAG = /<svg\b[^>]*>/i;
 const round = (n: number) => Math.round(n * 100) / 100;
 
 /**
- * Give the root <svg> a fixed pixel size. Mermaid emits width="100%" plus an
- * inline max-width, which a standalone image has no container to resolve
- * against.
+ * Parse Mermaid's SVG markup. Mermaid serializes it as HTML (`<br>`, `&nbsp;`
+ * in labels), which isn't valid XML, so it goes through the HTML parser.
+ */
+export function parseSvg(svg: string): SVGSVGElement | null {
+  return new DOMParser().parseFromString(svg, 'text/html').querySelector('svg');
+}
+
+/**
+ * Rewrite rendered SVG as a standalone image: well-formed XML (an SVG image is
+ * parsed as XML, so a single `<br>` would break it) with a fixed pixel size,
+ * since Mermaid's width="100%" and inline max-width have no container to
+ * resolve against.
  */
 export function standaloneSvg(svg: string, width: number, height: number): string {
-  return svg.replace(ROOT_TAG, (tag) => {
-    let next = tag.replace(/\s(?:width|height)="[^"]*"/gi, '').replace(/max-width:\s*[\d.]+px;?\s*/i, '');
-    if (!/\sxmlns="/i.test(next)) next = next.replace(/^<svg/i, '<svg xmlns="http://www.w3.org/2000/svg"');
-    return next.replace(/^<svg/i, `<svg width="${round(width)}" height="${round(height)}"`);
-  });
+  const root = parseSvg(svg);
+  if (!root) return svg;
+  // The HTML parser keeps the xmlns Mermaid writes on label <div>s as a plain
+  // attribute, and a serializer can then declare the namespace twice. The
+  // elements already carry their namespace, so the attribute can go.
+  root.querySelectorAll('[xmlns]').forEach((el) => el.removeAttribute('xmlns'));
+  root.setAttribute('width', String(round(width)));
+  root.setAttribute('height', String(round(height)));
+  root.style.removeProperty('max-width');
+  return new XMLSerializer().serializeToString(root);
 }
 
 export function svgDataUrl(svg: string): string {
@@ -80,12 +94,19 @@ export interface PngOptions {
 /** Chromium refuses canvases past ~32k px a side; stay well inside that. */
 const MAX_CANVAS_SIDE = 16384;
 
+export interface PngImage {
+  bytes: Uint8Array;
+  /** Device pixels per CSS pixel actually used: the requested scale, or less
+   * when a huge diagram had to be clamped to fit the canvas limit. */
+  scale: number;
+}
+
 export async function svgToPng(
   svg: string,
   width: number,
   height: number,
   { scale = 2, padding = 0, background }: PngOptions = {}
-): Promise<Uint8Array> {
+): Promise<PngImage> {
   if (!(width > 0 && height > 0)) throw new Error('Diagram has no measurable size');
   scale = Math.min(scale, MAX_CANVAS_SIDE / (Math.max(width, height) + padding * 2));
 
@@ -106,5 +127,5 @@ export async function svgToPng(
 
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
   if (!blob) throw new Error('PNG encoding failed');
-  return new Uint8Array(await blob.arrayBuffer());
+  return { bytes: new Uint8Array(await blob.arrayBuffer()), scale };
 }

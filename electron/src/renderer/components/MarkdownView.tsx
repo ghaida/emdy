@@ -1,6 +1,6 @@
-import React, { useMemo, useState, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
+import React, { createContext, useContext, useMemo, useState, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { Copy, Check } from 'lucide-react';
-import Markdown, { type Components } from 'react-markdown';
+import Markdown, { type Components, type ExtraProps } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { buildPrismTheme } from '../lib/prism-theme';
@@ -8,7 +8,7 @@ import type { ColorScale } from '../lib/color-themes';
 import { findMatches, clearMatches } from '../lib/find-walker';
 import { findScrollParent } from '../lib/find-scroller';
 import { buildInjectionMap, TOKEN_CATEGORIES, type DesignTokens, type TokenCategory } from '../lib/design-md';
-import { buildDiagramTheme } from '../lib/mermaid-theme';
+import { buildDiagramTheme, type DiagramTheme } from '../lib/mermaid-theme';
 import { TokenVisualization } from './design/TokenVisualization';
 import { MermaidBlock } from './MermaidBlock';
 
@@ -75,6 +75,39 @@ function mermaidSource(pre: HastNode | undefined): string | null {
   return isMermaid ? textContent(code).replace(/\n$/, '') : null;
 }
 
+interface FenceContextValue {
+  codeTheme: Record<string, React.CSSProperties>;
+  diagramTheme: DiagramTheme;
+  filePath?: string | null;
+}
+
+const FenceContext = createContext<FenceContextValue | null>(null);
+
+// Lives outside MarkdownView so its identity never changes: a new `pre`
+// component on every theme change would remount every diagram and drop it to a
+// placeholder while it re-renders. Themes arrive through context instead.
+function Pre({ node, children, ...props }: React.ComponentProps<'pre'> & ExtraProps) {
+  const fence = useContext(FenceContext);
+  const source = mermaidSource(node);
+  if (source === null || !fence) return <pre {...props}>{children}</pre>;
+  return (
+    <MermaidBlock
+      // Remount per file, so a block reused by the next document never shows
+      // the previous document's diagram while its own renders.
+      key={fence.filePath ?? ''}
+      source={source}
+      theme={fence.diagramTheme}
+      fallback={
+        <pre {...props}>
+          <CodeBlock language="mermaid" codeTheme={fence.codeTheme}>
+            {source}
+          </CodeBlock>
+        </pre>
+      }
+    />
+  );
+}
+
 export const MarkdownView = React.memo(
   React.forwardRef<MarkdownViewHandle, MarkdownViewProps>(function MarkdownView(
     { content, colors, filePath, style, contentRef, highlight, onMatchesChanged, designTokens },
@@ -82,6 +115,7 @@ export const MarkdownView = React.memo(
   ) {
     const codeTheme = useMemo(() => buildPrismTheme(colors), [colors]);
     const diagramTheme = useMemo(() => buildDiagramTheme(colors), [colors]);
+    const fence = useMemo(() => ({ codeTheme, diagramTheme, filePath }), [codeTheme, diagramTheme, filePath]);
 
     const injectionMap = useMemo(
       () => (designTokens ? buildInjectionMap(content, designTokens) : null),
@@ -215,25 +249,7 @@ export const MarkdownView = React.memo(
         }
         return <li {...props}>{children}</li>;
       },
-      pre({ node, children, ...props }) {
-        const source = mermaidSource(node);
-        if (source !== null) {
-          return (
-            <MermaidBlock
-              source={source}
-              theme={diagramTheme}
-              fallback={
-                <pre {...props}>
-                  <CodeBlock language="mermaid" codeTheme={codeTheme}>
-                    {source}
-                  </CodeBlock>
-                </pre>
-              }
-            />
-          );
-        }
-        return <pre {...props}>{children}</pre>;
-      },
+      pre: Pre,
       code({ className, children, ...props }) {
         const match = (className || '').match(LANGUAGE_PATTERN);
         const codeString = String(children).replace(/\n$/, '');
@@ -281,7 +297,7 @@ export const MarkdownView = React.memo(
           </div>
         );
       },
-    }), [filePath, codeTheme, diagramTheme, injectionMap, designTokens]);
+    }), [filePath, codeTheme, injectionMap, designTokens]);
 
     return (
       <div className="markdown-view" style={style} ref={contentRef}>
@@ -292,9 +308,11 @@ export const MarkdownView = React.memo(
               {designTokens.description && <p className="design-header-desc">{designTokens.description}</p>}
             </header>
           )}
-          <MemoMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>
-            {content}
-          </MemoMarkdown>
+          <FenceContext.Provider value={fence}>
+            <MemoMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>
+              {content}
+            </MemoMarkdown>
+          </FenceContext.Provider>
           {appendixCategories.length > 0 && designTokens && (
             <section className="design-appendix">
               {appendixCategories.map((cat) => (

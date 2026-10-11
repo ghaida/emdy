@@ -1,5 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { buildPrintPayload } from './print-payload';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { buildPrintPayload, preparePrintPayload } from './print-payload';
+
+const renderDiagram = vi.hoisted(() => vi.fn());
+vi.mock('./mermaid-render', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./mermaid-render')>()),
+  renderDiagram,
+}));
 
 describe('buildPrintPayload', () => {
   let host: HTMLElement;
@@ -96,6 +102,24 @@ describe('buildPrintPayload', () => {
     expect(img.width).toBe(160);
     expect(doc.querySelector('#live')).toBeNull();
     expect(html).not.toContain('Copy');
+  });
+
+  it('prints the document as it was when Print was chosen, even if another file opens meanwhile', async () => {
+    host.innerHTML =
+      '<div class="markdown-body"><p>From A</p>' +
+      '<div class="mermaid-block" data-mermaid-source="graph TD"><svg></svg></div></div>';
+    let finishRender!: (result: unknown) => void;
+    renderDiagram.mockReturnValue(new Promise((resolve) => (finishRender = resolve)));
+
+    const pending = preparePrintPayload(host, '/docs/a.md');
+    host.innerHTML = '<div class="markdown-body"><p>From B</p></div>';
+    finishRender({ ok: true, id: 'd', svg: '<svg viewBox="0 0 40 20"></svg>', width: 40, height: 20 });
+    const payload = (await pending)!;
+
+    expect(payload.title).toBe('a.md');
+    expect(payload.html).toContain('From A');
+    expect(payload.html).not.toContain('From B');
+    expect(payload.html).toContain('mermaid-image');
   });
 
   it('derives the title from the file path basename', () => {

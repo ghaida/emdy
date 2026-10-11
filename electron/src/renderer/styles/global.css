@@ -1532,9 +1532,12 @@ input:focus:not(:focus-visible),
   max-width: none !important;
 }
 
-/* Keep .markdown-body element styles out of HTML labels. */
+/* Keep .markdown-body element styles out of HTML labels, so they render as
+   Mermaid measured them (bolder, not the body's semibold) and match copied PNGs. */
 .markdown-body .mermaid-diagram p { margin: 0; }
-.markdown-body .mermaid-diagram strong { color: inherit; }
+.markdown-body .mermaid-diagram strong { color: inherit; font-weight: bolder; }
+.markdown-body .mermaid-diagram del { color: inherit; }
+.markdown-body .mermaid-diagram a { color: inherit; }
 .markdown-body .mermaid-diagram code { background: none; padding: 0; border-radius: 0; color: inherit; font-size: inherit; }
 .markdown-body .mermaid-diagram img { border-radius: 0; }
 

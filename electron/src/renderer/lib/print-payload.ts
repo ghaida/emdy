@@ -1,5 +1,20 @@
 import type { DiagramResult } from './mermaid-render';
-import { inlineDiagramsForPrint } from './diagram-export';
+import { inlineDiagramsForPrint, renderExportDiagrams } from './diagram-export';
+
+/**
+ * Print/PDF payload with diagrams swapped for their print renders. The content
+ * is snapshotted before rendering starts, so a file opened while the diagrams
+ * render (a second or more on a cold, diagram-heavy document) can't end up
+ * under this file's name.
+ */
+export async function preparePrintPayload(
+  contentRoot: HTMLElement | null,
+  filePath: string | null
+): Promise<{ html: string; title: string } | null> {
+  const snapshot = contentRoot ? (contentRoot.cloneNode(true) as HTMLElement) : null;
+  const diagrams = await renderExportDiagrams(snapshot);
+  return buildPrintPayload(snapshot, filePath, diagrams);
+}
 
 /**
  * Shared clone-and-sanitize logic for producing a neutral, print-styled

@@ -11,6 +11,8 @@
 
 import type { ColorScale } from './color-themes';
 import { neutral } from './color-themes';
+import { parseRgba, toHex } from './color';
+import { PRINT_COLORS } from '../../shared/print-colors';
 
 /** Diagram labels always use the bundled IBM Plex Sans, whatever the reading
  * font — the same way code blocks are always mono. */
@@ -35,49 +37,27 @@ export interface DiagramTheme {
   variables: Record<string, ThemeVariableValue>;
 }
 
-interface Rgba {
-  r: number;
-  g: number;
-  b: number;
-  a: number;
-}
-
-function parseHex(value: string): Rgba | null {
-  const hex = /^#([0-9a-f]{3,8})$/i.exec(value.trim())?.[1];
-  if (!hex || hex.length === 5 || hex.length === 7) return null;
-  const short = hex.length <= 4;
-  const channel = (i: number) =>
-    short ? parseInt(hex[i] + hex[i], 16) : parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-  const hasAlpha = hex.length === 4 || hex.length === 8;
-  return { r: channel(0), g: channel(1), b: channel(2), a: hasAlpha ? channel(3) / 255 : 1 };
-}
-
-function toHex({ r, g, b }: Rgba): string {
-  const h = (n: number) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0');
-  return `#${h(r)}${h(g)}${h(b)}`;
-}
-
-/** Composite a (possibly translucent) hex color over an opaque backdrop.
- * Unparseable colors fall back to the backdrop. */
+/** Composite a (possibly translucent) color over an opaque backdrop, as hex.
+ * Colors parseRgba can't read fall back to the backdrop. */
 export function flatten(color: string, backdrop: string): string {
-  const fg = parseHex(color);
-  const bg = parseHex(backdrop) ?? { r: 255, g: 255, b: 255, a: 1 };
-  if (!fg) return toHex(bg);
+  const fg = parseRgba(color);
+  const bg = parseRgba(backdrop) ?? { r: 255, g: 255, b: 255, a: 1 };
+  if (!fg) return toHex(bg.r, bg.g, bg.b);
   const blend = (f: number, b: number) => f * fg.a + b * (1 - fg.a);
-  return toHex({ r: blend(fg.r, bg.r), g: blend(fg.g, bg.g), b: blend(fg.b, bg.b), a: 1 });
+  return toHex(blend(fg.r, bg.r), blend(fg.g, bg.g), blend(fg.b, bg.b));
 }
 
-/** Mix two opaque hex colors; `amount` is the share of `a` (0..1). */
+/** Mix two opaque colors; `amount` is the share of `a` (0..1). */
 export function mix(a: string, b: string, amount: number): string {
-  const x = parseHex(a);
-  const y = parseHex(b);
+  const x = parseRgba(a);
+  const y = parseRgba(b);
   if (!x || !y) return a;
   const m = (p: number, q: number) => p * amount + q * (1 - amount);
-  return toHex({ r: m(x.r, y.r), g: m(x.g, y.g), b: m(x.b, y.b), a: 1 });
+  return toHex(m(x.r, y.r), m(x.g, y.g), m(x.b, y.b));
 }
 
 function luminance(color: string): number {
-  const c = parseHex(color);
+  const c = parseRgba(color);
   if (!c) return 1;
   const lin = (v: number) => {
     const s = v / 255;
@@ -332,7 +312,7 @@ export function buildDiagramTheme(c: ColorScale, fontFamily: string = DIAGRAM_FO
  * independent on purpose, like the rest of the print output. */
 export const PRINT_DIAGRAM_COLORS: ColorScale = {
   ...neutral.light,
-  bgCode: '#F0F0F0',
+  bgCode: PRINT_COLORS.block,
   bgContent: '#FFFFFF',
   bgSecondary: '#F5F5F5',
   bgTertiary: '#E4E4E4',
@@ -340,9 +320,9 @@ export const PRINT_DIAGRAM_COLORS: ColorScale = {
   borderSubtle: '#CCCCCC',
   textMuted: '#777777',
   textSecondary: '#555555',
-  textPrimary: '#2C2C2C',
-  textHeading: '#1A1A1A',
-  accent: '#3366AA',
+  textPrimary: PRINT_COLORS.text,
+  textHeading: PRINT_COLORS.heading,
+  accent: PRINT_COLORS.link,
   highlightSubtle: '#FFF3C4',
   highlightStrong: '#E0C870',
 };

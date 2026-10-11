@@ -31,8 +31,13 @@ describe('flatten', () => {
     expect(flatten('#fff', '#000000')).toBe('#ffffff');
   });
 
+  it('flattens rgb()/rgba() colors, not just hex', () => {
+    expect(flatten('rgba(0, 0, 0, 0.5)', '#ffffff')).toBe('#808080');
+    expect(flatten('rgb(1 2 3)', '#ffffff')).toBe('#010203');
+  });
+
   it('falls back to the backdrop for colors it cannot parse', () => {
-    expect(flatten('rgb(1, 2, 3)', '#123456')).toBe('#123456');
+    expect(flatten('hsl(10 20% 30%)', '#123456')).toBe('#123456');
   });
 });
 

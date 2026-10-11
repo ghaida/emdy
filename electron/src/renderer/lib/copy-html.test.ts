@@ -1,5 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { buildCopyHtml, flattenColor } from './copy-html';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { buildCopyHtml, flattenColor, prepareCopyHtml } from './copy-html';
+
+const renderDiagram = vi.hoisted(() => vi.fn());
+vi.mock('./mermaid-render', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./mermaid-render')>()),
+  renderDiagram,
+}));
 
 describe('buildCopyHtml', () => {
   let host: HTMLElement;
@@ -290,6 +296,33 @@ describe('buildCopyHtml', () => {
     expect(buildCopyHtml(host)).toBe(
       '<div class="markdown-body"><pre><code class="language-mermaid">graph TD</code></pre></div>'
     );
+  });
+
+  it('drops the viewer-only error note under a failed diagram', () => {
+    host.innerHTML =
+      '<div class="markdown-body"><div class="mermaid-error-block"><pre><code>graph TD</code></pre>' +
+      '<div class="mermaid-error"><div>Couldn’t render this Mermaid diagram</div></div></div></div>';
+    const out = buildCopyHtml(host);
+    expect(out).not.toContain('Couldn’t render');
+    expect(out).toContain('<pre><code>graph TD</code></pre>');
+  });
+
+  it('copies the document as it was when Copy was chosen, even if another file opens meanwhile', async () => {
+    host.innerHTML =
+      '<div class="markdown-body"><p>From A</p>' +
+      '<div class="mermaid-block" data-mermaid-source="graph TD"><svg></svg></div></div>';
+    let finishRender!: (result: unknown) => void;
+    renderDiagram.mockReturnValue(new Promise((resolve) => (finishRender = resolve)));
+
+    const pending = prepareCopyHtml(host);
+    host.innerHTML = '<div class="markdown-body"><p>From B</p></div>';
+    // jsdom can't rasterize, so the diagram pastes as source: still A's.
+    finishRender({ ok: true, id: 'd', svg: '<svg viewBox="0 0 40 20"></svg>', width: 40, height: 20 });
+    const html = await pending;
+
+    expect(html).toContain('From A');
+    expect(html).not.toContain('From B');
+    expect(html).toContain('<code class="language-mermaid">graph TD</code>');
   });
 
   it('triggers on a bare design-header without a design-block', () => {

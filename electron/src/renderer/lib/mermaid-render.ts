@@ -15,9 +15,13 @@ export type DiagramResult =
   | { ok: true; id: string; svg: string; width: number; height: number }
   | { ok: false; error: string };
 
+export type RenderedDiagram = Extract<DiagramResult, { ok: true }>;
+
 type Mermaid = typeof import('mermaid').default;
 
-const MAX_CACHED = 64;
+// Enough for a diagram-heavy document in a couple of themes plus its print
+// renders, so flipping back to a theme repaints from cache.
+const MAX_CACHED = 160;
 const cache = new Map<string, DiagramResult>();
 const inflight = new Map<string, Promise<DiagramResult>>();
 let queue: Promise<unknown> = Promise.resolve();
@@ -106,8 +110,9 @@ async function fontsReady(fontFamily: string): Promise<void> {
   }
 }
 
-/** Natural size of a rendered diagram, from its viewBox (or Mermaid's
- * max-width when there is no viewBox). */
+/** Natural size of a rendered diagram, from its viewBox. Without one (Mermaid's
+ * `info` diagram) it falls back to numeric size attributes, then the inline
+ * max-width; a dimension that can't be found is 0. */
 export function measureSvg(svg: string): { width: number; height: number } {
   const root = /<svg\b[^>]*>/i.exec(svg)?.[0] ?? '';
   const viewBox = /\sviewBox="([^"]+)"/i.exec(root)?.[1];
@@ -115,8 +120,14 @@ export function measureSvg(svg: string): { width: number; height: number } {
     const [, , w, h] = viewBox.trim().split(/[\s,]+/).map(Number);
     if (w > 0 && h > 0) return { width: w, height: h };
   }
-  const maxWidth = Number(/max-width:\s*([\d.]+)px/i.exec(root)?.[1]);
-  return { width: maxWidth > 0 ? maxWidth : 0, height: 0 };
+  const attr = (name: string) => Number(new RegExp(`\\s${name}="([\\d.]+)"`, 'i').exec(root)?.[1]) || 0;
+  const maxWidth = Number(/max-width:\s*([\d.]+)px/i.exec(root)?.[1]) || 0;
+  return { width: attr('width') || maxWidth, height: attr('height') };
+}
+
+/** A successful render with a usable size: what an image can be made from. */
+export function hasSize(result: DiagramResult | null | undefined): result is RenderedDiagram {
+  return !!result && result.ok && result.width > 0 && result.height > 0;
 }
 
 /** Mermaid's classic look hard-codes white fills on ER "zero" cardinality

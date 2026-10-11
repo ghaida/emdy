@@ -23,9 +23,9 @@ import type { FileEntry, NudgeState } from './lib/types';
 import { CONTENT_WIDTHS } from './lib/types';
 import { perfMark, perfMeasure } from './lib/perf';
 import { parseDesignMd } from './lib/design-md';
-import { buildCopyHtml } from './lib/copy-html';
-import { buildPrintPayload } from './lib/print-payload';
-import { renderCopyImages, renderExportDiagrams } from './lib/diagram-export';
+import { prepareCopyHtml } from './lib/copy-html';
+import { preparePrintPayload } from './lib/print-payload';
+import { exportNeedsRendering } from './lib/diagram-export';
 
 type FindMode = 'multi-persistent' | 'zero' | 'over-cap';
 
@@ -421,20 +421,25 @@ export function App() {
     [filePath, applyHighlight, addToast, announceAssertive]
   );
 
+  // Diagrams are re-rendered for print first; say so when that isn't instant.
+  const announceDiagramPrep = useCallback(() => {
+    if (exportNeedsRendering(contentRef.current)) addToast('Preparing diagrams…', 'info');
+  }, [addToast]);
+
   const handleExportPDF = useCallback(async () => {
-    const diagrams = await renderExportDiagrams(contentRef.current);
-    const payload = buildPrintPayload(contentRef.current, filePath, diagrams);
+    announceDiagramPrep();
+    const payload = await preparePrintPayload(contentRef.current, filePath);
     if (!payload) return;
     const ok = await window.electronAPI.exportPDF(payload);
     if (ok) addToast('PDF exported', 'success');
-  }, [addToast, filePath]);
+  }, [addToast, announceDiagramPrep, filePath]);
 
   const handlePrint = useCallback(async () => {
-    const diagrams = await renderExportDiagrams(contentRef.current);
-    const payload = buildPrintPayload(contentRef.current, filePath, diagrams);
+    announceDiagramPrep();
+    const payload = await preparePrintPayload(contentRef.current, filePath);
     if (!payload) return;
     window.electronAPI.print(payload);
-  }, [filePath]);
+  }, [announceDiagramPrep, filePath]);
 
   const handleFileContextMenu = useCallback((e: React.MouseEvent, path: string) => {
     e.preventDefault();
@@ -443,12 +448,11 @@ export function App() {
 
   const handleCopyHTML = useCallback(async () => {
     if (!contentRef.current) return;
-    const diagramImages = await renderCopyImages(contentRef.current);
-    if (!contentRef.current) return;
-    const html = buildCopyHtml(contentRef.current, diagramImages);
+    announceDiagramPrep();
+    const html = await prepareCopyHtml(contentRef.current);
     await window.electronAPI.writeClipboardHTML(html);
     addToast('Copied to clipboard', 'success');
-  }, [addToast]);
+  }, [addToast, announceDiagramPrep]);
 
   useFileWatcher(filePath, {
     onChanged: async (path) => {
