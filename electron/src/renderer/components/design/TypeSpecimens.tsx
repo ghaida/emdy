@@ -1,14 +1,10 @@
 import { useMemo } from 'react';
 import type { TypographyToken } from '../../lib/design-md';
+import { fontFamilies, isFontAvailable, withFallback } from '../../lib/font-availability';
 
-function fontAvailable(family: string | undefined): boolean {
-  if (!family) return true;
-  try {
-    if (typeof document === 'undefined' || !document.fonts?.check) return true;
-    return document.fonts.check(`16px "${family}"`);
-  } catch {
-    return true;
-  }
+function fontAvailable(value: string | undefined): boolean {
+  const first = value ? fontFamilies(value)[0] : undefined;
+  return !first || isFontAvailable(first);
 }
 
 export function TypeSpecimens({ typography }: { typography: Record<string, TypographyToken> }) {
@@ -31,7 +27,7 @@ function SpecimenRow({ name, token }: { name: string; token: TypographyToken }) 
       <div
         className="design-specimen"
         style={{
-          fontFamily: token.fontFamily,
+          fontFamily: token.fontFamily && withFallback(token.fontFamily),
           fontSize: token.fontSize,
           fontWeight: token.fontWeight as React.CSSProperties['fontWeight'],
           lineHeight: token.lineHeight,

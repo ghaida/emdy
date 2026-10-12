@@ -1831,15 +1831,19 @@ input:focus:not(:focus-visible),
   border: 1px solid var(--border-subtle);
   margin-bottom: var(--space-2);
 }
+/* Token names and values can be long with nowhere to break, like
+   rgba(246,244,241,0.85); they wrap inside their cell rather than spill out. */
 .design-token-name {
   font-family: var(--font-mono);
   font-size: var(--fs-sm);
   color: var(--text-primary);
+  overflow-wrap: anywhere;
 }
 .design-token-value {
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
   color: var(--text-muted);
+  overflow-wrap: anywhere;
 }
 .design-specimens {
   margin: 0;
@@ -1863,16 +1867,30 @@ input:focus:not(:focus-visible),
 }
 .design-scale-row {
   display: grid;
-  grid-template-columns: 200px var(--space-20) 1fr;
+  /* minmax(0, …) so a wide bar can't stretch the track past the block. */
+  grid-template-columns: 200px var(--space-20) minmax(0, 1fr);
   column-gap: var(--space-3);
   align-items: center;
   padding: var(--space-1) 0;
 }
+.design-spacing-track {
+  container-type: inline-size;
+}
 .design-spacing-bar {
+  position: relative;
   height: var(--space-3);
   max-width: 100%;
   background: var(--accent);
   border-radius: var(--radius-sm);
+}
+/* A bar wider than its track fills it and fades out at the end, so it reads as
+   longer than shown. The fade is zero-width whenever the bar fits. */
+.design-spacing-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: clamp(0px, (var(--bar-width, 0px) - 100cqw) * 1000, var(--space-8));
+  background: linear-gradient(to right, transparent, var(--bg-code));
 }
 .design-scale--radius {
   display: flex;

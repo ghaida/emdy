@@ -28,8 +28,10 @@ export const DESIGN_PRINT_STYLES: Record<string, string> = {
   'design-specimen': 'margin-bottom: 4px;',
   'design-fallback-note': 'display: none !important;',
   'design-scale-row':
-    'display: grid !important; grid-template-columns: 200px 80px 1fr; column-gap: 12px; align-items: center; padding: 4px 0;',
-  'design-spacing-bar': 'height: 12px !important; background: #2C2C2C; border-radius: 4px;',
+    'display: grid !important; grid-template-columns: 200px 80px minmax(0, 1fr); column-gap: 12px; align-items: center; padding: 4px 0;',
+  'design-spacing-track': 'container-type: inline-size;',
+  'design-spacing-bar':
+    'position: relative; height: 12px !important; max-width: 100%; background: #2C2C2C; border-radius: 4px;',
   'design-scale--radius': 'display: flex !important; gap: 24px; flex-wrap: wrap;',
   'design-radius-item': 'text-align: center;',
   'design-radius-square':
@@ -55,6 +57,9 @@ export const DESIGN_COMPONENT_TD_FIRST_WIDTH = '200px';
 // builder so the generated stylesheet matches the hand-written original.
 const DESIGN_PRINT_EXTRA_CSS = [
   '.design-specimen-row:last-child { border-bottom: none; }',
+  // A bar wider than its track fades out at the end, as on screen. --bar-width
+  // is the bar's own inline value, not a theme variable.
+  '.design-spacing-bar::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: clamp(0px, (var(--bar-width, 0px) - 100cqw) * 1000, 32px); background: linear-gradient(to right, transparent, #F0F0F0); }',
   `.design-component-table td:first-child { width: ${DESIGN_COMPONENT_TD_FIRST_WIDTH}; }`,
   `.design-component-table td { ${DESIGN_COMPONENT_TD_CSS} }`,
 ].join('\n');

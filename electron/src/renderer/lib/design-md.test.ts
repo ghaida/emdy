@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseDesignMd, isValidCssColor, cssLength } from './design-md';
-import { categoryForHeading, buildInjectionMap, type DesignTokens } from './design-md';
+import { categoriesForHeading, buildInjectionMap, type DesignTokens } from './design-md';
 
 const HERITAGE = `---
 name: Heritage
@@ -219,21 +219,35 @@ describe('cssLength', () => {
   });
 });
 
-describe('categoryForHeading', () => {
+describe('categoriesForHeading', () => {
   it('maps spec section names and aliases', () => {
-    expect(categoryForHeading('Colors')).toBe('colors');
-    expect(categoryForHeading('typography')).toBe('typography');
-    expect(categoryForHeading('Layout')).toBe('spacing');
-    expect(categoryForHeading('Layout & Spacing')).toBe('spacing');
-    expect(categoryForHeading('Spacing')).toBe('spacing');
-    expect(categoryForHeading('Shapes')).toBe('rounded');
-    expect(categoryForHeading('Components:')).toBe('components');
+    expect(categoriesForHeading('Colors')).toEqual(['colors']);
+    expect(categoriesForHeading('typography')).toEqual(['typography']);
+    expect(categoriesForHeading('Layout')).toEqual(['spacing']);
+    expect(categoriesForHeading('Layout & Spacing')).toEqual(['spacing']);
+    expect(categoriesForHeading('Spacing')).toEqual(['spacing']);
+    expect(categoriesForHeading('Shapes')).toEqual(['rounded']);
+    expect(categoriesForHeading('Components:')).toEqual(['components']);
   });
-  it('returns null for non-token sections', () => {
-    expect(categoryForHeading('Overview')).toBeNull();
-    expect(categoryForHeading("Do's and Don'ts")).toBeNull();
-    expect(categoryForHeading('Elevation & Depth')).toBeNull();
-    expect(categoryForHeading('Random Section')).toBeNull();
+  it('returns nothing for non-token sections', () => {
+    expect(categoriesForHeading('Overview')).toEqual([]);
+    expect(categoriesForHeading("Do's and Don'ts")).toEqual([]);
+    expect(categoriesForHeading('Elevation & Depth')).toEqual([]);
+    expect(categoriesForHeading('Random Section')).toEqual([]);
+  });
+  it('ignores numbering and a subtitle after a colon', () => {
+    expect(categoriesForHeading('2. Colors')).toEqual(['colors']);
+    expect(categoriesForHeading('2. Colors: The Print Palette')).toEqual(['colors']);
+    expect(categoriesForHeading('3) Typography')).toEqual(['typography']);
+    expect(categoriesForHeading('4.1 Layout')).toEqual(['spacing']);
+    expect(categoriesForHeading('Overview: Colors and Type')).toEqual([]);
+  });
+  it('finds sections named after a dash or alongside others', () => {
+    expect(categoriesForHeading('Tokens — Colors')).toEqual(['colors']);
+    expect(categoriesForHeading('Tokens — Spacing & Shapes')).toEqual(['spacing', 'rounded']);
+    expect(categoriesForHeading('4. Elevation, Shape, and Motion')).toEqual(['rounded']);
+    expect(categoriesForHeading('Colour')).toEqual(['colors']);
+    expect(categoriesForHeading('Color-blind safety')).toEqual([]);
   });
 });
 
@@ -247,28 +261,41 @@ describe('buildInjectionMap', () => {
   it('maps first matching heading line per category', () => {
     const body = '## Overview\n\ntext\n\n## Colors\n\ntext\n\n## Layout\n\ntext\n';
     const map = buildInjectionMap(body, tokens);
-    expect(map.get(5)).toBe('colors');
-    expect(map.get(9)).toBe('spacing');
+    expect(map.get(5)).toEqual(['colors']);
+    expect(map.get(9)).toEqual(['spacing']);
     expect(map.size).toBe(2);
+  });
+
+  it('claims numbered headings with subtitles', () => {
+    const body = '## 1. Overview\n\n## 2. Colors: The Print Palette\n\n## 4. Layout\n';
+    const map = buildInjectionMap(body, tokens);
+    expect(map.get(3)).toEqual(['colors']);
+    expect(map.get(5)).toEqual(['spacing']);
+    expect(map.size).toBe(2);
+  });
+
+  it('gives a heading every category it names', () => {
+    const map = buildInjectionMap('## Tokens — Spacing & Shapes\n', { ...tokens, rounded: { sm: '4px' } });
+    expect(map.get(1)).toEqual(['spacing', 'rounded']);
   });
 
   it('ignores headings for categories the file has no tokens for', () => {
     const map = buildInjectionMap('## Typography\n\n## Colors\n', tokens);
     expect(map.size).toBe(1);
-    expect(map.get(3)).toBe('colors');
+    expect(map.get(3)).toEqual(['colors']);
   });
 
   it('only the first matching heading per category is used', () => {
     const map = buildInjectionMap('## Colors\n\n## Colors\n', tokens);
     expect(map.size).toBe(1);
-    expect(map.get(1)).toBe('colors');
+    expect(map.get(1)).toEqual(['colors']);
   });
 
   it('skips headings inside fenced code blocks', () => {
     const body = '```\n## Colors\n```\n\n## Colors\n';
     const map = buildInjectionMap(body, tokens);
     expect(map.size).toBe(1);
-    expect(map.get(5)).toBe('colors');
+    expect(map.get(5)).toEqual(['colors']);
   });
 
   // F1: fence handling must match CommonMark, not a naive line toggle.
@@ -295,13 +322,13 @@ describe('buildInjectionMap', () => {
     const body = 'Colors\n------\n\ntext\n';
     const map = buildInjectionMap(body, tokens);
     expect(map.size).toBe(1);
-    expect(map.get(1)).toBe('colors');
+    expect(map.get(1)).toEqual(['colors']);
   });
 
   it('claims a 1-3-space-indented ATX h2', () => {
     const body = '  ## Colors\n\ntext\n';
     const map = buildInjectionMap(body, tokens);
     expect(map.size).toBe(1);
-    expect(map.get(1)).toBe('colors');
+    expect(map.get(1)).toEqual(['colors']);
   });
 });

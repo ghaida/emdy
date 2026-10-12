@@ -128,7 +128,7 @@ export const MarkdownView = React.memo(
 
     const appendixCategories = useMemo(() => {
       if (!designTokens || !injectionMap) return [];
-      const injected = new Set(injectionMap.values());
+      const injected = new Set([...injectionMap.values()].flat());
       return TOKEN_CATEGORIES.filter(
         (cat) => !injected.has(cat) && designTokens[cat] && Object.keys(designTokens[cat] as object).length > 0
       );
@@ -223,12 +223,14 @@ export const MarkdownView = React.memo(
     const components = useMemo<Components>(() => ({
       h2({ node, children, ...props }) {
         const line = node?.position?.start.line;
-        const category = line !== undefined && injectionMap ? injectionMap.get(line) : undefined;
-        if (category && designTokens) {
+        const categories = line !== undefined && injectionMap ? injectionMap.get(line) : undefined;
+        if (categories && designTokens) {
           return (
             <>
               <h2 {...props}>{children}</h2>
-              <TokenVisualization category={category} tokens={designTokens} />
+              {categories.map((category) => (
+                <TokenVisualization key={category} category={category} tokens={designTokens} />
+              ))}
             </>
           );
         }
