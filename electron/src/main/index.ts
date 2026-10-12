@@ -1,16 +1,16 @@
-import { app, BrowserWindow, ipcMain, protocol, net, session, systemPreferences, shell } from 'electron';
+import { app, autoUpdater, BrowserWindow, ipcMain, protocol, net, session, systemPreferences, shell } from 'electron';
 import path from 'node:path';
-import fs from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import started from 'electron-squirrel-startup';
-import { registerFileHandlers, scanDirectory, openPathInNewWindow } from './ipc-handlers';
+import { registerFileHandlers } from './ipc-handlers';
 import { registerSettingsHandlers, registerNudgeHandlers, nudgeTrackAppLaunch } from './settings-store';
 import { registerFileWatcher } from './file-watcher';
 import { registerExportHandlers } from './pdf-export';
 import { buildMenu } from './menu';
-import { addAllowedRoot, isPathAllowed, hardenWindow } from './allowed-paths';
+import { isPathAllowed } from './allowed-paths';
 import { setupAutoUpdater, registerAutoUpdaterIPC } from './auto-updater';
-import { getWindowBackgroundColor } from './window-theme';
+import { registerWindowHandlers, startWindows, openFromOutside, handleActivate, lastFocusedWindow, prepareForQuit } from './windows';
+import { clearRecents, forgetRecent, onRecentsChange, recentPaths } from './recents';
 
 if (started) {
   app.quit();
@@ -20,64 +20,9 @@ if (started) {
 // Emdy stores nothing sensitive in web storage, so encrypted storage is unnecessary.
 app.commandLine.appendSwitch('use-mock-keychain');
 
-let mainWindow: BrowserWindow | null = null;
-let pendingFilePath: string | null = null;
-let hasOpenedAnyPath = false;
-
-const createWindow = () => {
-  mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 700,
-    minWidth: 600,
-    minHeight: 400,
-    show: false,
-    backgroundColor: getWindowBackgroundColor(),
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 16, y: 16 },
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-    },
-  });
-
-  mainWindow.once('ready-to-show', () => {
-    mainWindow?.show();
-  });
-
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-  } else {
-    mainWindow.loadFile(
-      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
-    );
-  }
-
-  hardenWindow(mainWindow);
-
-  // Send pending file/directory from dock drop / double-click during launch
-  mainWindow.webContents.once('did-finish-load', async () => {
-    if (pendingFilePath) {
-      try {
-        const stat = await fs.stat(pendingFilePath);
-        if (stat.isDirectory()) {
-          addAllowedRoot(pendingFilePath);
-          const entries = await scanDirectory(pendingFilePath);
-          mainWindow?.webContents.send('dir:open', pendingFilePath, entries);
-        } else {
-          addAllowedRoot(path.dirname(pendingFilePath));
-          const content = await fs.readFile(pendingFilePath, 'utf-8');
-          mainWindow?.webContents.send('file:open', pendingFilePath, content);
-          app.addRecentDocument(pendingFilePath);
-        }
-      } catch {
-        // File/directory can't be read
-      }
-      pendingFilePath = null;
-    }
-  });
-};
+// Files and folders Emdy was launched with (double-click, Dock drop, Open
+// With) arrive before ready and wait here for startWindows.
+const launchPaths: string[] = [];
 
 ipcMain.handle('window:toggle-maximize', (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
@@ -87,6 +32,7 @@ ipcMain.handle('window:toggle-maximize', (event) => {
 });
 
 registerFileHandlers();
+registerWindowHandlers();
 registerSettingsHandlers();
 registerFileWatcher();
 registerExportHandlers();
@@ -142,9 +88,10 @@ app.on('ready', () => {
     });
   }
 
-  createWindow();
+  void startWindows(launchPaths);
   nudgeTrackAppLaunch();
-  buildMenu(sendMenuEvent);
+  rebuildMenu();
+  onRecentsChange(rebuildMenu);
   setupAutoUpdater();
 
   // Forward system accent color changes to renderer (macOS)
@@ -164,60 +111,47 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
+app.on('activate', handleActivate);
 
-// Handle opening files/directories via OS (double-click, drag to dock, Open Recent)
-app.on('open-file', async (event, filePath) => {
+// Save the open windows before quitting. An update restart closes the windows
+// before before-quit fires, so it needs its own hook.
+app.on('before-quit', prepareForQuit);
+autoUpdater.on('before-quit-for-update', prepareForQuit);
+
+// Opening files and folders from outside Emdy: double-click, Dock drop, Open
+// With, the Dock icon's recent list.
+app.on('open-file', (event, filePath) => {
   event.preventDefault();
-  const win = mainWindow || BrowserWindow.getAllWindows()[0];
-  if (!win || !win.webContents || win.webContents.isLoading()) {
-    // App is still launching — queue the path for when the window is ready
-    pendingFilePath = filePath;
+  if (!app.isReady()) {
+    launchPaths.push(filePath);
     return;
   }
-  if (hasOpenedAnyPath) {
-    try {
-      await openPathInNewWindow(filePath);
-    } catch {
-      // File/directory can't be opened
-    }
-    return;
-  }
-  try {
-    const stat = await fs.stat(filePath);
-    if (stat.isDirectory()) {
-      addAllowedRoot(filePath);
-      const entries = await scanDirectory(filePath);
-      win.webContents.send('dir:open', filePath, entries);
-    } else {
-      addAllowedRoot(path.dirname(filePath));
-      const content = await fs.readFile(filePath, 'utf-8');
-      win.webContents.send('file:open', filePath, content);
-      app.addRecentDocument(filePath);
-    }
-    hasOpenedAnyPath = true;
-  } catch {
+  openFromOutside(filePath).catch(() => {
     // File/directory can't be read
-  }
+  });
 });
 
 let hasFileOpen = false;
 
 ipcMain.handle('menu:set-has-file', (_event, hasFile: unknown) => {
   const value = Boolean(hasFile);
-  if (value) hasOpenedAnyPath = true;
   if (value !== hasFileOpen) {
     hasFileOpen = value;
-    buildMenu(sendMenuEvent, hasFileOpen);
+    rebuildMenu();
   }
 });
 
+function rebuildMenu() {
+  buildMenu(sendMenuEvent, hasFileOpen, { paths: recentPaths(), open: openRecent, clear: clearRecents });
+}
+
+// An entry that no longer opens (moved, deleted, unreadable) drops off the list.
+function openRecent(filePath: string) {
+  openFromOutside(filePath).catch(() => forgetRecent(filePath));
+}
+
 function sendMenuEvent(event: string) {
-  const win = BrowserWindow.getFocusedWindow() || mainWindow;
+  const win = BrowserWindow.getFocusedWindow() ?? lastFocusedWindow();
   if (win && !win.isDestroyed()) {
     win.webContents.send('menu:event', event);
   }

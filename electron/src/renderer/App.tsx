@@ -19,6 +19,7 @@ import { useAnnounce } from './hooks/useAnnounce';
 import { useDisplaySettings } from './hooks/useDisplaySettings';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useFileWatcher } from './hooks/useFileWatcher';
+import { useWindowState } from './hooks/useWindowState';
 import type { FileEntry, NudgeState } from './lib/types';
 import { CONTENT_WIDTHS } from './lib/types';
 import { perfMark, perfMeasure } from './lib/perf';
@@ -28,6 +29,8 @@ import { prepareCopyHtml } from './lib/copy-html';
 import type { ViewTheme } from './lib/code-export';
 import { preparePrintPayload } from './lib/print-payload';
 import { exportNeedsRendering } from './lib/diagram-export';
+import { holdScrollPosition } from './lib/scroll-restore';
+import { isInsideFolder } from '../shared/paths';
 
 type FindMode = 'multi-persistent' | 'zero' | 'over-cap';
 
@@ -44,6 +47,8 @@ interface FindState {
 const FIND_FADE_MS = 250;
 
 const FIND_QUERY_DEBOUNCE_MS = 150;
+
+const RESTORE_SCROLL_HOLD_MS = 3000;
 
 let toastId = 0;
 
@@ -329,6 +334,30 @@ export function App() {
     window.electronAPI.setMenuHasFile(content !== null);
   }, [content]);
 
+  // Tell main what this window shows (see useWindowState). While a restored
+  // window is getting its scroll position back, report that position rather
+  // than wherever the page is mid-load.
+  const heldScrollRef = useRef<number | null>(null);
+  const getScrollTop = useCallback(
+    () => heldScrollRef.current ?? scrollContainerRef.current?.scrollTop ?? 0,
+    [],
+  );
+  useWindowState({ filePath, dirPath, scrollContainerRef, getScrollTop });
+
+  // A restored window goes back to where it was once its content is on screen.
+  useEffect(() => {
+    const top = heldScrollRef.current;
+    const scrollEl = scrollContainerRef.current;
+    const contentEl = contentRef.current;
+    if (top === null || pendingOpen !== false || !scrollEl || !contentEl) return;
+    return holdScrollPosition(scrollEl, contentEl, top, {
+      ms: RESTORE_SCROLL_HOLD_MS,
+      onDone: () => {
+        heldScrollRef.current = null;
+      },
+    });
+  }, [content, pendingOpen]);
+
   const handleOpen = useCallback(async () => {
     try {
       const hasContent = content !== null || dirPath !== null;
@@ -527,6 +556,11 @@ export function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // The listeners below read the open folder through a ref, because they're
+  // registered once per effect run.
+  const dirPathRef = useRef(dirPath);
+  dirPathRef.current = dirPath;
+
   // Handle menu events from main process
   useEffect(() => {
     const removeMenu = window.electronAPI.onMenuEvent((event) => {
@@ -558,6 +592,14 @@ export function App() {
 
     const removeFileOpen = window.electronAPI.onFileOpen((path, fileContent) => {
       closeFind();
+      // A file from outside the open folder replaces the folder; a file
+      // inside it keeps the sidebar, which highlights it.
+      const openFolder = dirPathRef.current;
+      if (openFolder !== null && !isInsideFolder(path, openFolder)) {
+        setDirEntries(null);
+        setDirPath(null);
+        setSidebarVisible(false);
+      }
       setContent(fileContent);
       setFilePath(path);
       setFileDeleted(false);
@@ -595,7 +637,26 @@ export function App() {
       }
     });
 
-    return () => { removeMenu(); removeFileOpen(); removeDirOpen(); };
+    const removeDropRejected = window.electronAPI.onDropRejected(() => {
+      addToast('Emdy opens Markdown files and folders', 'info');
+    });
+
+    const removeRestore = window.electronAPI.onWindowRestore((state) => {
+      closeFind();
+      if (state.dirPath !== null && state.entries !== null) {
+        setDirEntries(state.entries);
+        setDirPath(state.dirPath);
+        setSidebarVisible(true);
+      }
+      heldScrollRef.current = state.scrollTop > 0 ? state.scrollTop : null;
+      setContent(state.content);
+      setFilePath(state.filePath);
+      setFileDeleted(false);
+      setFileError(null);
+      clearPendingWithMinTime();
+    });
+
+    return () => { removeMenu(); removeFileOpen(); removeDirOpen(); removeDropRejected(); removeRestore(); };
   }, [handleOpen, handleExportPDF, handlePrint, display, addToast, closeFind, handleOpenPalette, cycleMatchNext, cycleMatchPrev]);
 
   // Welcome = nothing loaded at all. Once a folder or file is open, show toolbar.

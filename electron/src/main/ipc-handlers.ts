@@ -1,12 +1,11 @@
-import { ipcMain, dialog, BrowserWindow, app, shell } from 'electron';
+import { ipcMain, dialog, BrowserWindow, shell } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { FileEntry } from '../renderer/lib/types';
 import { nudgeTrackFileOpen } from './settings-store';
-import { addAllowedRoot, isPathAllowed, hardenWindow } from './allowed-paths';
-import { getWindowBackgroundColor } from './window-theme';
-
-const pendingWindowIds = new Set<number>();
+import { addAllowedRoot, isPathAllowed } from './allowed-paths';
+import { noteRecent } from './recents';
+import { IGNORED_DIRS, scanDirectory } from './scan-directory';
+import { openPathInNewWindow } from './windows';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -24,11 +23,12 @@ export function registerFileHandlers() {
     const stat = await fs.stat(selected);
     if (stat.isDirectory()) {
       addAllowedRoot(selected);
+      noteRecent(selected);
       return { type: 'directory' as const, dirPath: selected, entries: await scanDirectory(selected) };
     }
     const content = await fs.readFile(selected, 'utf-8');
     addAllowedRoot(path.dirname(selected));
-    app.addRecentDocument(selected);
+    noteRecent(selected);
     return { type: 'file' as const, filePath: selected, content };
   });
 
@@ -43,7 +43,7 @@ export function registerFileHandlers() {
     const filePath = result.filePaths[0];
     const content = await fs.readFile(filePath, 'utf-8');
     addAllowedRoot(path.dirname(filePath));
-    app.addRecentDocument(filePath);
+    noteRecent(filePath);
     return { filePath, content };
   });
 
@@ -86,13 +86,6 @@ export function registerFileHandlers() {
     await openPathInNewWindow(pathToOpen);
   });
 
-  ipcMain.handle('window:is-pending-open', (event) => {
-    // Do NOT delete on read — React StrictMode invokes this twice in dev.
-    // Renderer clears its own pending state when file:open or dir:open arrives.
-    // The set entry is removed when the window closes.
-    return pendingWindowIds.has(event.sender.id);
-  });
-
   ipcMain.handle('open:dialog-in-new-window', async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return null;
@@ -102,6 +95,7 @@ export function registerFileHandlers() {
     });
     if (result.canceled || result.filePaths.length === 0) return null;
     await openPathInNewWindow(result.filePaths[0]);
+    noteRecent(result.filePaths[0]);
     return { opened: true };
   });
 
@@ -110,94 +104,6 @@ export function registerFileHandlers() {
     if (typeof rootPath !== 'string' || !isPathAllowed(rootPath)) return [];
     return searchEverything(rootPath, query.toLowerCase());
   });
-}
-
-export async function openPathInNewWindow(pathToOpen: string): Promise<void> {
-  const stat = await fs.stat(pathToOpen);
-  const win = new BrowserWindow({
-    width: 1000,
-    height: 700,
-    minWidth: 600,
-    minHeight: 400,
-    show: false,
-    backgroundColor: getWindowBackgroundColor(),
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 16, y: 16 },
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-    },
-  });
-  const wcId = win.webContents.id;
-  pendingWindowIds.add(wcId);
-  win.on('closed', () => pendingWindowIds.delete(wcId));
-  let shown = false;
-  const showOnce = () => {
-    if (shown || win.isDestroyed()) return;
-    shown = true;
-    win.show();
-  };
-  win.once('ready-to-show', showOnce);
-  setTimeout(showOnce, 2000);
-
-  const loadWithPendingFlag = () => {
-    if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-      win.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-    } else {
-      win.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
-    }
-  };
-
-  if (stat.isDirectory()) {
-    addAllowedRoot(pathToOpen);
-    const entries = await scanDirectory(pathToOpen);
-    win.webContents.once('did-finish-load', () => {
-      win.webContents.send('dir:open', pathToOpen, entries);
-    });
-    loadWithPendingFlag();
-  } else {
-    if (!isPathAllowed(pathToOpen)) addAllowedRoot(path.dirname(pathToOpen));
-    const content = await fs.readFile(pathToOpen, 'utf-8');
-    app.addRecentDocument(pathToOpen);
-    win.webContents.once('did-finish-load', () => {
-      win.webContents.send('file:open', pathToOpen, content);
-    });
-    loadWithPendingFlag();
-  }
-  hardenWindow(win);
-}
-
-const IGNORED_DIRS = new Set([
-  'node_modules', 'dist', 'build', 'out', '.vite', '__pycache__',
-  'vendor', '.git', '.svn', 'coverage', '.next', '.nuxt',
-]);
-
-export async function scanDirectory(dirPath: string): Promise<FileEntry[]> {
-  const entries: FileEntry[] = [];
-  try {
-    const items = await fs.readdir(dirPath, { withFileTypes: true });
-    for (const item of items) {
-      if (item.name.startsWith('.') || IGNORED_DIRS.has(item.name)) continue;
-      const fullPath = path.join(dirPath, item.name);
-      if (item.isDirectory()) {
-        const children = await scanDirectory(fullPath);
-        if (children.length > 0) {
-          entries.push({ name: item.name, path: fullPath, isDirectory: true, children });
-        }
-      } else if (/\.(md|markdown)$/i.test(item.name)) {
-        entries.push({ name: item.name, path: fullPath, isDirectory: false });
-      }
-    }
-  } catch {
-    // Permission denied or similar
-  }
-  entries.sort((a, b) => {
-    if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1;
-    return a.name.localeCompare(b.name);
-  });
-  return entries;
 }
 
 interface SearchResult {

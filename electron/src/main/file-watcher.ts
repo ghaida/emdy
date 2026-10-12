@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron';
 import chokidar, { type FSWatcher } from 'chokidar';
 import { isPathAllowed } from './allowed-paths';
-import { scanDirectory } from './ipc-handlers';
+import { scanDirectory } from './scan-directory';
 
 interface DirWatcherEntry {
   watcher: FSWatcher;
