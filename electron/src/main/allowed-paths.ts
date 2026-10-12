@@ -11,7 +11,16 @@ const allowedRoots = new Set<string>();
 
 /** Register a directory tree as accessible. */
 export function addAllowedRoot(dirPath: string) {
-  allowedRoots.add(path.resolve(dirPath) + path.sep);
+  let resolved: string;
+  try {
+    // isPathAllowed compares real paths, so store the real path here too
+    // (a folder opened as /tmp/notes is /private/tmp/notes on macOS)
+    resolved = fs.realpathSync(path.resolve(dirPath));
+  } catch {
+    // Folder is gone or inaccessible — fall back to logical path
+    resolved = path.resolve(dirPath);
+  }
+  allowedRoots.add(resolved + path.sep);
 }
 
 /** Check whether a file path falls inside any allowed root. */
