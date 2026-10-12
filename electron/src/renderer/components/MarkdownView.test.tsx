@@ -176,6 +176,18 @@ describe('MarkdownView design.md rendering', () => {
     expect(sibling?.querySelector('.design-swatches')).not.toBeNull();
   });
 
+  it('shows every category a heading names under it, and not again at the end', () => {
+    renderView({
+      content: '## 2. Colors & Typography: The Print Palette\n\nText.\n',
+      designTokens: { name: 'X', colors: { ink: '#111111' }, typography: { body: { fontSize: '16px' } } },
+    });
+    const heading = screen.getByRole('heading', { name: '2. Colors & Typography: The Print Palette' });
+    const swatches = heading.nextElementSibling;
+    expect(swatches?.querySelector('.design-swatches')).not.toBeNull();
+    expect(swatches?.nextElementSibling?.querySelector('.design-specimens')).not.toBeNull();
+    expect(document.querySelector('.design-appendix')).toBeNull();
+  });
+
   it('appends unmatched categories at the end', () => {
     renderDesign();
     // typography tokens exist but there is no ## Typography heading
@@ -183,6 +195,22 @@ describe('MarkdownView design.md rendering', () => {
     expect(appendix).not.toBeNull();
     expect(appendix!.querySelector('.design-specimens')).not.toBeNull();
     expect(screen.getByRole('heading', { name: 'Typography' })).toBeInTheDocument();
+  });
+
+  it('leaves out the end section when told to', () => {
+    renderView({
+      content: '## Overview\n\nText.\n',
+      designTokens: { name: '', colors: { ink: '#111111' } },
+      designAppendix: false,
+    });
+    expect(document.querySelector('.design-appendix')).toBeNull();
+    expect(document.querySelector('.design-swatches')).toBeNull();
+  });
+
+  it('shows no header for tokens without a name', () => {
+    renderView({ content: '# Pravah\n\n## Colors\n', designTokens: { name: '', colors: { ink: '#111111' } } });
+    expect(document.querySelector('.design-header')).toBeNull();
+    expect(document.querySelector('.design-swatches')).not.toBeNull();
   });
 
   it('renders plain markdown unchanged when designTokens is absent', () => {

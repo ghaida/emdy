@@ -31,6 +31,13 @@ describe('TokenVisualization', () => {
     expect(screen.getByText('auto')).toBeInTheDocument();
   });
 
+  it('puts each bar in a track and gives it its full width, so a bar too wide to show can say so', () => {
+    render(<TokenVisualization category="spacing" tokens={{ name: 'X', spacing: { page: '1280px' } }} />);
+    const bar = document.querySelector('.design-spacing-bar') as HTMLElement;
+    expect(bar.parentElement?.classList.contains('design-spacing-track')).toBe(true);
+    expect(bar.style.getPropertyValue('--bar-width')).toBe('1280px');
+  });
+
   it('renders radius squares with the literal radius applied', () => {
     render(<TokenVisualization category="rounded" tokens={tokens} />);
     const sq = document.querySelector('.design-radius-square') as HTMLElement;

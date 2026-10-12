@@ -50,6 +50,8 @@ interface MarkdownViewProps {
   highlight?: HighlightState | null;
   onMatchesChanged?: (count: number, isCapped: boolean, positions: number[]) => void;
   designTokens?: DesignTokens | null;
+  /** Show token categories no section heading names in a section at the end. */
+  designAppendix?: boolean;
 }
 
 const MAX_MATCHES = 1000;
@@ -113,7 +115,7 @@ function Pre({ node, children, ...props }: React.ComponentProps<'pre'> & ExtraPr
 
 export const MarkdownView = React.memo(
   React.forwardRef<MarkdownViewHandle, MarkdownViewProps>(function MarkdownView(
-    { content, colors, filePath, style, contentRef, highlight, onMatchesChanged, designTokens },
+    { content, colors, filePath, style, contentRef, highlight, onMatchesChanged, designTokens, designAppendix = true },
     ref
   ) {
     const codeTheme = useMemo(() => buildPrismTheme(colors), [colors]);
@@ -127,12 +129,12 @@ export const MarkdownView = React.memo(
     );
 
     const appendixCategories = useMemo(() => {
-      if (!designTokens || !injectionMap) return [];
-      const injected = new Set(injectionMap.values());
+      if (!designTokens || !injectionMap || !designAppendix) return [];
+      const injected = new Set([...injectionMap.values()].flat());
       return TOKEN_CATEGORIES.filter(
         (cat) => !injected.has(cat) && designTokens[cat] && Object.keys(designTokens[cat] as object).length > 0
       );
-    }, [designTokens, injectionMap]);
+    }, [designTokens, injectionMap, designAppendix]);
     const bodyRef = useRef<HTMLElement | null>(null);
     const matchElementsRef = useRef<HTMLElement[]>([]);
     const onMatchesChangedRef = useRef(onMatchesChanged);
@@ -223,12 +225,14 @@ export const MarkdownView = React.memo(
     const components = useMemo<Components>(() => ({
       h2({ node, children, ...props }) {
         const line = node?.position?.start.line;
-        const category = line !== undefined && injectionMap ? injectionMap.get(line) : undefined;
-        if (category && designTokens) {
+        const categories = line !== undefined && injectionMap ? injectionMap.get(line) : undefined;
+        if (categories && designTokens) {
           return (
             <>
               <h2 {...props}>{children}</h2>
-              <TokenVisualization category={category} tokens={designTokens} />
+              {categories.map((category) => (
+                <TokenVisualization key={category} category={category} tokens={designTokens} />
+              ))}
             </>
           );
         }
@@ -306,12 +310,12 @@ export const MarkdownView = React.memo(
     return (
       <div className="markdown-view" style={style} ref={contentRef}>
         <article className="markdown-body" ref={bodyRef}>
-          {designTokens && (
+          {designTokens?.name ? (
             <header className="design-header">
               <h1>{designTokens.name}</h1>
               {designTokens.description && <p className="design-header-desc">{designTokens.description}</p>}
             </header>
-          )}
+          ) : null}
           <FenceContext.Provider value={fence}>
             <MemoMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>
               {body}

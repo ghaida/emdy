@@ -28,6 +28,8 @@ export interface DesignTokens {
 export interface ParsedDesignMd {
   body: string;
   tokens: DesignTokens;
+  /** Where the tokens were declared: YAML front matter, or CSS code blocks in the body. */
+  source: 'front-matter' | 'css';
 }
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
@@ -45,7 +47,7 @@ export function parseDesignMd(content: string): ParsedDesignMd | null {
   );
   if (!hasTokens) return null;
 
-  return { body: frontMatter.body, tokens: normalizeTokens(raw) };
+  return { body: frontMatter.body, tokens: normalizeTokens(raw), source: 'front-matter' };
 }
 
 const REFERENCE_PATTERN = /^\{([\w.-]+)\}$/;
@@ -149,25 +151,39 @@ export function cssLength(value: string): number | null {
   return unit === 'rem' || unit === 'em' ? n * 16 : n;
 }
 
-const SECTION_MAP: Record<string, TokenCategory> = {
+const SECTION_NAMES: Record<string, TokenCategory> = {
   colors: 'colors',
+  color: 'colors',
+  colours: 'colors',
+  colour: 'colors',
+  'color palette': 'colors',
+  'colour palette': 'colors',
+  palette: 'colors',
+  theme: 'colors',
   typography: 'typography',
   layout: 'spacing',
-  'layout and spacing': 'spacing',
   spacing: 'spacing',
   shapes: 'rounded',
+  shape: 'rounded',
   components: 'components',
 };
 
-export function categoryForHeading(text: string): TokenCategory | null {
-  const normalized = text
+// Tools number their sections and add subtitles ("2. Colors: The Print
+// Palette"), and some sections cover more than one category ("Layout &
+// Spacing", "Tokens — Spacing & Shapes"). The name is what comes before a
+// colon; each part of it separated by a spaced dash, comma, & or "and" counts.
+export function categoriesForHeading(text: string): TokenCategory[] {
+  const name = text
     .trim()
     .toLowerCase()
-    .replace(/:+$/, '')
-    .replace(/\s*&\s*/g, ' and ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return SECTION_MAP[normalized] ?? null;
+    .replace(/^\d+(?:\.\d+)*[.)]?\s+/, '')
+    .split(':')[0];
+  const categories: TokenCategory[] = [];
+  for (const part of name.split(/\s+[—–-]\s+|,|&|\band\b/)) {
+    const category = SECTION_NAMES[part.replace(/\s+/g, ' ').trim()];
+    if (category && !categories.includes(category)) categories.push(category);
+  }
+  return categories;
 }
 
 // Minimal structural view of an mdast node — enough to walk the tree and read
@@ -197,23 +213,25 @@ function headingText(node: MdNode): string {
   return out;
 }
 
-// Map of 1-based body line number of a real h2 heading → category to inject
+// Map of 1-based body line number of a real h2 heading → categories to inject
 // there. Parsing with the same CommonMark+GFM machinery as the renderer means
 // the map agrees with it by construction: headings inside code fences don't
 // exist in the mdast tree, while setext and 1-3-space-indented ATX headings do,
 // with correct positions. First matching heading per category wins; a category
 // with no (non-empty) tokens is skipped.
-export function buildInjectionMap(body: string, tokens: DesignTokens): Map<number, TokenCategory> {
-  const map = new Map<number, TokenCategory>();
+export function buildInjectionMap(body: string, tokens: DesignTokens): Map<number, TokenCategory[]> {
+  const map = new Map<number, TokenCategory[]>();
   const claimed = new Set<TokenCategory>();
   const tree = headingProcessor.parse(body) as unknown as MdNode;
 
   const visit = (node: MdNode): void => {
     if (node.type === 'heading' && node.depth === 2 && node.position) {
-      const cat = categoryForHeading(headingText(node));
-      if (cat && !claimed.has(cat) && tokens[cat] && Object.keys(tokens[cat] as object).length > 0) {
-        claimed.add(cat);
-        map.set(node.position.start.line, cat);
+      const categories = categoriesForHeading(headingText(node)).filter(
+        (cat) => !claimed.has(cat) && tokens[cat] && Object.keys(tokens[cat] as object).length > 0
+      );
+      if (categories.length > 0) {
+        categories.forEach((cat) => claimed.add(cat));
+        map.set(node.position.start.line, categories);
       }
     }
     if (node.children) for (const child of node.children) visit(child);
