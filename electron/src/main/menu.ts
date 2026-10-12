@@ -1,16 +1,34 @@
 import { Menu, app } from 'electron';
+import { recentLabel } from './recent-list';
 
 type MenuCallback = (event: string) => void;
 
-export function buildMenu(sendEvent: MenuCallback, hasFile = false) {
+/** What File > Open Recent lists (recents.ts) and what its items do. */
+export interface RecentMenu {
+  paths: string[];
+  open: (path: string) => void;
+  clear: () => void;
+}
+
+export function buildMenu(sendEvent: MenuCallback, hasFile: boolean, recent: RecentMenu) {
   const isMac = process.platform === 'darwin';
   const isDev = !app.isPackaged;
+  const home = app.getPath('home');
 
   const fileSubmenu: Electron.MenuItemConstructorOptions[] = [
     {
       label: 'Open...',
       accelerator: 'CmdOrCtrl+O',
       click: () => sendEvent('open'),
+    },
+    // Emdy's own list rather than macOS's, so each entry can show its full path.
+    {
+      label: 'Open Recent',
+      submenu: [
+        ...recent.paths.map((filePath) => ({ label: recentLabel(filePath, home), click: () => recent.open(filePath) })),
+        ...(recent.paths.length > 0 ? [{ type: 'separator' as const }] : []),
+        { label: 'Clear Menu', enabled: recent.paths.length > 0, click: recent.clear },
+      ],
     },
     ...(hasFile ? [
       { type: 'separator' as const },

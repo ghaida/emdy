@@ -1,4 +1,31 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
+
+// Files dropped on the window are read here, in the preload's isolated world,
+// not in the page: page script can't reach drop:open, and files it builds in
+// JS have no path, so a drop only ever opens what the user dropped.
+function carriesFiles(event: DragEvent): boolean {
+  return event.dataTransfer?.types.includes('Files') ?? false;
+}
+
+function allowFileDrop(event: DragEvent) {
+  if (!carriesFiles(event)) return;
+  event.preventDefault();
+  if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+}
+
+window.addEventListener('dragenter', allowFileDrop);
+window.addEventListener('dragover', allowFileDrop);
+window.addEventListener('drop', (event) => {
+  if (!carriesFiles(event)) return;
+  event.preventDefault();
+  const files = event.dataTransfer ? Array.from(event.dataTransfer.files) : [];
+  const paths = files.map((file) => webUtils.getPathForFile(file)).filter((filePath) => filePath !== '');
+  if (paths.length > 0) {
+    ipcRenderer.invoke('drop:open', paths).catch(() => {
+      // Main reports anything it couldn't open with drop:rejected.
+    });
+  }
+});
 
 contextBridge.exposeInMainWorld('electronAPI', {
   checkPendingOpen: () => ipcRenderer.invoke('window:is-pending-open'),
@@ -63,6 +90,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Menu state
   setMenuHasFile: (hasFile: boolean) => ipcRenderer.invoke('menu:set-has-file', hasFile),
 
+  // What this window shows, for routing and session restore
+  reportWindowState: (state: { filePath: string | null; dirPath: string | null; scrollTop: number }) =>
+    ipcRenderer.send('window:report-state', state),
+
   // Menu events from main process
   onMenuEvent: (callback: (event: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, menuEvent: string) => callback(menuEvent);
@@ -80,6 +111,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const handler = (_event: Electron.IpcRendererEvent, dirPath: string, entries: unknown[]) => callback(dirPath, entries);
     ipcRenderer.on('dir:open', handler);
     return () => ipcRenderer.removeListener('dir:open', handler);
+  },
+  onDropRejected: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('drop:rejected', handler);
+    return () => ipcRenderer.removeListener('drop:rejected', handler);
+  },
+  onWindowRestore: (callback: (state: unknown) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, state: unknown) => callback(state);
+    ipcRenderer.on('window:restore', handler);
+    return () => ipcRenderer.removeListener('window:restore', handler);
   },
 
   // Nudge

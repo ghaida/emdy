@@ -45,6 +45,22 @@ export type OpenDialogResult =
   | { type: 'directory'; dirPath: string; entries: FileEntry[] }
   | null;
 
+/** What a window shows, reported to main (see useWindowState). */
+export interface WindowState {
+  filePath: string | null;
+  dirPath: string | null;
+  scrollTop: number;
+}
+
+/** A window's folder and file as they were at the last quit (window:restore). */
+export interface WindowRestoreState {
+  dirPath: string | null;
+  entries: FileEntry[] | null;
+  filePath: string;
+  content: string;
+  scrollTop: number;
+}
+
 export interface ElectronAPI {
   checkPendingOpen: () => Promise<boolean>;
   openDialog: () => Promise<OpenDialogResult>;
@@ -64,6 +80,7 @@ export interface ElectronAPI {
   unwatchDir: () => Promise<void>;
   onDirEntriesUpdated: (callback: (entries: FileEntry[]) => void) => () => void;
   setMenuHasFile: (hasFile: boolean) => Promise<void>;
+  reportWindowState: (state: WindowState) => void;
   exportPDF: (opts: { html: string; title: string }) => Promise<boolean>;
   print: (opts: { html: string; title: string }) => Promise<boolean>;
   writeClipboardHTML: (html: string) => Promise<void>;
@@ -78,6 +95,8 @@ export interface ElectronAPI {
   onMenuEvent: (callback: (event: string) => void) => () => void;
   onFileOpen: (callback: (filePath: string, content: string) => void) => () => void;
   onDirOpen: (callback: (dirPath: string, entries: FileEntry[]) => void) => () => void;
+  onDropRejected: (callback: () => void) => () => void;
+  onWindowRestore: (callback: (state: WindowRestoreState) => void) => () => void;
   getNudgeState: () => Promise<NudgeState>;
   setNudgeSetting: (key: string, value: unknown) => Promise<void>;
   getAppVersion: () => Promise<string>;
