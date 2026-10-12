@@ -9,11 +9,13 @@ import type { ColorScale } from '../lib/color-themes';
 import { findMatches, clearMatches } from '../lib/find-walker';
 import { findScrollParent } from '../lib/find-scroller';
 import { buildInjectionMap, TOKEN_CATEGORIES, type DesignTokens, type TokenCategory } from '../lib/design-md';
+import { stripFrontMatter } from '../lib/front-matter';
+import { remarkHideComments } from '../lib/remark-hide-comments';
 import { buildDiagramTheme, type DiagramTheme } from '../lib/mermaid-theme';
 import { TokenVisualization } from './design/TokenVisualization';
 import { MermaidBlock } from './MermaidBlock';
 
-const REMARK_PLUGINS = [remarkGfm];
+const REMARK_PLUGINS = [remarkGfm, remarkHideComments];
 const MemoMarkdown = React.memo(Markdown);
 
 const CATEGORY_LABELS: Record<TokenCategory, string> = {
@@ -117,10 +119,11 @@ export const MarkdownView = React.memo(
     const codeTheme = useMemo(() => buildPrismTheme(colors), [colors]);
     const diagramTheme = useMemo(() => buildDiagramTheme(colors), [colors]);
     const fence = useMemo(() => ({ codeTheme, diagramTheme, filePath }), [codeTheme, diagramTheme, filePath]);
+    const body = useMemo(() => stripFrontMatter(content), [content]);
 
     const injectionMap = useMemo(
-      () => (designTokens ? buildInjectionMap(content, designTokens) : null),
-      [content, designTokens]
+      () => (designTokens ? buildInjectionMap(body, designTokens) : null),
+      [body, designTokens]
     );
 
     const appendixCategories = useMemo(() => {
@@ -158,7 +161,7 @@ export const MarkdownView = React.memo(
         clearMatches(root);
         matchElementsRef.current = [];
       };
-    }, [content, highlight?.query, highlight?.mode]);
+    }, [body, highlight?.query, highlight?.mode]);
 
     useLayoutEffect(() => {
       const marks = matchElementsRef.current;
@@ -311,7 +314,7 @@ export const MarkdownView = React.memo(
           )}
           <FenceContext.Provider value={fence}>
             <MemoMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>
-              {content}
+              {body}
             </MemoMarkdown>
           </FenceContext.Provider>
           {appendixCategories.length > 0 && designTokens && (

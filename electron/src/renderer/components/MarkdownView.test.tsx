@@ -192,6 +192,45 @@ describe('MarkdownView design.md rendering', () => {
   });
 });
 
+describe('MarkdownView front matter and comments', () => {
+  it('hides front matter', () => {
+    const { container } = render(
+      <MarkdownView content={'---\ntitle: My note\ntags: [a, b]\n---\n\n# Heading\n\nBody.'} colors={colors} />
+    );
+    expect(container.querySelector('hr')).toBeNull();
+    expect(container.querySelector('h2')).toBeNull();
+    expect(container.querySelector('h1')?.textContent).toBe('Heading');
+    expect(container.textContent).not.toContain('title:');
+  });
+
+  it('hides front matter that sits below an HTML comment', () => {
+    const { container } = render(
+      <MarkdownView content={'<!-- SEED: generated -->\n\n---\nname: Mutual aid\n---\n\n# Design'} colors={colors} />
+    );
+    expect(container.textContent).not.toContain('SEED');
+    expect(container.textContent).not.toContain('name:');
+    expect(container.querySelector('hr')).toBeNull();
+  });
+
+  it('hides HTML comments, on their own and inline', () => {
+    const { container } = render(
+      <MarkdownView content={'<!-- a note for tools -->\n\n# Title\n\nBefore <!-- aside --> after.'} colors={colors} />
+    );
+    expect(container.textContent).not.toContain('a note for tools');
+    expect(container.textContent).not.toContain('aside');
+    expect(container.textContent).toContain('Before');
+    expect(container.textContent).toContain('after.');
+  });
+
+  it('keeps comment syntax inside code', () => {
+    const { container } = render(
+      <MarkdownView content={'Use `<!-- -->` in HTML.\n\n```html\n<!-- kept -->\n```'} colors={colors} />
+    );
+    expect(container.textContent).toContain('<!-- -->');
+    expect(container.textContent).toContain('<!-- kept -->');
+  });
+});
+
 describe('MarkdownView code blocks', () => {
   const longCode = Array.from({ length: 250 }, (_, i) => `log(${i + 1});`).join('\n');
 

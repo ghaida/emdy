@@ -1,7 +1,7 @@
-import { parse as parseYaml } from 'yaml';
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkGfm from 'remark-gfm';
+import { splitFrontMatter } from './front-matter';
 
 export type TokenCategory = 'colors' | 'typography' | 'spacing' | 'rounded' | 'components';
 
@@ -30,34 +30,14 @@ export interface ParsedDesignMd {
   tokens: DesignTokens;
 }
 
-const FRONT_MATTER_PATTERN = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
-
-// Cap the captured front-matter block before handing it to the YAML parser.
-// Measured hazard: a ~3MB valid front-matter block blocks the UI thread for
-// minutes inside parseYaml. Real design.md front matter is <10KB, so 100KB is a
-// generous ceiling that keeps the parser responsive while never rejecting a
-// legitimate file.
-const MAX_FRONT_MATTER_CHARS = 100 * 1024;
-
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
 export function parseDesignMd(content: string): ParsedDesignMd | null {
-  // Strip a leading UTF-8 BOM so the front-matter fence is still recognized.
-  const text = content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
-
-  const match = FRONT_MATTER_PATTERN.exec(text);
-  if (!match) return null;
-  if (match[1].length > MAX_FRONT_MATTER_CHARS) return null;
-
-  let raw: unknown;
-  try {
-    raw = parseYaml(match[1]);
-  } catch {
-    return null;
-  }
-  if (!isPlainObject(raw)) return null;
+  const frontMatter = splitFrontMatter(content);
+  if (!frontMatter) return null;
+  const raw = frontMatter.data;
   if (typeof raw.name !== 'string' || raw.name.trim() === '') return null;
 
   const hasTokens = TOKEN_CATEGORIES.some(
@@ -65,8 +45,7 @@ export function parseDesignMd(content: string): ParsedDesignMd | null {
   );
   if (!hasTokens) return null;
 
-  const body = text.slice(match[0].length);
-  return { body, tokens: normalizeTokens(raw) };
+  return { body: frontMatter.body, tokens: normalizeTokens(raw) };
 }
 
 const REFERENCE_PATTERN = /^\{([\w.-]+)\}$/;
