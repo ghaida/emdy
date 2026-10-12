@@ -28,6 +28,8 @@ export interface DesignTokens {
 export interface ParsedDesignMd {
   body: string;
   tokens: DesignTokens;
+  /** Where the tokens were declared: YAML front matter, or CSS code blocks in the body. */
+  source: 'front-matter' | 'css';
 }
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
@@ -45,7 +47,7 @@ export function parseDesignMd(content: string): ParsedDesignMd | null {
   );
   if (!hasTokens) return null;
 
-  return { body: frontMatter.body, tokens: normalizeTokens(raw) };
+  return { body: frontMatter.body, tokens: normalizeTokens(raw), source: 'front-matter' };
 }
 
 const REFERENCE_PATTERN = /^\{([\w.-]+)\}$/;
@@ -154,6 +156,10 @@ const SECTION_NAMES: Record<string, TokenCategory> = {
   color: 'colors',
   colours: 'colors',
   colour: 'colors',
+  'color palette': 'colors',
+  'colour palette': 'colors',
+  palette: 'colors',
+  theme: 'colors',
   typography: 'typography',
   layout: 'spacing',
   spacing: 'spacing',

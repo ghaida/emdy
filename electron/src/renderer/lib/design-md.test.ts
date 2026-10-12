@@ -34,6 +34,7 @@ describe('parseDesignMd detection', () => {
   it('parses a valid design.md file', () => {
     const result = parseDesignMd(HERITAGE);
     expect(result).not.toBeNull();
+    expect(result!.source).toBe('front-matter');
     expect(result!.tokens.name).toBe('Heritage');
     expect(result!.tokens.description).toBe('A warm editorial identity');
     expect(result!.tokens.colors).toEqual({ primary: '#1A1C1E', tertiary: '#B8422E' });
@@ -241,6 +242,12 @@ describe('categoriesForHeading', () => {
     expect(categoriesForHeading('3) Typography')).toEqual(['typography']);
     expect(categoriesForHeading('4.1 Layout')).toEqual(['spacing']);
     expect(categoriesForHeading('Overview: Colors and Type')).toEqual([]);
+  });
+  it('treats Theme and Palette sections as colors', () => {
+    expect(categoriesForHeading('Theme')).toEqual(['colors']);
+    expect(categoriesForHeading('Palette')).toEqual(['colors']);
+    expect(categoriesForHeading('2. Color Palette & Roles')).toEqual(['colors']);
+    expect(categoriesForHeading('1. Theme delivery')).toEqual([]);
   });
   it('finds sections named after a dash or alongside others', () => {
     expect(categoriesForHeading('Tokens — Colors')).toEqual(['colors']);

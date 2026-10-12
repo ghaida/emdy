@@ -23,6 +23,7 @@ import type { FileEntry, NudgeState } from './lib/types';
 import { CONTENT_WIDTHS } from './lib/types';
 import { perfMark, perfMeasure } from './lib/perf';
 import { parseDesignMd } from './lib/design-md';
+import { parseCssDesignMd } from './lib/css-tokens';
 import { prepareCopyHtml } from './lib/copy-html';
 import type { ViewTheme } from './lib/code-export';
 import { preparePrintPayload } from './lib/print-payload';
@@ -606,7 +607,10 @@ export function App() {
     display.fontFamily === 'serif' ? 'var(--font-serif)' :
     'var(--font-mono)';
 
-  const designParsed = useMemo(() => (content !== null ? parseDesignMd(content) : null), [content]);
+  const designParsed = useMemo(
+    () => (content !== null ? parseDesignMd(content) ?? parseCssDesignMd(content, filePath) : null),
+    [content, filePath]
+  );
 
   const markdownStyle = useMemo(() => ({
     fontFamily: fontFamilyVar,
@@ -672,6 +676,9 @@ export function App() {
               ref={markdownViewRef}
               content={designParsed ? designParsed.body : content}
               designTokens={designParsed?.tokens ?? null}
+              // Tokens read from CSS are still in the document's code blocks, so
+              // only show them where a section heading names them.
+              designAppendix={designParsed?.source !== 'css'}
               colors={display.resolvedColors}
               filePath={filePath}
               style={markdownStyle}

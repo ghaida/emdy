@@ -197,6 +197,22 @@ describe('MarkdownView design.md rendering', () => {
     expect(screen.getByRole('heading', { name: 'Typography' })).toBeInTheDocument();
   });
 
+  it('leaves out the end section when told to', () => {
+    renderView({
+      content: '## Overview\n\nText.\n',
+      designTokens: { name: '', colors: { ink: '#111111' } },
+      designAppendix: false,
+    });
+    expect(document.querySelector('.design-appendix')).toBeNull();
+    expect(document.querySelector('.design-swatches')).toBeNull();
+  });
+
+  it('shows no header for tokens without a name', () => {
+    renderView({ content: '# Pravah\n\n## Colors\n', designTokens: { name: '', colors: { ink: '#111111' } } });
+    expect(document.querySelector('.design-header')).toBeNull();
+    expect(document.querySelector('.design-swatches')).not.toBeNull();
+  });
+
   it('renders plain markdown unchanged when designTokens is absent', () => {
     renderView({ content: '## Colors\n\nJust a doc.' });
     expect(document.querySelector('.design-swatches')).toBeNull();
