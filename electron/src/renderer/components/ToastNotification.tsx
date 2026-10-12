@@ -36,7 +36,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
   return (
     <div className={`toast toast-${toast.type}${visible ? ' toast-visible' : ''}`}>
       <span>{toast.message}</span>
-      <button className="toast-close" onClick={() => onDismiss(toast.id)} aria-label="Close">
+      <button className="toast-close" onClick={() => onDismiss(toast.id)} aria-label="Close" data-tooltip="Close">
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M2 2l6 6M8 2l-6 6" />
         </svg>

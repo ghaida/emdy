@@ -102,17 +102,18 @@ export function MermaidBlock({ source, theme, fallback }: MermaidBlockProps) {
   return (
     <div {...blockProps}>
       <div className="code-block-actions">
+        <button className="code-block-copy" onClick={handleCopySource} data-tooltip="Copy code" aria-label="Copy code">
+          {copied === 'source' ? <Check size={14} strokeWidth={1.5} /> : <Copy size={14} strokeWidth={1.5} />}
+        </button>
         <button
           className="code-block-copy"
           onClick={handleCopyImage}
           disabled={!hasSize(current)}
-          title="Copy as PNG"
-          aria-label="Copy diagram as PNG"
+          data-tooltip="Copy as PNG"
+          data-tooltip-placement="end"
+          aria-label="Copy as PNG"
         >
           {copied === 'image' ? <Check size={14} strokeWidth={1.5} /> : <ImageIcon size={14} strokeWidth={1.5} />}
-        </button>
-        <button className="code-block-copy" onClick={handleCopySource} title="Copy source" aria-label="Copy diagram source">
-          {copied === 'source' ? <Check size={14} strokeWidth={1.5} /> : <Copy size={14} strokeWidth={1.5} />}
         </button>
       </div>
       {result ? (

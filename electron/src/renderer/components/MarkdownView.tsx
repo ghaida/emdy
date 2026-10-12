@@ -356,7 +356,13 @@ function CodeBlock({ language, codeTheme, children }: {
 
   return (
     <div {...wrapperProps}>
-      <button className="code-block-copy" onClick={handleCopy} title="Copy code" aria-label="Copy code">
+      <button
+        className="code-block-copy"
+        onClick={handleCopy}
+        data-tooltip="Copy code"
+        data-tooltip-placement="left"
+        aria-label="Copy code"
+      >
         {copied ? <Check size={14} strokeWidth={1.5} /> : <Copy size={14} strokeWidth={1.5} />}
       </button>
       <SyntaxHighlighter

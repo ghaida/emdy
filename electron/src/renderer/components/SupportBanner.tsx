@@ -69,7 +69,13 @@ export function SupportBanner({ nudgeState }: SupportBannerProps) {
       <div className="support-banner-actions">
         <button className="support-banner-cta" onClick={handleContribute}>Contribute</button>
         <button className="support-banner-later" onClick={handleLater}>Later</button>
-        <button className="support-banner-close" onClick={handleDismiss} aria-label="Dismiss for 30 days">
+        <button
+          className="support-banner-close"
+          onClick={handleDismiss}
+          aria-label="Dismiss for 30 days"
+          data-tooltip="Dismiss for 30 days"
+          data-tooltip-placement="end"
+        >
           <X size={16} strokeWidth={1.5} />
         </button>
       </div>

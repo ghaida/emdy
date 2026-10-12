@@ -160,6 +160,7 @@ export function FindBar({
             type="button"
             className="find-bar-btn"
             aria-label="Previous match"
+          data-tooltip="Previous match  ⇧⌘G"
             onClick={onPrev}
             disabled={cycleDisabled}
           >
@@ -169,6 +170,7 @@ export function FindBar({
             type="button"
             className="find-bar-btn"
             aria-label="Next match"
+          data-tooltip="Next match  ⌘G"
             onClick={onNext}
             disabled={cycleDisabled}
           >
@@ -179,6 +181,8 @@ export function FindBar({
           type="button"
           className="find-bar-btn"
           aria-label="Close find bar"
+          data-tooltip="Close  Esc"
+          data-tooltip-placement="end"
           onClick={onClose}
         >
           <X size={16} strokeWidth={1.5} aria-hidden="true" />

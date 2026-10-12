@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, waitFor, fireEvent, screen, act } from '@testing-library/react';
+import { render, waitFor, fireEvent, screen, act, within } from '@testing-library/react';
 import { MarkdownView } from './MarkdownView';
 import { warm } from '../lib/color-themes';
 import { buildDiagramTheme } from '../lib/mermaid-theme';
@@ -51,7 +51,7 @@ beforeEach(() => {
   (window as unknown as { electronAPI: Partial<Window['electronAPI']> }).electronAPI = { writeClipboardImage, openExternal };
 });
 
-const pngButton = () => screen.getByRole('button', { name: 'Copy diagram as PNG' }) as HTMLButtonElement;
+const pngButton = () => screen.getByRole('button', { name: 'Copy as PNG' }) as HTMLButtonElement;
 
 describe('Mermaid blocks in MarkdownView', () => {
   it('renders a mermaid fence as a diagram in a code-style container', async () => {
@@ -84,10 +84,48 @@ describe('Mermaid blocks in MarkdownView', () => {
     expect(container.querySelector('.mermaid-error-detail')!.textContent).toBe('Parse error on line 2');
   });
 
+  it('labels its buttons Copy code, then Copy as PNG', () => {
+    const { container } = render(<MarkdownView content={DOC} colors={warm.light} />);
+    const [first, second] = within(container.querySelector('.mermaid-block') as HTMLElement).getAllByRole('button');
+    expect(first).toBe(screen.getByRole('button', { name: 'Copy code' }));
+    expect(second).toBe(pngButton());
+  });
+
   it('copies the diagram source', () => {
     render(<MarkdownView content={DOC} colors={warm.light} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Copy diagram source' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Copy code' }));
     expect(writeText).toHaveBeenCalledWith(SOURCE);
+  });
+
+  it('shows a check for two seconds after copying the source', () => {
+    vi.useFakeTimers();
+    try {
+      render(<MarkdownView content={DOC} colors={warm.light} />);
+      const button = screen.getByRole('button', { name: 'Copy code' });
+
+      fireEvent.click(button);
+      expect(button.querySelector('.lucide-check')).not.toBeNull();
+
+      act(() => vi.advanceTimersByTime(2000));
+      expect(button.querySelector('.lucide-check')).toBeNull();
+      expect(button.querySelector('.lucide-copy')).not.toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('shows a check only once the PNG is on the clipboard', async () => {
+    const { container } = render(<MarkdownView content={DOC} colors={warm.light} />);
+    await waitFor(() => expect(container.querySelector('.mermaid-diagram svg')).not.toBeNull());
+    const button = pngButton();
+
+    writeClipboardImage.mockResolvedValueOnce(false);
+    fireEvent.click(button);
+    await waitFor(() => expect(writeClipboardImage).toHaveBeenCalledTimes(1));
+    expect(button.querySelector('.lucide-check')).toBeNull();
+
+    fireEvent.click(button);
+    await waitFor(() => expect(button.querySelector('.lucide-check')).not.toBeNull());
   });
 
   it('copies a 2x PNG on the code-block background through the main process', async () => {
