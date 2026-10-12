@@ -1,6 +1,6 @@
 import type { DiagramResult } from './mermaid-render';
 import { inlineDiagramsForPrint, renderExportDiagrams } from './diagram-export';
-import { highlightCodeForExport } from './code-export';
+import { prepareCodeForExport, type ViewTheme } from './code-export';
 
 /**
  * Print/PDF payload with diagrams swapped for their print renders. The content
@@ -10,11 +10,12 @@ import { highlightCodeForExport } from './code-export';
  */
 export async function preparePrintPayload(
   contentRoot: HTMLElement | null,
-  filePath: string | null
+  filePath: string | null,
+  theme?: ViewTheme
 ): Promise<{ html: string; title: string } | null> {
   const snapshot = contentRoot ? (contentRoot.cloneNode(true) as HTMLElement) : null;
   const diagrams = await renderExportDiagrams(snapshot);
-  return buildPrintPayload(snapshot, filePath, diagrams);
+  return buildPrintPayload(snapshot, filePath, diagrams, theme);
 }
 
 /**
@@ -23,11 +24,11 @@ export async function preparePrintPayload(
  * "Print" so the two paths render the exact same document.
  *
  * Clones `.markdown-body`, swaps Mermaid diagrams for their print renders
- * (see renderExportDiagrams), re-highlights code in the print palette instead
- * of the live theme's colors, strips inline flex layouts / fixed heights /
- * hidden overflow that only make sense in the live themed viewer, removes
- * the code-block copy buttons, and returns the sanitized innerHTML plus a
- * title derived from the file path.
+ * (see renderExportDiagrams), prepares code blocks for export from `theme`
+ * (see prepareCodeForExport: no buttons, full code, print palette from a
+ * dark theme), strips inline flex layouts / fixed heights / hidden overflow
+ * that only make sense in the live themed viewer, and returns the sanitized
+ * innerHTML plus a title derived from the file path.
  *
  * Returns null when there's no content to print (no `.markdown-body` or no
  * open file) so callers can no-op.
@@ -35,7 +36,8 @@ export async function preparePrintPayload(
 export function buildPrintPayload(
   contentRoot: HTMLElement | null,
   filePath: string | null,
-  diagrams: Map<string, DiagramResult> = new Map()
+  diagrams: Map<string, DiagramResult> = new Map(),
+  theme?: ViewTheme
 ): { html: string; title: string } | null {
   if (!contentRoot || !filePath) return null;
   const markdownBody = contentRoot.querySelector('.markdown-body');
@@ -44,7 +46,7 @@ export function buildPrintPayload(
   // Clone and sanitize for print — strip flex layouts and fixed heights
   const clone = markdownBody.cloneNode(true) as HTMLElement;
   inlineDiagramsForPrint(clone, diagrams);
-  highlightCodeForExport(clone);
+  prepareCodeForExport(clone, theme);
   clone.querySelectorAll('*').forEach((el) => {
     const s = (el as HTMLElement).style;
     if (s.display === 'flex' || s.display === 'inline-flex') s.display = 'block';
@@ -52,8 +54,6 @@ export function buildPrintPayload(
     if (s.maxHeight) s.maxHeight = 'none';
     if (s.overflow === 'hidden') s.overflow = 'visible';
   });
-  // Remove copy buttons from code blocks
-  clone.querySelectorAll('.code-block-copy').forEach((el) => el.remove());
 
   const html = clone.innerHTML;
   const title = filePath.split('/').pop() || 'document';

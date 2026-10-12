@@ -24,6 +24,7 @@ import { CONTENT_WIDTHS } from './lib/types';
 import { perfMark, perfMeasure } from './lib/perf';
 import { parseDesignMd } from './lib/design-md';
 import { prepareCopyHtml } from './lib/copy-html';
+import type { ViewTheme } from './lib/code-export';
 import { preparePrintPayload } from './lib/print-payload';
 import { exportNeedsRendering } from './lib/diagram-export';
 
@@ -110,6 +111,11 @@ export function App() {
 
   const display = useDisplaySettings();
   const { announce, announceAssertive } = useAnnounce();
+  // Exports keep a light theme's code colors and recolor a dark theme's.
+  const viewTheme = useMemo<ViewTheme>(
+    () => ({ colors: display.resolvedColors, appearance: display.resolvedAppearance }),
+    [display.resolvedColors, display.resolvedAppearance]
+  );
 
   const closeFind = useCallback(() => {
     if (editDebounceRef.current) {
@@ -428,18 +434,18 @@ export function App() {
 
   const handleExportPDF = useCallback(async () => {
     announceDiagramPrep();
-    const payload = await preparePrintPayload(contentRef.current, filePath);
+    const payload = await preparePrintPayload(contentRef.current, filePath, viewTheme);
     if (!payload) return;
     const ok = await window.electronAPI.exportPDF(payload);
     if (ok) addToast('PDF exported', 'success');
-  }, [addToast, announceDiagramPrep, filePath]);
+  }, [addToast, announceDiagramPrep, filePath, viewTheme]);
 
   const handlePrint = useCallback(async () => {
     announceDiagramPrep();
-    const payload = await preparePrintPayload(contentRef.current, filePath);
+    const payload = await preparePrintPayload(contentRef.current, filePath, viewTheme);
     if (!payload) return;
     window.electronAPI.print(payload);
-  }, [announceDiagramPrep, filePath]);
+  }, [announceDiagramPrep, filePath, viewTheme]);
 
   const handleFileContextMenu = useCallback((e: React.MouseEvent, path: string) => {
     e.preventDefault();
@@ -449,10 +455,10 @@ export function App() {
   const handleCopyHTML = useCallback(async () => {
     if (!contentRef.current) return;
     announceDiagramPrep();
-    const html = await prepareCopyHtml(contentRef.current);
+    const html = await prepareCopyHtml(contentRef.current, viewTheme);
     await window.electronAPI.writeClipboardHTML(html);
     addToast('Copied to clipboard', 'success');
-  }, [addToast, announceDiagramPrep]);
+  }, [addToast, announceDiagramPrep, viewTheme]);
 
   useFileWatcher(filePath, {
     onChanged: async (path) => {

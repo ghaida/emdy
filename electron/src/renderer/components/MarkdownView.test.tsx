@@ -1,9 +1,10 @@
 import React, { createRef } from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, waitFor, act, screen } from '@testing-library/react';
+import { render, waitFor, act, screen, fireEvent } from '@testing-library/react';
 import { MarkdownView, type MarkdownViewHandle, type HighlightState } from './MarkdownView';
 import { warm } from '../lib/color-themes';
 import { parseDesignMd } from '../lib/design-md';
+import { FULL_CODE_ATTR } from '../lib/code-export';
 
 const colors = warm.light;
 
@@ -188,5 +189,23 @@ describe('MarkdownView design.md rendering', () => {
     renderView({ content: '## Colors\n\nJust a doc.' });
     expect(document.querySelector('.design-swatches')).toBeNull();
     expect(document.querySelector('.design-appendix')).toBeNull();
+  });
+});
+
+describe('MarkdownView code blocks', () => {
+  const longCode = Array.from({ length: 250 }, (_, i) => `log(${i + 1});`).join('\n');
+
+  it('keeps the full code of a block cut short on screen, for export', () => {
+    renderView({ content: '```js\nconst a = 1;\n```\n\n```js\n' + longCode + '\n```' });
+    const [short, long] = [...document.querySelectorAll('.code-block-wrapper')];
+
+    expect(short.hasAttribute(FULL_CODE_ATTR)).toBe(false);
+    expect(long.getAttribute(FULL_CODE_ATTR)).toBe(longCode);
+    expect(long.querySelector('code')!.textContent!.split('\n')).toHaveLength(200);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show all 250 lines' }));
+
+    expect(long.hasAttribute(FULL_CODE_ATTR)).toBe(false);
+    expect(long.querySelector('code')!.textContent).toBe(longCode);
   });
 });

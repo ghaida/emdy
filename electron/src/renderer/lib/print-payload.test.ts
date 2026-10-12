@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { buildPrintPayload, preparePrintPayload } from './print-payload';
+import { warm } from './color-themes';
 
 const renderDiagram = vi.hoisted(() => vi.fn());
 vi.mock('./mermaid-render', async (importOriginal) => ({
@@ -122,7 +123,7 @@ describe('buildPrintPayload', () => {
     expect(payload.html).toContain('mermaid-image');
   });
 
-  it('prints code in the print palette, not the live theme\'s colors', () => {
+  it("prints a dark theme's code in the print palette", () => {
     // A JavaScript block as react-syntax-highlighter renders it in Warm dark:
     // colors inlined, token types dropped, plain text in the theme's light gray.
     host.innerHTML =
@@ -134,7 +135,7 @@ describe('buildPrintPayload', () => {
       '<span> </span><span class="token" style="color: rgb(212, 116, 24);">\'code block\'</span>' +
       '</code></div></div></pre></div>';
 
-    const html = buildPrintPayload(host, '/docs/readme.md')!.html;
+    const html = buildPrintPayload(host, '/docs/readme.md', new Map(), { colors: warm.dark, appearance: 'dark' })!.html;
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const code = doc.querySelector('.code-block-wrapper code') as HTMLElement;
 
@@ -145,6 +146,26 @@ describe('buildPrintPayload', () => {
       ([...code.querySelectorAll('span')].find((s) => s.textContent === text) as HTMLElement).style.color;
     expect(tokenColor('const')).toBe('rgb(173, 61, 164)'); // print keyword
     expect(tokenColor("'code block'")).toBe('rgb(192, 42, 23)'); // print string
+    expect(doc.querySelector('.code-block-copy')).toBeNull();
+  });
+
+  it("keeps a light theme's code colors and prints cut-short code in full, without its buttons", async () => {
+    host.innerHTML =
+      '<div class="markdown-body"><pre><div class="code-block-wrapper" data-full-code="let a = 1;\nlet b = 2;">' +
+      '<button class="code-block-copy">Copy</button>' +
+      '<div style="color: rgb(58, 55, 50);"><code class="language-js" style="color: rgb(58, 55, 50);">' +
+      '<span class="token" style="color: rgb(95, 107, 45); font-weight: 600;">let</span><span> a = 1;</span>' +
+      '</code></div><button class="code-block-show-all">Show all 2 lines</button></div></pre></div>';
+
+    const html = (await preparePrintPayload(host, '/docs/readme.md', { colors: warm.light, appearance: 'light' }))!.html;
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const code = doc.querySelector('.code-block-wrapper code') as HTMLElement;
+
+    expect(code.textContent).toBe('let a = 1;\nlet b = 2;');
+    expect(code.style.color).toBe('rgb(58, 55, 50)'); // Warm light text
+    expect((code.querySelector('span') as HTMLElement).style.color).toBe('rgb(95, 107, 45)'); // Warm light keyword
+    expect(html).not.toContain('Show all');
+    expect(html).not.toContain('data-full-code');
     expect(doc.querySelector('.code-block-copy')).toBeNull();
   });
 

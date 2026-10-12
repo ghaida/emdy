@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { buildCopyHtml, flattenColor, prepareCopyHtml } from './copy-html';
+import { warm } from './color-themes';
 
 const renderDiagram = vi.hoisted(() => vi.fn());
 vi.mock('./mermaid-render', async (importOriginal) => ({
@@ -298,7 +299,7 @@ describe('buildCopyHtml', () => {
     );
   });
 
-  it('copies code in the print palette, not the live theme\'s colors', () => {
+  it("copies a dark theme's code in the print palette", () => {
     // A JavaScript block as react-syntax-highlighter renders it in Warm dark:
     // colors inlined, token types dropped, plain text in the theme's light gray.
     host.innerHTML =
@@ -309,7 +310,7 @@ describe('buildCopyHtml', () => {
       '<span> </span><span class="token" style="color: rgb(212, 116, 24);">\'code block\'</span>' +
       '</code></div></div></pre></div>';
 
-    const out = buildCopyHtml(host);
+    const out = buildCopyHtml(host, new Map(), { colors: warm.dark, appearance: 'dark' });
     const doc = new DOMParser().parseFromString(out, 'text/html');
     const code = doc.querySelector('.code-block-wrapper code') as HTMLElement;
 
@@ -321,6 +322,34 @@ describe('buildCopyHtml', () => {
     expect(keyword.style.color).toBe('rgb(173, 61, 164)'); // print keyword
     // The live document keeps its theme colors.
     expect(host.innerHTML).toContain('rgb(217, 210, 198)');
+  });
+
+  it("keeps a light theme's code colors, copies cut-short code in full, and drops the code buttons", async () => {
+    // Two blocks as CodeBlock renders them in Warm light: one whole, one cut
+    // short on screen with its full code kept aside.
+    const copyButton = '<button class="code-block-copy" aria-label="Copy code"><svg class="lucide"></svg></button>';
+    host.innerHTML =
+      '<div class="markdown-body"><pre><div class="code-block-wrapper">' + copyButton +
+      '<div style="color: rgb(58, 55, 50);"><code class="language-js" style="color: rgb(58, 55, 50);">' +
+      '<span class="token" style="color: rgb(95, 107, 45); font-weight: 600;">const</span><span> whole = 1;</span>' +
+      '</code></div></div></pre>' +
+      '<pre><div class="code-block-wrapper" data-full-code="let a = 1;\nlet b = 2;">' + copyButton +
+      '<div style="color: rgb(58, 55, 50);"><code class="language-js" style="color: rgb(58, 55, 50);">' +
+      '<span class="token" style="color: rgb(95, 107, 45); font-weight: 600;">let</span><span> a = 1;</span>' +
+      '</code></div><button class="code-block-show-all">Show all 2 lines</button></div></pre></div>';
+    const wholeOnScreen = host.querySelector('.code-block-wrapper code')!.outerHTML;
+
+    const out = await prepareCopyHtml(host, { colors: warm.light, appearance: 'light' });
+    const doc = new DOMParser().parseFromString(out, 'text/html');
+    const [whole, cut] = [...doc.querySelectorAll<HTMLElement>('.code-block-wrapper code')];
+
+    expect(whole.outerHTML).toBe(wholeOnScreen);
+    expect(cut.textContent).toBe('let a = 1;\nlet b = 2;');
+    expect(cut.style.color).toBe('rgb(58, 55, 50)'); // Warm light text
+    expect(out).not.toContain('code-block-copy');
+    expect(out).not.toContain('<svg');
+    expect(out).not.toContain('Show all');
+    expect(out).not.toContain('data-full-code');
   });
 
   it('drops the viewer-only error note under a failed diagram', () => {

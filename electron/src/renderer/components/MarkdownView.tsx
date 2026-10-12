@@ -4,6 +4,7 @@ import Markdown, { type Components, type ExtraProps } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { buildPrismTheme } from '../lib/prism-theme';
+import { FULL_CODE_ATTR } from '../lib/code-export';
 import type { ColorScale } from '../lib/color-themes';
 import { findMatches, clearMatches } from '../lib/find-walker';
 import { findScrollParent } from '../lib/find-scroller';
@@ -350,9 +351,11 @@ function CodeBlock({ language, codeTheme, children }: {
   const displayContent = isTruncated
     ? children.split('\n').slice(0, MAX_HIGHLIGHTED_LINES).join('\n')
     : children;
+  // Print, PDF and Copy take a block cut short in full (see code-export).
+  const wrapperProps = { className: 'code-block-wrapper', [FULL_CODE_ATTR]: isTruncated ? children : undefined };
 
   return (
-    <div className="code-block-wrapper">
+    <div {...wrapperProps}>
       <button className="code-block-copy" onClick={handleCopy} title="Copy code" aria-label="Copy code">
         {copied ? <Check size={14} strokeWidth={1.5} /> : <Copy size={14} strokeWidth={1.5} />}
       </button>
