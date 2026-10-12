@@ -1451,6 +1451,9 @@ input:focus:not(:focus-visible),
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 0.9em;
+  /* A long path or URL breaks rather than running past the column, which
+     would cut it off. Code blocks keep their lines: they don't wrap at all. */
+  overflow-wrap: break-word;
 }
 
 .code-block-wrapper {
