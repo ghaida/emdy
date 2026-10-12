@@ -16,6 +16,11 @@ interface TickInfo {
   isCurrent: boolean;
 }
 
+/** Quiet period before re-cloning the document after it changes. */
+const SYNC_SETTLE_MS = 150;
+/** Longest a pending re-clone can be postponed by continuing changes. */
+const SYNC_MAX_WAIT_MS = 1000;
+
 export function Minimap({
   visible,
   contentRef,
@@ -140,6 +145,22 @@ export function Minimap({
     const content = contentRef.current;
     if (!content) return;
 
+    // Content changes in bursts (diagrams finishing one at a time, find marks
+    // going in), and every sync deep-clones the whole document. Coalesce them:
+    // sync once things settle, but at least once a second during a long burst.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let firstPendingAt = 0;
+    const scheduleSync = () => {
+      const now = performance.now();
+      if (timer === undefined) firstPendingAt = now;
+      else clearTimeout(timer);
+      const delay = Math.min(SYNC_SETTLE_MS, Math.max(0, firstPendingAt + SYNC_MAX_WAIT_MS - now));
+      timer = setTimeout(() => {
+        timer = undefined;
+        syncContent();
+      }, delay);
+    };
+
     const observer = new MutationObserver((mutations) => {
       let changed = false;
       for (const m of mutations) {
@@ -149,10 +170,13 @@ export function Minimap({
         }
         if (changed) break;
       }
-      if (changed) syncContent();
+      if (changed) scheduleSync();
     });
     observer.observe(content, { childList: true, subtree: true });
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      clearTimeout(timer);
+    };
   }, [visible, syncContent, contentRef]);
 
   useEffect(() => {

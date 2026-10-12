@@ -52,7 +52,7 @@ export function applyTheme(colorTheme: ColorThemeName, appearance: 'light' | 'da
 
   // Transitions
   for (const [key, value] of Object.entries(transition)) {
-    root.style.setProperty(`--transition-${key}`, value);
+    root.style.setProperty(`--transition-${camelToKebab(key)}`, value);
   }
 
   // Shadows — appearance-aware (layered, with dark mode ring)

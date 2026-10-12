@@ -4,6 +4,8 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import { hardenWindow, escapeHtml } from './allowed-paths';
 import { buildDesignPrintCss } from '../shared/design-print-styles';
+import { PRINT_COLORS } from '../shared/print-colors';
+import { DIAGRAM_BLOCK_CLASS } from '../shared/diagram-markup';
 
 const PRINT_CSS = `
 @page { margin: 20mm; }
@@ -33,7 +35,7 @@ body {
   font-family: 'IBM Plex Sans', -apple-system, sans-serif;
   font-size: 14px;
   line-height: 1.7;
-  color: #2C2C2C;
+  color: ${PRINT_COLORS.text};
   max-width: 680px;
   margin: 0 auto;
   padding: 0;
@@ -43,23 +45,23 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 1.5em;
   margin-bottom: 0.5em;
   line-height: 1.3;
-  color: #1A1A1A;
+  color: ${PRINT_COLORS.heading};
 }
 h1 { font-size: 2em; }
 h2 { font-size: 1.5em; }
 h3 { font-size: 1.25em; }
 h4 { font-size: 1.1em; }
 p { margin-bottom: 1em; }
-a { color: #3366AA; text-decoration: none; }
+a { color: ${PRINT_COLORS.link}; text-decoration: none; }
 code {
-  background: #F0F0F0;
+  background: ${PRINT_COLORS.block};
   padding: 2px 6px;
   border-radius: 3px;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.9em;
 }
 pre {
-  background: #F0F0F0;
+  background: ${PRINT_COLORS.block};
   padding: 16px;
   border-radius: 6px;
   overflow-x: auto;
@@ -87,6 +89,14 @@ input[type="checkbox"] { margin-right: 8px; }
 .task-list-item { list-style: none; }
 .task-list-text { display: inline !important; }
 .table-wrapper { overflow: visible; }
+.${DIAGRAM_BLOCK_CLASS} {
+  background: ${PRINT_COLORS.block};
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 1em;
+  text-align: center;
+  break-inside: avoid !important;
+}
 ${buildDesignPrintCss()}
 `;
 
@@ -204,5 +214,20 @@ export function registerExportHandlers() {
     if (html.length > 20_000_000) return;
     const { clipboard } = await import('electron');
     clipboard.writeHTML(html);
+  });
+
+  ipcMain.handle('clipboard:write-image', async (_event, png: unknown, scale: unknown) => {
+    // Same guard-rail as the HTML clipboard: bytes only, nothing absurd.
+    if (!(png instanceof Uint8Array) || png.byteLength === 0 || png.byteLength > 20_000_000) return false;
+    const { clipboard, nativeImage } = await import('electron');
+    // Diagram PNGs are rendered above 1x; mark them with the scale they were
+    // drawn at so they paste at their logical size.
+    const scaleFactor = typeof scale === 'number' && scale >= 0.25 && scale <= 4 ? scale : 1;
+    const image = nativeImage.createFromBuffer(Buffer.from(png.buffer, png.byteOffset, png.byteLength), {
+      scaleFactor,
+    });
+    if (image.isEmpty()) return false;
+    clipboard.writeImage(image);
+    return true;
   });
 }

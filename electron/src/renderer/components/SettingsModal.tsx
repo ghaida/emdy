@@ -54,7 +54,7 @@ export function SettingsModal({
       <div ref={modalRef} className={`settings-modal${active ? ' active' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
         <div className="settings-header">
           <span id="settings-modal-title" className="settings-title">Settings</span>
-          <button className="settings-close" onClick={onClose} aria-label="Close">
+          <button className="settings-close" onClick={onClose} aria-label="Close" data-tooltip="Close" data-tooltip-placement="end">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M2 2l10 10M12 2L2 12" />
             </svg>

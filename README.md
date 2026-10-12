@@ -11,6 +11,7 @@ Emdy renders Markdown files as clean, formatted documents. No editing, no plugin
 ## Features
 
 - **GitHub Flavored Markdown** with syntax-highlighted code blocks
+- **Mermaid diagrams** drawn in the active color theme, with copy as PNG
 - **Directory browser** sidebar for navigating .md files in a folder
 - **Command palette** (Cmd+F) to search across file names and content
 - **Canvas minimap** for quick document navigation
@@ -37,7 +38,7 @@ npm run bump       # interactive version bump
 
 ### Tech stack
 
-Electron Forge + Vite, React 18, TypeScript, Tailwind CSS v3, react-markdown + remark-gfm, react-syntax-highlighter (Prism), Lucide React icons, IBM Plex fonts.
+Electron Forge + Vite, React 18, TypeScript, Tailwind CSS v3, react-markdown + remark-gfm, react-syntax-highlighter (Prism), Mermaid, Lucide React icons, IBM Plex fonts.
 
 ## Support
 

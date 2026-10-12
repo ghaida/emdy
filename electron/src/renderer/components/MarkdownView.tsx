@@ -1,14 +1,17 @@
-import React, { useMemo, useState, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
+import React, { createContext, useContext, useMemo, useState, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { Copy, Check } from 'lucide-react';
-import Markdown, { type Components } from 'react-markdown';
+import Markdown, { type Components, type ExtraProps } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { buildPrismTheme } from '../lib/prism-theme';
+import { FULL_CODE_ATTR } from '../lib/code-export';
 import type { ColorScale } from '../lib/color-themes';
 import { findMatches, clearMatches } from '../lib/find-walker';
 import { findScrollParent } from '../lib/find-scroller';
 import { buildInjectionMap, TOKEN_CATEGORIES, type DesignTokens, type TokenCategory } from '../lib/design-md';
+import { buildDiagramTheme, type DiagramTheme } from '../lib/mermaid-theme';
 import { TokenVisualization } from './design/TokenVisualization';
+import { MermaidBlock } from './MermaidBlock';
 
 const REMARK_PLUGINS = [remarkGfm];
 const MemoMarkdown = React.memo(Markdown);
@@ -50,12 +53,70 @@ interface MarkdownViewProps {
 const MAX_MATCHES = 1000;
 const LANGUAGE_PATTERN = /language-(\w+)/;
 
+// Structural slice of a hast node, enough to read a fenced block's language and text.
+interface HastNode {
+  type: string;
+  tagName?: string;
+  value?: string;
+  properties?: Record<string, unknown>;
+  children?: HastNode[];
+}
+
+function textContent(node: HastNode): string {
+  if (node.type === 'text') return node.value ?? '';
+  return (node.children ?? []).map(textContent).join('');
+}
+
+/** The source of a ```mermaid fence, or null for any other <pre>. */
+function mermaidSource(pre: HastNode | undefined): string | null {
+  const code = pre?.children?.find((child) => child.type === 'element');
+  if (code?.tagName !== 'code') return null;
+  const classes = code.properties?.className;
+  const isMermaid = Array.isArray(classes) && classes.some((c) => String(c).toLowerCase() === 'language-mermaid');
+  return isMermaid ? textContent(code).replace(/\n$/, '') : null;
+}
+
+interface FenceContextValue {
+  codeTheme: Record<string, React.CSSProperties>;
+  diagramTheme: DiagramTheme;
+  filePath?: string | null;
+}
+
+const FenceContext = createContext<FenceContextValue | null>(null);
+
+// Lives outside MarkdownView so its identity never changes: a new `pre`
+// component on every theme change would remount every diagram and drop it to a
+// placeholder while it re-renders. Themes arrive through context instead.
+function Pre({ node, children, ...props }: React.ComponentProps<'pre'> & ExtraProps) {
+  const fence = useContext(FenceContext);
+  const source = mermaidSource(node);
+  if (source === null || !fence) return <pre {...props}>{children}</pre>;
+  return (
+    <MermaidBlock
+      // Remount per file, so a block reused by the next document never shows
+      // the previous document's diagram while its own renders.
+      key={fence.filePath ?? ''}
+      source={source}
+      theme={fence.diagramTheme}
+      fallback={
+        <pre {...props}>
+          <CodeBlock language="mermaid" codeTheme={fence.codeTheme}>
+            {source}
+          </CodeBlock>
+        </pre>
+      }
+    />
+  );
+}
+
 export const MarkdownView = React.memo(
   React.forwardRef<MarkdownViewHandle, MarkdownViewProps>(function MarkdownView(
     { content, colors, filePath, style, contentRef, highlight, onMatchesChanged, designTokens },
     ref
   ) {
     const codeTheme = useMemo(() => buildPrismTheme(colors), [colors]);
+    const diagramTheme = useMemo(() => buildDiagramTheme(colors), [colors]);
+    const fence = useMemo(() => ({ codeTheme, diagramTheme, filePath }), [codeTheme, diagramTheme, filePath]);
 
     const injectionMap = useMemo(
       () => (designTokens ? buildInjectionMap(content, designTokens) : null),
@@ -189,6 +250,7 @@ export const MarkdownView = React.memo(
         }
         return <li {...props}>{children}</li>;
       },
+      pre: Pre,
       code({ className, children, ...props }) {
         const match = (className || '').match(LANGUAGE_PATTERN);
         const codeString = String(children).replace(/\n$/, '');
@@ -247,9 +309,11 @@ export const MarkdownView = React.memo(
               {designTokens.description && <p className="design-header-desc">{designTokens.description}</p>}
             </header>
           )}
-          <MemoMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>
-            {content}
-          </MemoMarkdown>
+          <FenceContext.Provider value={fence}>
+            <MemoMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>
+              {content}
+            </MemoMarkdown>
+          </FenceContext.Provider>
           {appendixCategories.length > 0 && designTokens && (
             <section className="design-appendix">
               {appendixCategories.map((cat) => (
@@ -287,10 +351,18 @@ function CodeBlock({ language, codeTheme, children }: {
   const displayContent = isTruncated
     ? children.split('\n').slice(0, MAX_HIGHLIGHTED_LINES).join('\n')
     : children;
+  // Print, PDF and Copy take a block cut short in full (see code-export).
+  const wrapperProps = { className: 'code-block-wrapper', [FULL_CODE_ATTR]: isTruncated ? children : undefined };
 
   return (
-    <div className="code-block-wrapper">
-      <button className="code-block-copy" onClick={handleCopy} title="Copy code" aria-label="Copy code">
+    <div {...wrapperProps}>
+      <button
+        className="code-block-copy"
+        onClick={handleCopy}
+        data-tooltip="Copy code"
+        data-tooltip-placement="left"
+        aria-label="Copy code"
+      >
         {copied ? <Check size={14} strokeWidth={1.5} /> : <Copy size={14} strokeWidth={1.5} />}
       </button>
       <SyntaxHighlighter

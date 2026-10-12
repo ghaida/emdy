@@ -67,6 +67,8 @@ export interface ElectronAPI {
   exportPDF: (opts: { html: string; title: string }) => Promise<boolean>;
   print: (opts: { html: string; title: string }) => Promise<boolean>;
   writeClipboardHTML: (html: string) => Promise<void>;
+  /** `scale` is device pixels per point, so the image pastes at its logical size. */
+  writeClipboardImage: (png: Uint8Array, scale: number) => Promise<boolean>;
   getAccentColor: () => Promise<string>;
   onAccentColorChanged: (callback: (color: string) => void) => () => void;
   toggleMaximize: () => Promise<void>;

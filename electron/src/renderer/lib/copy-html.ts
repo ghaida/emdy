@@ -17,7 +17,12 @@
 //     primitives (mini-swatches, radius squares, bar divs) that RTF discards.
 //
 // For plain (non-design) markdown, this is a no-op that returns the source
-// innerHTML unchanged, preserving the exact pre-feature clipboard behavior.
+// innerHTML unchanged, preserving the exact pre-feature clipboard behavior,
+// with two exceptions. Mermaid diagrams are swapped for PNG images, since RTF
+// drops SVG entirely (see renderCopyImages). Code blocks lose their buttons,
+// come back in full when cut short on screen, and from a dark theme are
+// re-highlighted in the print palette, since its colors paste as light-gray
+// text (see prepareCodeForExport).
 
 import {
   DESIGN_PRINT_STYLES,
@@ -25,6 +30,15 @@ import {
   DESIGN_COMPONENT_TD_FIRST_WIDTH,
 } from '../../shared/design-print-styles';
 import { isValidCssColor } from './design-md';
+import { parseRgba, toHex, type Rgba } from './color';
+import { CODE_BLOCK_SELECTOR, prepareCodeForExport, type ViewTheme } from './code-export';
+import {
+  DIAGRAM_BLOCK_SELECTOR,
+  DIAGRAM_ERROR_SELECTOR,
+  inlineDiagramsForCopy,
+  renderCopyImages,
+  type DiagramImage,
+} from './diagram-export';
 
 // Neutral bar/chip colors and column widths for the rebuilt tables. All literal
 // print values — never `var(--…)`, never viewer-computed.
@@ -45,13 +59,6 @@ const COPY_SPECIMEN_ROW_CSS = 'padding-bottom: 8px;';
 // composited over a dark neutral (#333333) so glass/overlay tokens still read
 // the way they do against the app's dark surface, and opaque colors pass through.
 const NEUTRAL_BACKDROP = 51; // #333333 per channel
-
-interface Rgba {
-  r: number;
-  g: number;
-  b: number;
-  a: number;
-}
 
 /** Minimal 2D-context surface this module needs. A real
  * `CanvasRenderingContext2D` satisfies it; tests inject a fake. */
@@ -90,7 +97,7 @@ const SENTINEL_B = '#fdfcfb';
  * Value: draw the color into a 1×1 surface and read straight rgba back, which
  * resolves EVERY form Chromium supports (oklch/lab/hsl/named/space-syntax)
  * uniformly, alpha included, without parsing the normalized string. Returns null
- * when no context is available (jsdom) so the regex fallback runs. */
+ * when no context is available (jsdom) so the parseRgba fallback runs. */
 function normalizeViaCanvas(value: string, ctxFactory: CtxFactory): Rgba | null {
   try {
     const ctx = ctxFactory();
@@ -113,83 +120,6 @@ function normalizeViaCanvas(value: string, ctxFactory: CtxFactory): Rgba | null 
   } catch {
     return null;
   }
-}
-
-/** Parse an authored color string into r/g/b/a. This is the CANVAS-LESS
- * fallback (jsdom); in production the canvas above handles every form. It covers
- * only the sRGB forms it can do correctly: `#rgb`/`#rgba`/`#rrggbb`/`#rrggbbaa`
- * and `rgb()`/`rgba()` — including percent channels (`50%` → 127.5), percent
- * alpha (`50%` → 0.5), comma OR space separation, and the space-syntax slash
- * alpha (`rgb(10 20 30 / .5)`). Alpha is clamped to [0,1]. Returns null for
- * hsl/oklch/lab/named (the canvas handles those in production). */
-function parseRgba(value: string): Rgba | null {
-  const s = value.trim();
-
-  const hex = /^#([0-9a-fA-F]+)$/.exec(s);
-  if (hex) {
-    const h = hex[1];
-    const dbl = (c: string) => parseInt(c + c, 16);
-    if (h.length === 3) return { r: dbl(h[0]), g: dbl(h[1]), b: dbl(h[2]), a: 1 };
-    if (h.length === 4) return { r: dbl(h[0]), g: dbl(h[1]), b: dbl(h[2]), a: dbl(h[3]) / 255 };
-    if (h.length === 6)
-      return {
-        r: parseInt(h.slice(0, 2), 16),
-        g: parseInt(h.slice(2, 4), 16),
-        b: parseInt(h.slice(4, 6), 16),
-        a: 1,
-      };
-    if (h.length === 8)
-      return {
-        r: parseInt(h.slice(0, 2), 16),
-        g: parseInt(h.slice(2, 4), 16),
-        b: parseInt(h.slice(4, 6), 16),
-        a: parseInt(h.slice(6, 8), 16) / 255,
-      };
-    return null;
-  }
-
-  const fn = /^rgba?\(([^)]+)\)$/i.exec(s);
-  if (fn) {
-    let body = fn[1].trim();
-
-    // Space-syntax alpha: "r g b / a". Split the alpha off first.
-    let alphaStr: string | undefined;
-    const slash = body.split('/');
-    if (slash.length === 2) {
-      alphaStr = slash[1].trim();
-      body = slash[0].trim();
-    } else if (slash.length > 2) {
-      return null;
-    }
-
-    // Channels: comma- OR whitespace-separated.
-    const parts = body.split(/[\s,]+/).filter(Boolean);
-    if (parts.length < 3) return null;
-    if (alphaStr === undefined && parts.length >= 4) alphaStr = parts[3];
-
-    // A channel is either 0-255 or a percentage of 255.
-    const channel = (p: string): number =>
-      p.endsWith('%') ? (parseFloat(p) / 100) * 255 : parseFloat(p);
-
-    const r = channel(parts[0]);
-    const g = channel(parts[1]);
-    const b = channel(parts[2]);
-    let a = 1;
-    if (alphaStr !== undefined) {
-      a = alphaStr.endsWith('%') ? parseFloat(alphaStr) / 100 : parseFloat(alphaStr);
-    }
-    if ([r, g, b, a].some((n) => Number.isNaN(n))) return null;
-    a = Math.max(0, Math.min(1, a)); // clamp alpha to [0,1]
-    return { r, g, b, a };
-  }
-
-  return null;
-}
-
-function toHex(r: number, g: number, b: number): string {
-  const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
-  const h = (n: number) => clamp(n).toString(16).padStart(2, '0');
-  return `#${h(r)}${h(g)}${h(b)}`;
 }
 
 /**
@@ -422,19 +352,34 @@ function rebuildComponentTable(table: Element, doc: Document): void {
 
 /**
  * Given the live content element, return HTML for the clipboard. Plain markdown
- * returns `source.innerHTML` unchanged; design.md content is cloned and its
- * constructs transformed into RTF-safe markup with inline neutral print styles.
+ * returns `source.innerHTML` unchanged; diagrams become the PNGs in
+ * `diagramImages` (or their source, when missing); code blocks are prepared
+ * for export from `theme` (see prepareCodeForExport); design.md content is
+ * cloned and its constructs transformed into RTF-safe markup with inline
+ * neutral print styles.
  */
-export function buildCopyHtml(source: HTMLElement): string {
+export function buildCopyHtml(
+  source: HTMLElement,
+  diagramImages: Map<string, DiagramImage | null> = new Map(),
+  theme?: ViewTheme
+): string {
   const hasDesignContent =
     source.querySelector('.design-block') !== null ||
     source.querySelector('.design-header') !== null;
+  const hasDiagrams = source.querySelector(`${DIAGRAM_BLOCK_SELECTOR}, ${DIAGRAM_ERROR_SELECTOR}`) !== null;
+  const hasCode = source.querySelector(CODE_BLOCK_SELECTOR) !== null;
 
-  if (!hasDesignContent) {
+  if (!hasDesignContent && !hasDiagrams && !hasCode) {
     return source.innerHTML;
   }
 
   const clone = source.cloneNode(true) as HTMLElement;
+  inlineDiagramsForCopy(clone, diagramImages);
+  prepareCodeForExport(clone, theme);
+  if (!hasDesignContent) {
+    return clone.innerHTML;
+  }
+
   const doc = clone.ownerDocument;
 
   // Drop viewer chrome that shouldn't reach the paste target.
@@ -485,4 +430,13 @@ export function buildCopyHtml(source: HTMLElement): string {
   }
 
   return clone.innerHTML;
+}
+
+/**
+ * Clipboard HTML with diagrams rendered to PNGs. The content is snapshotted
+ * before rendering starts, so a file opened meanwhile can't be what's copied.
+ */
+export async function prepareCopyHtml(source: HTMLElement, theme?: ViewTheme): Promise<string> {
+  const snapshot = source.cloneNode(true) as HTMLElement;
+  return buildCopyHtml(snapshot, await renderCopyImages(snapshot), theme);
 }

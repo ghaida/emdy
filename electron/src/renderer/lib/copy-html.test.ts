@@ -1,5 +1,12 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { buildCopyHtml, flattenColor } from './copy-html';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { buildCopyHtml, flattenColor, prepareCopyHtml } from './copy-html';
+import { warm } from './color-themes';
+
+const renderDiagram = vi.hoisted(() => vi.fn());
+vi.mock('./mermaid-render', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./mermaid-render')>()),
+  renderDiagram,
+}));
 
 describe('buildCopyHtml', () => {
   let host: HTMLElement;
@@ -266,6 +273,110 @@ describe('buildCopyHtml', () => {
     const chipStyle = cells[1]?.getAttribute('style') || '';
     expect(chipStyle).toContain('width: 16px');
     expect(chipStyle).not.toContain('background');
+  });
+
+  it('swaps diagrams for PNG paragraphs and leaves the rest of plain markdown as is', () => {
+    host.innerHTML =
+      '<div class="markdown-body"><p>Before</p>' +
+      '<div class="mermaid-block" data-mermaid-source="graph TD"><div class="mermaid-diagram"><svg></svg></div></div>' +
+      '<p>After</p></div>';
+    const image = { src: 'data:image/png;base64,AAAA', width: 100, height: 50, alt: 'Diagram' };
+
+    expect(buildCopyHtml(host, new Map([['graph TD', image]]))).toBe(
+      '<div class="markdown-body"><p>Before</p>' +
+      '<p><img src="data:image/png;base64,AAAA" width="100" height="50" alt="Diagram"></p>' +
+      '<p>After</p></div>'
+    );
+    // The live document is untouched.
+    expect(host.querySelector('.mermaid-block svg')).not.toBeNull();
+  });
+
+  it('pastes diagram source when no image was rendered', () => {
+    host.innerHTML =
+      '<div class="markdown-body"><div class="mermaid-block" data-mermaid-source="graph TD"><svg></svg></div></div>';
+    expect(buildCopyHtml(host)).toBe(
+      '<div class="markdown-body"><pre><code class="language-mermaid">graph TD</code></pre></div>'
+    );
+  });
+
+  it("copies a dark theme's code in the print palette", () => {
+    // A JavaScript block as react-syntax-highlighter renders it in Warm dark:
+    // colors inlined, token types dropped, plain text in the theme's light gray.
+    host.innerHTML =
+      '<div class="markdown-body"><p>Prose stays as is.</p><pre><div class="code-block-wrapper">' +
+      '<div style="color: rgb(217, 210, 198);"><code class="language-js" style="color: rgb(217, 210, 198);">' +
+      '<span class="token" style="color: rgb(143, 168, 62); font-weight: 600;">const</span>' +
+      '<span> regular </span><span class="token" style="color: rgb(156, 148, 136);">=</span>' +
+      '<span> </span><span class="token" style="color: rgb(212, 116, 24);">\'code block\'</span>' +
+      '</code></div></div></pre></div>';
+
+    const out = buildCopyHtml(host, new Map(), { colors: warm.dark, appearance: 'dark' });
+    const doc = new DOMParser().parseFromString(out, 'text/html');
+    const code = doc.querySelector('.code-block-wrapper code') as HTMLElement;
+
+    expect(out).not.toContain('rgb(217, 210, 198)');
+    expect(out).toContain('<p>Prose stays as is.</p>');
+    expect(code.textContent).toBe("const regular = 'code block'");
+    expect(code.style.color).toBe('rgb(44, 44, 44)'); // print text
+    const keyword = [...code.querySelectorAll('span')].find((s) => s.textContent === 'const') as HTMLElement;
+    expect(keyword.style.color).toBe('rgb(173, 61, 164)'); // print keyword
+    // The live document keeps its theme colors.
+    expect(host.innerHTML).toContain('rgb(217, 210, 198)');
+  });
+
+  it("keeps a light theme's code colors, copies cut-short code in full, and drops the code buttons", async () => {
+    // Two blocks as CodeBlock renders them in Warm light: one whole, one cut
+    // short on screen with its full code kept aside.
+    const copyButton = '<button class="code-block-copy" aria-label="Copy code"><svg class="lucide"></svg></button>';
+    host.innerHTML =
+      '<div class="markdown-body"><pre><div class="code-block-wrapper">' + copyButton +
+      '<div style="color: rgb(58, 55, 50);"><code class="language-js" style="color: rgb(58, 55, 50);">' +
+      '<span class="token" style="color: rgb(95, 107, 45); font-weight: 600;">const</span><span> whole = 1;</span>' +
+      '</code></div></div></pre>' +
+      '<pre><div class="code-block-wrapper" data-full-code="let a = 1;\nlet b = 2;">' + copyButton +
+      '<div style="color: rgb(58, 55, 50);"><code class="language-js" style="color: rgb(58, 55, 50);">' +
+      '<span class="token" style="color: rgb(95, 107, 45); font-weight: 600;">let</span><span> a = 1;</span>' +
+      '</code></div><button class="code-block-show-all">Show all 2 lines</button></div></pre></div>';
+    const wholeOnScreen = host.querySelector('.code-block-wrapper code')!.outerHTML;
+
+    const out = await prepareCopyHtml(host, { colors: warm.light, appearance: 'light' });
+    const doc = new DOMParser().parseFromString(out, 'text/html');
+    const [whole, cut] = [...doc.querySelectorAll<HTMLElement>('.code-block-wrapper code')];
+
+    expect(whole.outerHTML).toBe(wholeOnScreen);
+    expect(cut.textContent).toBe('let a = 1;\nlet b = 2;');
+    expect(cut.style.color).toBe('rgb(58, 55, 50)'); // Warm light text
+    expect(out).not.toContain('code-block-copy');
+    expect(out).not.toContain('<svg');
+    expect(out).not.toContain('Show all');
+    expect(out).not.toContain('data-full-code');
+  });
+
+  it('drops the viewer-only error note under a failed diagram', () => {
+    host.innerHTML =
+      '<div class="markdown-body"><div class="mermaid-error-block"><pre><code>graph TD</code></pre>' +
+      '<div class="mermaid-error"><div>Couldn’t render this Mermaid diagram</div></div></div></div>';
+    const out = buildCopyHtml(host);
+    expect(out).not.toContain('Couldn’t render');
+    expect(out).toContain('<pre><code>graph TD</code></pre>');
+  });
+
+  it('copies the document as it was when Copy was chosen, even if another file opens meanwhile', async () => {
+    host.innerHTML =
+      '<div class="markdown-body"><p>From A</p>' +
+      '<div class="mermaid-block" data-mermaid-source="graph TD"><svg></svg></div></div>';
+    let finishRender!: (result: unknown) => void;
+    renderDiagram.mockReturnValue(new Promise((resolve) => (finishRender = resolve)));
+
+    const pending = prepareCopyHtml(host);
+    host.innerHTML = '<div class="markdown-body"><p>From B</p></div>';
+    // jsdom can't rasterize, so the diagram pastes as source: still A's.
+    finishRender({ ok: true, id: 'd', svg: '<svg viewBox="0 0 40 20"></svg>', width: 40, height: 20 });
+    const html = await pending;
+
+    expect(html).toContain('From A');
+    expect(html).not.toContain('From B');
+    expect(html).toContain('<code class="language-mermaid">graph TD</code>');
   });
 
   it('triggers on a bare design-header without a design-block', () => {

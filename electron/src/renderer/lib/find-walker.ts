@@ -3,7 +3,9 @@ export interface FindMatchesResult {
   isCapped: boolean;
 }
 
-const SKIP_SELECTOR = 'script, style';
+// Matches are wrapped in HTML <mark> elements, which don't render inside SVG:
+// a match in a diagram label would make that text disappear.
+const SKIP_SELECTOR = 'script, style, svg';
 
 function collectTextNodes(root: HTMLElement): Text[] {
   const nodes: Text[] = [];

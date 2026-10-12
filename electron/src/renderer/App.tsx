@@ -23,8 +23,10 @@ import type { FileEntry, NudgeState } from './lib/types';
 import { CONTENT_WIDTHS } from './lib/types';
 import { perfMark, perfMeasure } from './lib/perf';
 import { parseDesignMd } from './lib/design-md';
-import { buildCopyHtml } from './lib/copy-html';
-import { buildPrintPayload } from './lib/print-payload';
+import { prepareCopyHtml } from './lib/copy-html';
+import type { ViewTheme } from './lib/code-export';
+import { preparePrintPayload } from './lib/print-payload';
+import { exportNeedsRendering } from './lib/diagram-export';
 
 type FindMode = 'multi-persistent' | 'zero' | 'over-cap';
 
@@ -109,6 +111,11 @@ export function App() {
 
   const display = useDisplaySettings();
   const { announce, announceAssertive } = useAnnounce();
+  // Exports keep a light theme's code colors and recolor a dark theme's.
+  const viewTheme = useMemo<ViewTheme>(
+    () => ({ colors: display.resolvedColors, appearance: display.resolvedAppearance }),
+    [display.resolvedColors, display.resolvedAppearance]
+  );
 
   const closeFind = useCallback(() => {
     if (editDebounceRef.current) {
@@ -420,18 +427,25 @@ export function App() {
     [filePath, applyHighlight, addToast, announceAssertive]
   );
 
+  // Diagrams are re-rendered for print first; say so when that isn't instant.
+  const announceDiagramPrep = useCallback(() => {
+    if (exportNeedsRendering(contentRef.current)) addToast('Preparing diagrams…', 'info');
+  }, [addToast]);
+
   const handleExportPDF = useCallback(async () => {
-    const payload = buildPrintPayload(contentRef.current, filePath);
+    announceDiagramPrep();
+    const payload = await preparePrintPayload(contentRef.current, filePath, viewTheme);
     if (!payload) return;
     const ok = await window.electronAPI.exportPDF(payload);
     if (ok) addToast('PDF exported', 'success');
-  }, [addToast, filePath]);
+  }, [addToast, announceDiagramPrep, filePath, viewTheme]);
 
-  const handlePrint = useCallback(() => {
-    const payload = buildPrintPayload(contentRef.current, filePath);
+  const handlePrint = useCallback(async () => {
+    announceDiagramPrep();
+    const payload = await preparePrintPayload(contentRef.current, filePath, viewTheme);
     if (!payload) return;
     window.electronAPI.print(payload);
-  }, [filePath]);
+  }, [announceDiagramPrep, filePath, viewTheme]);
 
   const handleFileContextMenu = useCallback((e: React.MouseEvent, path: string) => {
     e.preventDefault();
@@ -440,10 +454,11 @@ export function App() {
 
   const handleCopyHTML = useCallback(async () => {
     if (!contentRef.current) return;
-    const html = buildCopyHtml(contentRef.current);
+    announceDiagramPrep();
+    const html = await prepareCopyHtml(contentRef.current, viewTheme);
     await window.electronAPI.writeClipboardHTML(html);
     addToast('Copied to clipboard', 'success');
-  }, [addToast]);
+  }, [addToast, announceDiagramPrep, viewTheme]);
 
   useFileWatcher(filePath, {
     onChanged: async (path) => {

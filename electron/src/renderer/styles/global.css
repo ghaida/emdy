@@ -163,21 +163,41 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   color: #F0F0F0;
   font-family: var(--font-sans);
   font-size: var(--fs-xs);
+  /* Set, not inherited, so a tooltip inside code is the same height as in the toolbar. */
+  line-height: 1.5;
   white-space: nowrap;
   border-radius: var(--radius-sm);
   pointer-events: none;
   opacity: 0;
-  transition: opacity var(--transition-fast) 1s;
+  /* No delay here, so a tooltip hides as soon as the pointer leaves. */
+  transition: opacity var(--transition-fast);
   z-index: 100;
 }
 
 [data-tooltip]:hover::after {
   opacity: 1;
+  transition-delay: var(--transition-tooltip-delay);
 }
 
 [data-tooltip]:active::after {
   opacity: 0;
   transition-delay: 0s;
+}
+
+/* At the right edge of a box, line the tooltip up with the button's right
+   edge so it doesn't hang past the box. */
+[data-tooltip-placement='end']::after {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+/* Inside a scroll area, which would clip a tooltip below the button. */
+[data-tooltip-placement='left']::after {
+  top: 50%;
+  left: auto;
+  right: calc(100% + var(--space-1));
+  transform: translateY(-50%);
 }
 
 .toolbar-divider {
@@ -395,7 +415,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   gap: var(--space-px);
   width: 100%;
   margin: 0;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-1);
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
@@ -426,7 +446,7 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   gap: var(--space-2);
   width: calc(100% - var(--space-2));
   margin: 0 var(--space-1);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-1);
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
@@ -1434,6 +1454,8 @@ input:focus:not(:focus-visible),
 
 .code-block-wrapper {
   position: relative;
+  /* At least as tall as the copy button, so a one-line block doesn't clip it or its tooltip. */
+  min-height: var(--space-7);
   margin-bottom: var(--space-4);
   background: var(--bg-code);
   border-radius: var(--radius-md);
@@ -1487,6 +1509,72 @@ input:focus:not(:focus-visible),
 }
 
 .markdown-body pre code { background: none; padding: 0; border-radius: 0; color: inherit; }
+
+/* Keyboard focus reveals the hover-only copy buttons. */
+.code-block-copy:focus-visible { opacity: 1; }
+
+/* ---- Mermaid diagrams ---- */
+
+/* Same surface as a code block's pre: background, radius, padding, spacing. */
+.markdown-body .mermaid-block {
+  position: relative;
+  background: var(--bg-code);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+/* Hover actions sit where a code block's copy button does. */
+.code-block-actions {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 1;
+  display: flex;
+  gap: var(--space-1);
+}
+.code-block-actions .code-block-copy { position: relative; }
+.mermaid-block:hover .code-block-copy { opacity: 1; }
+.mermaid-block:hover .code-block-copy:disabled { opacity: 0.4; cursor: default; }
+
+.mermaid-diagram {
+  max-width: 100%;
+  margin: 0 auto;
+  /* Mermaid measures labels in a scratch node on <body>. Match that context so
+     text styles inherited from .markdown-body can't resize labels after layout. */
+  line-height: 1.5;
+  white-space: normal;
+}
+
+.mermaid-diagram > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Mermaid's inline max-width is in px and would stop zoom from scaling the diagram up. */
+  max-width: none !important;
+}
+
+/* Keep .markdown-body element styles out of HTML labels, so they render as
+   Mermaid measured them (bolder, not the body's semibold) and match copied PNGs. */
+.markdown-body .mermaid-diagram p { margin: 0; }
+.markdown-body .mermaid-diagram strong { color: inherit; font-weight: bolder; }
+.markdown-body .mermaid-diagram del { color: inherit; }
+.markdown-body .mermaid-diagram a { color: inherit; }
+.markdown-body .mermaid-diagram code { background: none; padding: 0; border-radius: 0; color: inherit; font-size: inherit; }
+.markdown-body .mermaid-diagram img { border-radius: 0; }
+
+.mermaid-loading { min-height: 8em; }
+
+.mermaid-error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: calc(-1 * var(--space-2)) 0 var(--space-4);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+.mermaid-error-title { color: var(--error); }
+.mermaid-error-detail { font-family: var(--font-mono); white-space: pre-wrap; }
 
 .markdown-body blockquote {
   border-left: var(--space-half) solid var(--border);

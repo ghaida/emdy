@@ -79,6 +79,8 @@ export const transition = {
   fast: '0.1s',
   normal: '0.15s',
   slow: '0.2s',
+  // How long the pointer rests on a button before its tooltip shows.
+  tooltipDelay: '0.3s',
 } as const;
 
 // Shadows are appearance-dependent — defined per light/dark in shadowSets below
