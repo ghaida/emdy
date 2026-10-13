@@ -29,12 +29,12 @@ const CATEGORY_LABELS: Record<TokenCategory, string> = {
 
 // Find splits text nodes React owns; if React patched those in place on a
 // content change, pieces of the old document would survive into the new one.
-// So while find has marks in the document, a new document (a live reload
-// included) gets a fresh DOM subtree. Without marks React patches in place, so
-// a reload keeps a diagram on screen while it renders again and an expanded
-// code block open. Remounting was chosen over moving find to the CSS Highlight
-// API. The design tokens count as content: a front-matter edit changes them
-// and not the body.
+// So a change of document while find has marks in it (a live reload, or going
+// back to an earlier document, included) gets a fresh DOM subtree. Without
+// marks React patches in place, so a reload keeps a diagram on screen while it
+// renders again and an expanded code block open. Remounting was chosen over
+// moving find to the CSS Highlight API. The design tokens count as content: a
+// front-matter edit changes them and not the body.
 function documentKey(body: string, filePath: string | null | undefined, designTokens: DesignTokens | null | undefined): string {
   const text = designTokens ? `${JSON.stringify(designTokens)}\n${body}` : body;
   let hash = 5381;
@@ -154,11 +154,18 @@ export const MarkdownView = React.memo(
     }, [designTokens, injectionMap, designAppendix]);
     const bodyRef = useRef<HTMLElement | null>(null);
     const matchElementsRef = useRef<HTMLElement[]>([]);
-    // The key the document is mounted under moves to a new document's key only
-    // while find has marks in it. Reading the marks during render is deliberate:
-    // they're the ones the last commit left, in the DOM React is about to patch.
-    const mountedKeyRef = useRef(docKey);
-    if (docKey !== mountedKeyRef.current && matchElementsRef.current.length > 0) mountedKeyRef.current = docKey;
+    // The document subtree's key is a generation that moves on when the document
+    // changes while find has marks in it. The change is judged against the last
+    // render's document, not the one the subtree was mounted for: after an
+    // in-place patch those differ, and going back to the mounted one must still
+    // remount. Reading the marks during render is deliberate: they're the ones
+    // the last commit left, in the DOM React is about to patch.
+    const shownKeyRef = useRef(docKey);
+    const generationRef = useRef(0);
+    if (docKey !== shownKeyRef.current) {
+      if (matchElementsRef.current.length > 0) generationRef.current += 1;
+      shownKeyRef.current = docKey;
+    }
     const onMatchesChangedRef = useRef(onMatchesChanged);
 
     useEffect(() => {
@@ -328,7 +335,7 @@ export const MarkdownView = React.memo(
     return (
       <div className="markdown-view" style={style} ref={contentRef}>
         <article className="markdown-body" ref={bodyRef}>
-          <React.Fragment key={mountedKeyRef.current}>
+          <React.Fragment key={generationRef.current}>
             {designTokens?.name ? (
               <header className="design-header">
                 <h1>{designTokens.name}</h1>

@@ -302,6 +302,26 @@ describe('MarkdownView document switch while find is applied', () => {
     expect(container.querySelector('.markdown-body')?.textContent).toBe('Open the settings panel to begin.\nAnother paragraph.');
   });
 
+  it('leaves none of the other file behind when going back to the first one with find applied', async () => {
+    const base = { colors, onMatchesChanged: vi.fn() };
+    const docA2 = 'Alpha **one** text here.';
+    const docB2 = 'Beta **two** foo here.';
+    const foo = (dismissing: boolean): HighlightState => ({ query: 'foo', currentIndex: 0, mode: 'multi-persistent', dismissing });
+    const { container, rerender } = render(<MarkdownView {...base} filePath="/x/a.md" content={docA2} highlight={null} />);
+    // b.md with find closed is patched in place.
+    rerender(<MarkdownView {...base} filePath="/x/b.md" content={docB2} highlight={null} />);
+    rerender(<MarkdownView {...base} filePath="/x/b.md" content={docB2} highlight={foo(false)} />);
+    expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(1);
+    // Clicking a.md: its content and closeFind land in one render.
+    await act(async () => {
+      rerender(<MarkdownView {...base} filePath="/x/a.md" content={docA2} highlight={foo(true)} />);
+    });
+    await act(async () => {
+      rerender(<MarkdownView {...base} filePath="/x/a.md" content={docA2} highlight={null} />);
+    });
+    expect(container.querySelector('.markdown-body')?.textContent).toBe('Alpha one text here.');
+  });
+
   it('re-highlights the same text when only the file path changes', () => {
     const ref = createRef<MarkdownViewHandle>();
     const alpha: HighlightState = { query: 'alpha', currentIndex: 0, mode: 'multi-persistent' };
@@ -338,6 +358,21 @@ describe('MarkdownView live reload', () => {
     rerender(<MarkdownView {...props} content={doc('After the edit.')} highlight={highlight} />);
     expect(container.querySelector('h1')).not.toBe(heading);
     expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(1);
+  });
+
+  it('leaves none of the newer version behind when a reload goes back to the first one with find applied', () => {
+    const base = { colors, filePath: '/x/a.md', onMatchesChanged: vi.fn() };
+    const v1 = 'Alpha **one** text here.';
+    const v2 = 'Alpha **one** foo added.';
+    const foo: HighlightState = { query: 'foo', currentIndex: 0, mode: 'multi-persistent' };
+    const { container, rerender } = render(<MarkdownView {...base} content={v1} highlight={null} />);
+    // The editor saves v2 with find closed, so it's patched in place.
+    rerender(<MarkdownView {...base} content={v2} highlight={null} />);
+    rerender(<MarkdownView {...base} content={v2} highlight={foo} />);
+    expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(1);
+    // Undo and save: v1 again, with find still applied.
+    rerender(<MarkdownView {...base} content={v1} highlight={foo} />);
+    expect(container.querySelector('.markdown-body')?.textContent).toBe('Alpha one text here.');
   });
 
   it('mounts a new document when only the design tokens change while find has marks in it', () => {
