@@ -9,7 +9,19 @@ import { buildMenu } from './menu';
 import { isPathAllowed } from './allowed-paths';
 import { localFilePathFromUrl } from './local-file';
 import { setupAutoUpdater, registerAutoUpdaterIPC } from './auto-updater';
-import { registerWindowHandlers, startWindows, openFromOutside, handleActivate, lastFocusedWindow, prepareForQuit, sendMenuEventWithoutWindow } from './windows';
+import {
+  registerWindowHandlers,
+  startWindows,
+  openFromOutside,
+  handleActivate,
+  lastFocusedWindow,
+  prepareForQuit,
+  sendMenuEventWithoutWindow,
+  sendWhenReadyTo,
+  focusedWindowHasFile,
+  onWindowFocus,
+  setWindowHasFile,
+} from './windows';
 import { clearRecents, forgetRecent, onRecentsChange, recentPaths } from './recents';
 
 if (started) {
@@ -93,6 +105,7 @@ app.on('ready', () => {
   nudgeTrackAppLaunch();
   rebuildMenu();
   onRecentsChange(rebuildMenu);
+  onWindowFocus(rebuildMenu);
   setupAutoUpdater();
 
   // Forward system accent color changes to renderer (macOS)
@@ -132,18 +145,21 @@ app.on('open-file', (event, filePath) => {
   });
 });
 
-let hasFileOpen = false;
-
-ipcMain.handle('menu:set-has-file', (_event, hasFile: unknown) => {
-  const value = Boolean(hasFile);
-  if (value !== hasFileOpen) {
-    hasFileOpen = value;
-    rebuildMenu();
-  }
+ipcMain.handle('menu:set-has-file', (event, hasFile: unknown) => {
+  setWindowHasFile(event.sender, Boolean(hasFile));
+  rebuildMenu();
 });
 
+// The menu describes the focused window, so it's rebuilt when focus moves or a
+// window closes.
+let lastMenuSignature = '';
 function rebuildMenu() {
-  buildMenu(sendMenuEvent, hasFileOpen, { paths: recentPaths(), open: openRecent, clear: clearRecents });
+  const hasFile = focusedWindowHasFile();
+  const paths = recentPaths();
+  const signature = `${hasFile}|${paths.join('\n')}`;
+  if (signature === lastMenuSignature) return;
+  lastMenuSignature = signature;
+  buildMenu(sendMenuEvent, hasFile, { paths, open: openRecent, clear: clearRecents });
 }
 
 // An entry that no longer opens (moved, deleted, unreadable) drops off the list.
@@ -154,7 +170,7 @@ function openRecent(filePath: string) {
 function sendMenuEvent(event: string) {
   const win = BrowserWindow.getFocusedWindow() ?? lastFocusedWindow();
   if (win && !win.isDestroyed()) {
-    win.webContents.send('menu:event', event);
+    sendWhenReadyTo(win.webContents, 'menu:event', event);
   } else {
     sendMenuEventWithoutWindow(event);
   }

@@ -39,6 +39,8 @@ interface WindowRecord {
   queued: { channel: string; args: unknown[] }[];
   /** A file from outside is loading into it, so it no longer counts as empty. */
   claimed: boolean;
+  /** Its page shows a file, so the menu lists Edit, Export and Print while it has focus. */
+  hasFile: boolean;
   lastFocusedAt: number;
 }
 
@@ -60,6 +62,8 @@ let startupDone = false;
 // saved session.
 let quitting = false;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
+// Run when another window takes focus or a window closes (onWindowFocus).
+const focusListeners: Array<() => void> = [];
 // The window a new one steps out from: the one opened or focused last.
 let previousWindow: BrowserWindow | null = null;
 
@@ -93,6 +97,7 @@ export function createAppWindow(options: { bounds?: Rect | null; pending?: boole
     ready: false,
     queued: [],
     claimed: false,
+    hasFile: false,
     lastFocusedAt: Date.now(),
   };
   records.set(wcId, record);
@@ -115,6 +120,7 @@ export function createAppWindow(options: { bounds?: Rect | null; pending?: boole
     record.lastFocusedAt = Date.now();
     previousWindow = win;
     scheduleSave();
+    for (const listener of focusListeners) listener();
   });
   win.on('moved', scheduleSave);
   win.on('resized', scheduleSave);
@@ -122,6 +128,8 @@ export function createAppWindow(options: { bounds?: Rect | null; pending?: boole
     if (quitting) return;
     records.delete(wcId);
     scheduleSave();
+    // The menu now describes another window, or none when this was the last.
+    for (const listener of focusListeners) listener();
   });
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
@@ -154,6 +162,14 @@ function recordFor(win: BrowserWindow): WindowRecord | undefined {
 function sendWhenReady(record: WindowRecord, channel: string, ...args: unknown[]) {
   if (!record.ready) record.queued.push({ channel, args });
   else if (!record.win.isDestroyed()) record.win.webContents.send(channel, ...args);
+}
+
+// The same, for senders that hold a page rather than its record, such as the
+// menu. A page that isn't an Emdy window gets it straight away.
+export function sendWhenReadyTo(wc: Electron.WebContents, channel: string, ...args: unknown[]) {
+  const record = records.get(wc.id);
+  if (record) sendWhenReady(record, channel, ...args);
+  else wc.send(channel, ...args);
 }
 
 // Reads a folder or file before any window is touched, so a path that can't
@@ -284,7 +300,8 @@ export function handleActivate() {
 }
 
 // The menu items that still make sense with no window open. The others act on
-// a document, and the menu can still list them after the last window closes.
+// a window. Edit, Export and Print leave the menu when the last window closes,
+// but the View menu's items stay, and with no window they do nothing.
 const NO_WINDOW_MENU_EVENTS = new Set(['open', 'show-about', 'check-for-updates']);
 
 /**
@@ -310,6 +327,22 @@ export function lastFocusedWindow(): BrowserWindow | null {
     if (!latest || record.lastFocusedAt > latest.lastFocusedAt) latest = record;
   }
   return latest ? latest.win : null;
+}
+
+/** Whether the window a menu command would go to shows a file. */
+export function focusedWindowHasFile(): boolean {
+  const win = BrowserWindow.getFocusedWindow() ?? lastFocusedWindow();
+  return win ? (recordFor(win)?.hasFile ?? false) : false;
+}
+
+export function setWindowHasFile(sender: Electron.WebContents, hasFile: boolean) {
+  const record = records.get(sender.id);
+  if (record) record.hasFile = hasFile;
+}
+
+/** Calls listener when another window takes focus, and when a window closes. */
+export function onWindowFocus(listener: () => void) {
+  focusListeners.push(listener);
 }
 
 function sessionPath(): string {

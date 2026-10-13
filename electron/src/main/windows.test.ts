@@ -368,6 +368,15 @@ describe("sending to a window's page", () => {
     reportReady(welcome);
     expect(welcome.webContents.sent).toEqual([['file:open', a, '# a.md\n']]);
   });
+
+  it('holds a menu event until the page is listening, then sends it once', () => {
+    const { webContents } = windows.createAppWindow();
+    const [win] = live();
+    windows.sendWhenReadyTo(webContents, 'menu:event', 'find');
+    expect(sent(win, 'menu:event')).toEqual([]);
+    reportReady(win);
+    expect(sent(win, 'menu:event')).toEqual([['menu:event', 'find']]);
+  });
 });
 
 describe('the menu with no window open', () => {
@@ -419,5 +428,43 @@ describe('the menu with no window open', () => {
     windows.prepareForQuit();
     windows.sendMenuEventWithoutWindow('open');
     expect(live()).toHaveLength(0);
+  });
+});
+
+describe('the menu follows the focused window', () => {
+  // Stands in for index.ts's rebuildMenu, which asks focusedWindowHasFile each
+  // time it runs.
+  function watchRebuilds() {
+    const rebuild = vi.fn(() => windows.focusedWindowHasFile());
+    windows.onWindowFocus(rebuild);
+    return rebuild;
+  }
+
+  it('is rebuilt for each window that takes focus', () => {
+    // a shows a file; b is on the welcome screen.
+    const a = windows.createAppWindow();
+    const b = windows.createAppWindow();
+    windows.setWindowHasFile(a.webContents, true);
+    const rebuild = watchRebuilds();
+    a.focus();
+    expect(rebuild).toHaveBeenCalledTimes(1);
+    expect(windows.focusedWindowHasFile()).toBe(true);
+    b.focus();
+    expect(rebuild).toHaveBeenCalledTimes(2);
+    expect(windows.focusedWindowHasFile()).toBe(false);
+  });
+
+  it('is rebuilt without the last window once it closes', async () => {
+    // No other window takes focus afterwards, so only the close can rebuild it.
+    const a = windows.createAppWindow();
+    windows.setWindowHasFile(a.webContents, true);
+    const rebuild = watchRebuilds();
+    a.focus();
+    expect(windows.focusedWindowHasFile()).toBe(true);
+    a.close();
+    await sleep(10);
+    expect(rebuild).toHaveBeenCalledTimes(2);
+    expect(rebuild).toHaveLastReturnedWith(false);
+    expect(windows.focusedWindowHasFile()).toBe(false);
   });
 });
