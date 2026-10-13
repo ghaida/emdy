@@ -18,6 +18,18 @@ describe('resolveImagePath', () => {
       .toBe('/Users/me/notes/Screenshot 2026-10-12 at 14.07.18.png');
   });
 
+  it('drops a #fragment, as GitHub does with logo.png#gh-dark-mode-only', () => {
+    expect(resolveImagePath('logo.png#gh-dark-mode-only', file)).toBe('/Users/me/notes/logo.png');
+  });
+
+  it('drops a ?query', () => {
+    expect(resolveImagePath('img/shot.png?raw=true', file)).toBe('/Users/me/notes/img/shot.png');
+  });
+
+  it('keeps an encoded # as part of the file name', () => {
+    expect(resolveImagePath('a%23b.png', file)).toBe('/Users/me/notes/a#b.png');
+  });
+
   it('keeps an absolute path', () => {
     expect(resolveImagePath('/Volumes/Work/pic.png', file)).toBe('/Volumes/Work/pic.png');
   });
