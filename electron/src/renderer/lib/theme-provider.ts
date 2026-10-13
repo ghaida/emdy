@@ -13,7 +13,7 @@ function adjustBrightness(hex: string, amount: number): string {
 }
 
 export function applyTheme(colorTheme: ColorThemeName, appearance: 'light' | 'dark', systemAccentColor?: string): void {
-  const colors: ColorScale = { ...themes[colorTheme][appearance] };
+  const colors: ColorScale = { ...(themes[colorTheme] ?? themes.warm)[appearance] };
 
   // Neutral theme inherits accent from system settings
   if (colorTheme === 'neutral' && systemAccentColor) {
@@ -74,7 +74,7 @@ export function applyTheme(colorTheme: ColorThemeName, appearance: 'light' | 'da
 }
 
 export function getResolvedColors(colorTheme: ColorThemeName, appearance: 'light' | 'dark', systemAccentColor?: string): ColorScale {
-  const colors = { ...themes[colorTheme][appearance] };
+  const colors = { ...(themes[colorTheme] ?? themes.warm)[appearance] };
   if (colorTheme === 'neutral' && systemAccentColor) {
     colors.accent = systemAccentColor;
     colors.accentHover = appearance === 'light'

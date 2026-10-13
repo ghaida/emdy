@@ -16,3 +16,12 @@ describe('applyTheme transitions', () => {
     expect(cssVar('--transition-slow')).toBe('0.2s');
   });
 });
+
+describe('applyTheme with an unknown theme name', () => {
+  it('falls back to warm instead of throwing', () => {
+    applyTheme('warm', 'light');
+    const warmAccent = cssVar('--accent');
+    expect(() => applyTheme('sepia' as never, 'light')).not.toThrow();
+    expect(cssVar('--accent')).toBe(warmAccent);
+  });
+});

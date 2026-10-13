@@ -1,31 +1,15 @@
 import { ipcMain, app } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
-
-interface Settings {
-  fontFamily: string;
-  theme: string;
-  colorTheme: string;
-  zoom: number;
-  contentWidth: string;
-}
-
-const defaults: Settings = {
-  fontFamily: 'sans',
-  theme: 'system',
-  colorTheme: 'warm',
-  zoom: 1.0,
-  contentWidth: 'default',
-};
+import { sanitizeSettings, validateSetting, type Settings } from './settings-schema';
 
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
 
 function load(): Settings {
   try {
-    const data = fs.readFileSync(settingsPath, 'utf-8');
-    return { ...defaults, ...JSON.parse(data) };
+    return sanitizeSettings(JSON.parse(fs.readFileSync(settingsPath, 'utf-8')));
   } catch {
-    return { ...defaults };
+    return sanitizeSettings(null);
   }
 }
 
@@ -37,22 +21,6 @@ const current = load();
 
 export function getSettings(): Settings {
   return { ...current };
-}
-
-const VALID_FONT_FAMILIES = new Set(['sans', 'serif', 'mono']);
-const VALID_THEMES = new Set(['light', 'dark', 'system']);
-const VALID_COLOR_THEMES = new Set(['warm', 'cool', 'neutral', 'fresh', 'neon']);
-const VALID_CONTENT_WIDTHS = new Set(['default', 'wide']);
-
-function validateSetting(key: string, value: unknown): boolean {
-  switch (key) {
-    case 'fontFamily': return typeof value === 'string' && VALID_FONT_FAMILIES.has(value);
-    case 'theme': return typeof value === 'string' && VALID_THEMES.has(value);
-    case 'colorTheme': return typeof value === 'string' && VALID_COLOR_THEMES.has(value);
-    case 'zoom': return typeof value === 'number' && value >= 0.5 && value <= 3.0;
-    case 'contentWidth': return typeof value === 'string' && VALID_CONTENT_WIDTHS.has(value);
-    default: return false;
-  }
 }
 
 export function registerSettingsHandlers() {
