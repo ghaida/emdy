@@ -39,6 +39,13 @@ describe('findMatches', () => {
     expect(root.querySelector('svg mark')).toBeNull();
   });
 
+  it('skips text directly in the root, where a mark would outlive the document', () => {
+    const root = setup('Intro<p>x</p>');
+    const childCount = root.childNodes.length;
+    expect(findMatches(root, 'Intro', 1000).marks.length).toBe(0);
+    expect(root.childNodes.length).toBe(childCount);
+  });
+
   it('returns empty when no matches found', () => {
     const root = setup('<p>Hello world</p>');
     const { marks, isCapped } = findMatches(root, 'xyz', 1000);
@@ -134,6 +141,30 @@ describe('findMatches', () => {
     expect(marks.length).toBe(3);
     expect(isCapped).toBe(false);
   });
+
+  it('handles a Turkish dotted İ without throwing or drifting', () => {
+    const root = setup("<p>Toplantı İzmir'de yapılacak</p>");
+    const { marks } = findMatches(root, 'yapılacak', 1000);
+    expect(marks.map((m) => m.textContent)).toEqual(['yapılacak']);
+  });
+
+  it('matches İ itself', () => {
+    const root = setup('<p>Gidiş İzmir</p>');
+    const { marks } = findMatches(root, 'İzmir', 1000);
+    expect(marks.map((m) => m.textContent)).toEqual(['İzmir']);
+  });
+
+  it('treats regex characters in the query literally', () => {
+    const root = setup('<p>a.b and axb and (x) and [1]</p>');
+    expect(findMatches(root, 'a.b', 1000).marks.map((m) => m.textContent)).toEqual(['a.b']);
+    expect(findMatches(root, '(x)', 1000).marks.map((m) => m.textContent)).toEqual(['(x)']);
+    expect(findMatches(root, '[1]', 1000).marks.map((m) => m.textContent)).toEqual(['[1]']);
+  });
+
+  it('is still case-insensitive for ASCII', () => {
+    const root = setup('<p>Alpha ALPHA alpha</p>');
+    expect(findMatches(root, 'alpha', 1000).marks.length).toBe(3);
+  });
 });
 
 describe('clearMatches', () => {
@@ -160,5 +191,45 @@ describe('clearMatches', () => {
     const root = setup('<p>nothing to do</p>');
     expect(() => clearMatches(root)).not.toThrow();
     expect(root.textContent).toBe('nothing to do');
+  });
+
+  it('keeps the original text node when a match starts at its first character', () => {
+    const root = setup('<p>See <a href="#">docs</a>.</p>');
+    const p = root.querySelector('p');
+    const original = p?.lastChild as Text;
+    expect(findMatches(root, '.', 1000).marks.length).toBe(1);
+
+    clearMatches(root);
+
+    expect(p?.lastChild).toBe(original);
+    expect(original.data).toBe('.');
+    expect(p?.textContent).toBe('See docs.');
+  });
+
+  it('rejoins a match into the text node it was split from', () => {
+    const root = setup('<p>Hello world</p>');
+    const p = root.querySelector('p');
+    const original = p?.firstChild;
+    expect(findMatches(root, 'world', 1000).marks.length).toBe(1);
+
+    clearMatches(root);
+
+    expect(p?.childNodes.length).toBe(1);
+    expect(p?.firstChild).toBe(original);
+    expect(p?.textContent).toBe('Hello world');
+  });
+
+  it('leaves a text node it did not split alone when the original is gone', () => {
+    const root = setup('<p>Hello world</p>');
+    const p = root.querySelector('p');
+    expect(findMatches(root, 'world', 1000).marks.length).toBe(1);
+    const stranger = document.createTextNode('Bye ');
+    p?.firstChild?.replaceWith(stranger);
+
+    clearMatches(root);
+
+    expect(stranger.data).toBe('Bye ');
+    expect(p?.textContent).toBe('Bye world');
+    expect(root.querySelector('mark')).toBeNull();
   });
 });

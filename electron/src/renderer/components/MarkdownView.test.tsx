@@ -2,7 +2,7 @@ import React, { createRef } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, waitFor, act, screen, fireEvent } from '@testing-library/react';
 import { MarkdownView, type MarkdownViewHandle, type HighlightState } from './MarkdownView';
-import { warm } from '../lib/color-themes';
+import { warm, cool } from '../lib/color-themes';
 import { parseDesignMd } from '../lib/design-md';
 import { FULL_CODE_ATTR } from '../lib/code-export';
 
@@ -300,5 +300,88 @@ describe('MarkdownView document switch while find is applied', () => {
       rerender(<MarkdownView {...props} filePath="/x/b.md" content={docB} highlight={null} />);
     });
     expect(container.querySelector('.markdown-body')?.textContent).toBe('Open the settings panel to begin.\nAnother paragraph.');
+  });
+
+  it('re-highlights the same text when only the file path changes', () => {
+    const ref = createRef<MarkdownViewHandle>();
+    const alpha: HighlightState = { query: 'alpha', currentIndex: 0, mode: 'multi-persistent' };
+    const props = { colors, content: 'alpha beta alpha', highlight: alpha, onMatchesChanged: vi.fn() };
+    const { container, rerender } = render(<MarkdownView ref={ref} {...props} filePath="/x/a.md" />);
+    expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(2);
+    rerender(<MarkdownView ref={ref} {...props} filePath="/x/b.md" />);
+    expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(2);
+    expect(ref.current?.getMatchCount()).toBe(2);
+  });
+});
+
+describe('MarkdownView find with non-ASCII text', () => {
+  it('does not throw on a Turkish dotted İ', () => {
+    expect(() =>
+      render(
+        <MarkdownView
+          colors={colors}
+          filePath="/x/a.md"
+          content={"Toplantı İzmir'de yapılacak"}
+          highlight={{ query: 'yapılacak', currentIndex: 0, mode: 'multi-persistent' }}
+          onMatchesChanged={vi.fn()}
+        />
+      )
+    ).not.toThrow();
+  });
+});
+
+describe('MarkdownView find with raw HTML at the top level', () => {
+  // react-markdown renders raw HTML on its own line as a text node directly in
+  // the article, between the newline nodes that separate blocks.
+  const docA = 'Intro paragraph.\n\n<h1 align="center">Emdy</h1>\n\nAfter paragraph.';
+  const emdy: HighlightState = { query: 'Emdy', currentIndex: 0, mode: 'multi-persistent' };
+
+  function plainText(content: string) {
+    const { container } = render(<MarkdownView colors={colors} content={content} />);
+    return container.querySelector('.markdown-body')?.textContent;
+  }
+
+  it('survives a live reload after find, with nothing left behind', () => {
+    const edited = 'Intro edited.\n\n<h1 align="center">Emdy</h1>\n\nAfter paragraph.';
+    const props = { colors, filePath: '/x/a.md', onMatchesChanged: vi.fn() };
+    const { container, rerender } = render(<MarkdownView {...props} content={docA} highlight={emdy} />);
+    rerender(<MarkdownView {...props} content={docA} highlight={null} />);
+    expect(() =>
+      act(() => {
+        rerender(<MarkdownView {...props} content={edited} highlight={null} />);
+      })
+    ).not.toThrow();
+    const expected = plainText(edited);
+    expect(expected).toContain('Intro edited.');
+    expect(container.querySelector('.markdown-body')?.textContent).toBe(expected);
+  });
+
+  it('leaves none of it behind when switching files while find is applied', async () => {
+    const docB = 'Open the settings **panel** to begin.\n\nAnother paragraph.';
+    const props = { colors, onMatchesChanged: vi.fn() };
+    const { container, rerender } = render(<MarkdownView {...props} filePath="/x/a.md" content={docA} highlight={emdy} />);
+    await act(async () => {
+      rerender(<MarkdownView {...props} filePath="/x/b.md" content={docB} highlight={{ ...emdy, dismissing: true }} />);
+    });
+    await act(async () => {
+      rerender(<MarkdownView {...props} filePath="/x/b.md" content={docB} highlight={null} />);
+    });
+    const expected = plainText(docB);
+    expect(expected).toContain('Open the settings panel to begin.');
+    expect(container.querySelector('.markdown-body')?.textContent).toBe(expected);
+  });
+});
+
+describe('MarkdownView theme switch after find', () => {
+  it('keeps working after a match at the start of a text node', () => {
+    // The period is its own text node after the link, so the match starts it.
+    const props = { filePath: '/x/a.md', content: 'See [docs](https://example.com).', onMatchesChanged: vi.fn() };
+    const { container, rerender } = render(
+      <MarkdownView {...props} colors={colors} highlight={{ query: '.', currentIndex: 0, mode: 'multi-persistent' }} />
+    );
+    expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(1);
+    rerender(<MarkdownView {...props} colors={colors} highlight={null} />);
+    expect(() => rerender(<MarkdownView {...props} colors={cool.light} highlight={null} />)).not.toThrow();
+    expect(container.querySelector('.markdown-body')?.textContent).toBe('See docs.');
   });
 });

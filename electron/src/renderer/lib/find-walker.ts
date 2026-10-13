@@ -7,12 +7,21 @@ export interface FindMatchesResult {
 // a match in a diagram label would make that text disappear.
 const SKIP_SELECTOR = 'script, style, svg';
 
+// A mark splits a text node into head, match and tail, and the head may be
+// React's. Clearing appends the match and tail back onto the head and removes
+// only the pieces find created. normalize() would remove a head emptied by a
+// match at its first character, and React would throw on its next update there.
+const splits = new WeakMap<Element, { head: Text; tail: Text }>();
+
 function collectTextNodes(root: HTMLElement): Text[] {
   const nodes: Text[] = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       const parent = node.parentElement;
       if (!parent) return NodeFilter.FILTER_REJECT;
+      // Raw HTML on its own line renders as text directly in the root, which
+      // outlives each document: a mark split off there would be left behind.
+      if (parent === root) return NodeFilter.FILTER_REJECT;
       if (parent.closest(SKIP_SELECTOR)) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     },
@@ -22,15 +31,30 @@ function collectTextNodes(root: HTMLElement): Text[] {
   return nodes;
 }
 
-function findPositions(haystack: string, needle: string): number[] {
-  const positions: number[] = [];
-  if (!needle) return positions;
-  let idx = 0;
-  while ((idx = haystack.indexOf(needle, idx)) !== -1) {
-    positions.push(idx);
-    idx += needle.length;
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+interface MatchRange {
+  start: number;
+  length: number;
+}
+
+// Offsets come from the original text. Lowercasing it first would shift them:
+// 'İ'.toLowerCase() is two UTF-16 units, and splitText at a shifted offset
+// throws. Unicode case folding with the u flag never changes a match's length.
+function findRanges(text: string, pattern: RegExp): MatchRange[] {
+  const ranges: MatchRange[] = [];
+  pattern.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = pattern.exec(text)) !== null) {
+    if (m[0].length === 0) {
+      pattern.lastIndex++;
+      continue;
+    }
+    ranges.push({ start: m.index, length: m[0].length });
   }
-  return positions;
+  return ranges;
 }
 
 export function findMatches(
@@ -43,7 +67,7 @@ export function findMatches(
   const trimmed = query.trim();
   if (!trimmed) return { marks: [], isCapped: false };
 
-  const q = query.toLowerCase();
+  const pattern = new RegExp(escapeRegExp(query), 'giu');
   const textNodes = collectTextNodes(root);
 
   const marks: HTMLElement[] = [];
@@ -51,9 +75,8 @@ export function findMatches(
 
   for (const textNode of textNodes) {
     const text = textNode.textContent || '';
-    const lower = text.toLowerCase();
-    const positions = findPositions(lower, q);
-    if (positions.length === 0) continue;
+    const ranges = findRanges(text, pattern);
+    if (ranges.length === 0) continue;
 
     if (marks.length >= maxMatches) {
       // We already hit the cap; any additional matches confirm isCapped.
@@ -63,22 +86,23 @@ export function findMatches(
 
     let currentNode: Text = textNode;
     let consumed = 0;
-    for (const pos of positions) {
+    for (const range of ranges) {
       if (marks.length >= maxMatches) {
         isCapped = true;
         break;
       }
-      const relPos = pos - consumed;
+      const relPos = range.start - consumed;
       const matchNode = currentNode.splitText(relPos);
-      const tail = matchNode.splitText(q.length);
+      const tail = matchNode.splitText(range.length);
       const mark = document.createElement('mark');
       mark.setAttribute('data-emdy-match', '');
       mark.setAttribute('data-match-index', String(marks.length));
       matchNode.parentNode!.insertBefore(mark, matchNode);
       mark.appendChild(matchNode);
+      splits.set(mark, { head: textNode, tail });
       marks.push(mark);
       currentNode = tail;
-      consumed = pos + q.length;
+      consumed = range.start + range.length;
     }
   }
 
@@ -86,17 +110,16 @@ export function findMatches(
 }
 
 export function clearMatches(root: HTMLElement): void {
-  const marks = root.querySelectorAll('mark[data-emdy-match]');
-  if (marks.length === 0) return;
-  const parents = new Set<Node>();
-  marks.forEach((mark) => {
-    const parent = mark.parentNode;
-    if (!parent) return;
-    parents.add(parent);
-    while (mark.firstChild) {
-      parent.insertBefore(mark.firstChild, mark);
+  // Document order: the tails of earlier marks in the same text node are gone
+  // by the time a mark is reached, so it sits right after its head again.
+  root.querySelectorAll('mark[data-emdy-match]').forEach((mark) => {
+    const split = splits.get(mark);
+    if (split && mark.previousSibling === split.head && mark.nextSibling === split.tail) {
+      split.head.appendData((mark.textContent ?? '') + split.tail.data);
+      split.tail.remove();
+      mark.remove();
+    } else {
+      mark.replaceWith(...mark.childNodes);
     }
-    parent.removeChild(mark);
   });
-  parents.forEach((p) => p.normalize());
 }
