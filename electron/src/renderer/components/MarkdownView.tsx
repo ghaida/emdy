@@ -29,7 +29,10 @@ const CATEGORY_LABELS: Record<TokenCategory, string> = {
 
 // A new document gets a fresh DOM subtree. Find splits text nodes React owns;
 // if React patched those in place on a content change, pieces of the old
-// document would survive into the new one.
+// document would survive into the new one. A live reload counts as a new
+// document too, so a changed diagram shows its placeholder while it renders
+// again and an expanded code block collapses. That trade-off is deliberate:
+// remounting was chosen over moving find to the CSS Highlight API.
 function documentKey(body: string, filePath: string | null | undefined): string {
   let hash = 5381;
   for (let i = 0; i < body.length; i++) hash = ((hash * 33) ^ body.charCodeAt(i)) >>> 0;
@@ -174,7 +177,7 @@ export const MarkdownView = React.memo(
         clearMatches(root);
         matchElementsRef.current = [];
       };
-    }, [body, highlight?.query, highlight?.mode]);
+    }, [docKey, highlight?.query, highlight?.mode]);
 
     useLayoutEffect(() => {
       const marks = matchElementsRef.current;

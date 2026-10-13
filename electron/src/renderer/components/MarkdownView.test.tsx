@@ -299,6 +299,6 @@ describe('MarkdownView document switch while find is applied', () => {
     await act(async () => {
       rerender(<MarkdownView {...props} filePath="/x/b.md" content={docB} highlight={null} />);
     });
-    expect(container.querySelector('p')!.textContent).toBe('Open the settings panel to begin.');
+    expect(container.querySelector('.markdown-body')?.textContent).toBe('Open the settings panel to begin.\nAnother paragraph.');
   });
 });
