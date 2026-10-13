@@ -348,3 +348,55 @@ describe("sending to a window's page", () => {
     expect(welcome.webContents.sent).toEqual([['file:open', a, '# a.md\n']]);
   });
 });
+
+describe('the menu with no window open', () => {
+  // Launch, then close every window, as ⌘W on the last one does.
+  async function closeEveryWindow() {
+    await windows.startWindows([]);
+    for (const win of live()) win.close();
+    await sleep(20);
+  }
+
+  it.each(['open', 'show-about', 'check-for-updates'])(
+    'opens a welcome window for %s and sends it there once the page is listening',
+    async (event) => {
+      await closeEveryWindow();
+      windows.sendMenuEventWithoutWindow(event);
+      expect(live()).toHaveLength(1);
+      const [welcome] = live();
+      await vi.waitFor(() => expect(welcome.shown).toBe(true));
+      expect(sent(welcome, 'menu:event')).toEqual([]);
+      reportReady(welcome);
+      expect(sent(welcome, 'menu:event')).toEqual([['menu:event', event]]);
+    },
+  );
+
+  it('waits for the window to be on screen, since Open… shows its dialog on it', async () => {
+    await closeEveryWindow();
+    windows.sendMenuEventWithoutWindow('open');
+    const [welcome] = live();
+    reportReady(welcome);
+    expect(sent(welcome, 'menu:event')).toEqual([]);
+    await vi.waitFor(() => expect(sent(welcome, 'menu:event')).toEqual([['menu:event', 'open']]));
+    expect(welcome.shown).toBe(true);
+  });
+
+  it('leaves menu items that act on a document alone', async () => {
+    await closeEveryWindow();
+    for (const event of ['export-pdf', 'print', 'find', 'zoom-in']) windows.sendMenuEventWithoutWindow(event);
+    expect(live()).toHaveLength(0);
+  });
+
+  it('opens nothing while Emdy is launching, while a window is open, or once it is quitting', async () => {
+    windows.sendMenuEventWithoutWindow('open');
+    expect(Fake.all).toHaveLength(0);
+    await windows.startWindows([]);
+    windows.sendMenuEventWithoutWindow('open');
+    expect(live()).toHaveLength(1);
+    for (const win of live()) win.close();
+    await sleep(20);
+    windows.prepareForQuit();
+    windows.sendMenuEventWithoutWindow('open');
+    expect(live()).toHaveLength(0);
+  });
+});

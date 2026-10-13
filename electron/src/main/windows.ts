@@ -283,6 +283,25 @@ export function handleActivate() {
   if (startupDone && records.size === 0) createAppWindow();
 }
 
+// The menu items that still make sense with no window open. The others act on
+// a document, and the menu can still list them after the last window closes.
+const NO_WINDOW_MENU_EVENTS = new Set(['open', 'show-about', 'check-for-updates']);
+
+/**
+ * Open…, About and Check for Updates… chosen with no window open (⌘W closes
+ * the last one): a welcome window opens, as for a Dock click, and gets the
+ * event once it's on screen and its page is listening. Other items do nothing.
+ */
+export function sendMenuEventWithoutWindow(event: string) {
+  if (!NO_WINDOW_MENU_EVENTS.has(event) || !startupDone || quitting || records.size > 0) return;
+  const win = createAppWindow();
+  // Open… shows its dialog as a sheet on this window, so wait until it's on screen.
+  void whenShown(win).then(() => {
+    const record = recordFor(win);
+    if (record) sendWhenReady(record, 'menu:event', event);
+  });
+}
+
 /** Where menu events go when no window has focus. */
 export function lastFocusedWindow(): BrowserWindow | null {
   let latest: WindowRecord | null = null;

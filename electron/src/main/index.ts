@@ -9,7 +9,7 @@ import { buildMenu } from './menu';
 import { isPathAllowed } from './allowed-paths';
 import { localFilePathFromUrl } from './local-file';
 import { setupAutoUpdater, registerAutoUpdaterIPC } from './auto-updater';
-import { registerWindowHandlers, startWindows, openFromOutside, handleActivate, lastFocusedWindow, prepareForQuit } from './windows';
+import { registerWindowHandlers, startWindows, openFromOutside, handleActivate, lastFocusedWindow, prepareForQuit, sendMenuEventWithoutWindow } from './windows';
 import { clearRecents, forgetRecent, onRecentsChange, recentPaths } from './recents';
 
 if (started) {
@@ -155,5 +155,7 @@ function sendMenuEvent(event: string) {
   const win = BrowserWindow.getFocusedWindow() ?? lastFocusedWindow();
   if (win && !win.isDestroyed()) {
     win.webContents.send('menu:event', event);
+  } else {
+    sendMenuEventWithoutWindow(event);
   }
 }
