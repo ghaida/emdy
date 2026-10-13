@@ -3,14 +3,7 @@ import { perfMark, perfMeasure } from '../lib/perf';
 import { useTransition } from '../hooks/useTransition';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useAnnounce } from '../hooks/useAnnounce';
-
-interface SearchResult {
-  filePath: string;
-  fileName: string;
-  matchLine?: string;
-  lineNumber?: number;
-  type: 'file' | 'content';
-}
+import type { SearchResult } from '../lib/types';
 
 type RenderableRow =
   | { kind: 'legacy-file'; filePath: string; fileName: string }
@@ -80,17 +73,31 @@ export function CommandPalette({
   const [searching, setSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const generationRef = useRef(0);
+  // True from sending a query to main until the next cancel, so each search
+  // gets at most one cancel, even one that has already finished.
+  const searchSentRef = useRef(false);
   const { mounted, active } = useTransition(visible);
   useFocusTrap(modalRef, visible);
   const { announce } = useAnnounce();
 
+  // Main stops this window's search between files once a newer generation
+  // arrives; an empty query sends one without starting another search.
+  const cancelSearch = useCallback((generation: number) => {
+    if (!searchSentRef.current) return;
+    searchSentRef.current = false;
+    window.electronAPI.searchEverything('', { rootPath: null, filePath: null }, generation).catch(() => undefined);
+  }, []);
+
+  // Cleared on both open and close, so a hidden palette never keeps re-running
+  // its last query on every file switch.
   useEffect(() => {
-    if (visible) {
-      setQuery('');
-      setResults([]);
-      setSelectedIndex(0);
-    }
-  }, [visible]);
+    cancelSearch(++generationRef.current);
+    setQuery('');
+    setResults([]);
+    setSelectedIndex(0);
+    setSearching(false);
+  }, [visible, cancelSearch]);
 
   const setInputRef = useCallback(
     (node: HTMLInputElement | null) => {
@@ -113,28 +120,34 @@ export function CommandPalette({
   }, [visible, onClose]);
 
   const search = useCallback(async (q: string) => {
-    if (!q.trim()) {
+    const generation = ++generationRef.current;
+    if (!q.trim() || (!rootPath && !currentFilePath)) {
+      cancelSearch(generation);
       setResults([]);
-      return;
-    }
-    const effectiveRoot = rootPath || (currentFilePath ? dirname(currentFilePath) : null);
-    if (!effectiveRoot) {
-      setResults([]);
+      setSearching(false);
       return;
     }
     setSearching(true);
+    searchSentRef.current = true;
     try {
       perfMark('search-start');
-      const searchResults = await window.electronAPI.searchEverything(q, effectiveRoot);
+      // With a single file open the search covers only that file.
+      const searchResults = await window.electronAPI.searchEverything(
+        q,
+        { rootPath: rootPath ?? null, filePath: currentFilePath ?? null },
+        generation,
+      );
       perfMeasure('search', 'search-start');
+      // A slower, older query may finish after this one; its results are stale.
+      if (generation !== generationRef.current || searchResults === null) return;
       setResults(searchResults);
       setSelectedIndex(0);
     } catch {
-      setResults([]);
+      if (generation === generationRef.current) setResults([]);
     } finally {
-      setSearching(false);
+      if (generation === generationRef.current) setSearching(false);
     }
-  }, [rootPath, currentFilePath]);
+  }, [rootPath, currentFilePath, cancelSearch]);
 
   useEffect(() => {
     const timeout = setTimeout(() => search(query), 200);
@@ -196,14 +209,14 @@ export function CommandPalette({
           if (r.type !== 'content') continue;
           const existing = byPath.get(r.filePath);
           if (existing) {
-            existing.row.matchCount = Math.min(existing.row.matchCount + 1, MATCH_COUNT_DISPLAY_CAP);
+            existing.row.matchCount = Math.min(r.matchCount ?? existing.row.matchCount + 1, MATCH_COUNT_DISPLAY_CAP);
           } else {
             byPath.set(r.filePath, {
               row: {
                 kind: 'aggregated',
                 filePath: r.filePath,
                 fileName: r.fileName,
-                matchCount: 1,
+                matchCount: Math.min(r.matchCount ?? 1, MATCH_COUNT_DISPLAY_CAP),
                 firstMatchSnippet: r.matchLine ?? '',
                 firstMatchLineNumber: r.lineNumber ?? 1,
                 subtitle: null,
@@ -340,7 +353,7 @@ export function CommandPalette({
   if (!mounted) return null;
 
   const placeholder = currentFilePath
-    ? 'Search this file and folder…'
+    ? (rootPath ? 'Search this file and folder…' : 'Search this file…')
     : 'Search files and content…';
 
   return (

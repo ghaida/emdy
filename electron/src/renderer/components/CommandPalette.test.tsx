@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CommandPalette } from './CommandPalette';
 import { AnnounceProvider } from '../hooks/useAnnounce';
@@ -11,12 +11,22 @@ interface TestResult {
   matchLine?: string;
   lineNumber?: number;
   type: 'file' | 'content';
+  matchCount?: number;
 }
 
+type SearchEverything = (q: string, scope: unknown, generation: number) => Promise<TestResult[]>;
+
 function mockSearchResults(results: TestResult[]) {
-  (window as unknown as { electronAPI: { searchEverything: (q: string, root: string) => Promise<TestResult[]> } }).electronAPI = {
+  (window as unknown as { electronAPI: { searchEverything: SearchEverything } }).electronAPI = {
     searchEverything: vi.fn().mockResolvedValue(results),
   };
+}
+
+// Searches that never answer, so a test can act while one is in flight.
+function mockPendingSearches() {
+  const searchEverything = vi.fn<SearchEverything>(() => new Promise(() => undefined));
+  (window as unknown as { electronAPI: { searchEverything: SearchEverything } }).electronAPI = { searchEverything };
+  return searchEverything;
 }
 
 function renderPalette(overrides: Partial<Parameters<typeof CommandPalette>[0]> = {}) {
@@ -49,10 +59,10 @@ describe('CommandPalette grouping', () => {
     expect(input).toBeTruthy();
   });
 
-  it('shows contextual placeholder when a file is open', async () => {
+  it('names only the file in the placeholder when a file is open without a folder', async () => {
     mockSearchResults([]);
     renderPalette({ currentFilePath: '/root/notes/today.md' });
-    const input = await screen.findByPlaceholderText('Search this file and folder…');
+    const input = await screen.findByPlaceholderText('Search this file…');
     expect(input).toBeTruthy();
   });
 
@@ -87,7 +97,7 @@ describe('CommandPalette grouping', () => {
     ]);
     const user = userEvent.setup();
     const { props } = renderPalette({ currentFilePath: '/root/notes/today.md' });
-    const input = await screen.findByPlaceholderText('Search this file and folder…');
+    const input = await screen.findByPlaceholderText('Search this file…');
     await user.type(input, 'alpha');
     await waitFor(() => {
       expect(screen.getByText('alpha here')).toBeTruthy();
@@ -177,5 +187,96 @@ describe('CommandPalette grouping', () => {
     });
     expect(screen.getByText('1 match')).toBeTruthy();
     expect(screen.getByText('2 matches')).toBeTruthy();
+  });
+
+  it('shows the match count main reports, capped at 1,000+', async () => {
+    mockSearchResults([
+      { filePath: '/root/notes/x.md', fileName: 'x.md', lineNumber: 1, matchLine: 'alpha', type: 'content', matchCount: 40 },
+      { filePath: '/root/notes/x.md', fileName: 'x.md', lineNumber: 2, matchLine: 'alpha again', type: 'content', matchCount: 40 },
+      { filePath: '/root/notes/x.md', fileName: 'x.md', lineNumber: 3, matchLine: 'alpha once more', type: 'content', matchCount: 40 },
+      { filePath: '/root/notes/y.md', fileName: 'y.md', lineNumber: 1, matchLine: 'alpha', type: 'content', matchCount: 1000 },
+    ]);
+    const user = userEvent.setup();
+    renderPalette({ currentFilePath: '/root/notes/today.md', rootPath: '/root' });
+    const input = await screen.findByPlaceholderText('Search this file and folder…');
+    await user.type(input, 'alpha');
+    await waitFor(() => {
+      expect(screen.getByText('x.md')).toBeTruthy();
+    });
+    expect(screen.getByText('40 matches')).toBeTruthy();
+    expect(screen.getByText('1,000+ matches')).toBeTruthy();
+  });
+
+  it('tells main to stop the search in flight when the field is cleared', async () => {
+    const searchEverything = mockPendingSearches();
+    const user = userEvent.setup();
+    renderPalette({ rootPath: '/root' });
+    const input = await screen.findByPlaceholderText('Search files and content…');
+    await user.type(input, 'alpha');
+    await waitFor(() => expect(searchEverything).toHaveBeenCalledTimes(1));
+    await user.clear(input);
+    await waitFor(() => expect(searchEverything).toHaveBeenCalledTimes(2));
+    const [first, cancel] = searchEverything.mock.calls;
+    expect(cancel[0]).toBe('');
+    expect(cancel[2]).toBeGreaterThan(first[2]);
+    await waitFor(() => expect(document.querySelector('.command-palette-spinner')).toBeNull());
+  });
+
+  it('tells main to stop the search in flight when the palette closes, then stays quiet', async () => {
+    const searchEverything = mockPendingSearches();
+    const user = userEvent.setup();
+    const { rerender, props } = renderPalette({ rootPath: '/root', currentFilePath: '/root/a.md' });
+    const show = (overrides: Partial<Parameters<typeof CommandPalette>[0]>) =>
+      rerender(
+        <AnnounceProvider>
+          <CommandPalette {...props} {...overrides} />
+        </AnnounceProvider>
+      );
+    const input = await screen.findByPlaceholderText('Search this file and folder…');
+    await user.type(input, 'alpha');
+    await waitFor(() => expect(searchEverything).toHaveBeenCalledTimes(1));
+    show({ visible: false });
+    expect(searchEverything).toHaveBeenCalledTimes(2);
+    const [first, cancel] = searchEverything.mock.calls;
+    expect(cancel[0]).toBe('');
+    expect(cancel[2]).toBeGreaterThan(first[2]);
+    // Switching files with the palette closed sends nothing, not even a cancel.
+    show({ visible: false, currentFilePath: '/root/b.md' });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    });
+    expect(searchEverything).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the newer query results when an older query finishes last', async () => {
+    // Each call's promise stays pending until the test resolves it, in call order.
+    const pending: Array<(results: TestResult[]) => void> = [];
+    const searchEverything = vi.fn(
+      () =>
+        new Promise<TestResult[]>((resolve) => {
+          pending.push(resolve);
+        }),
+    );
+    (window as unknown as { electronAPI: { searchEverything: typeof searchEverything } }).electronAPI = { searchEverything };
+    const user = userEvent.setup();
+    renderPalette({ rootPath: '/root' });
+    const input = await screen.findByPlaceholderText('Search files and content…');
+    await user.type(input, 'alp');
+    await waitFor(() => expect(searchEverything).toHaveBeenCalledTimes(1));
+    await user.keyboard('ha');
+    await waitFor(() => expect(searchEverything).toHaveBeenCalledTimes(2));
+
+    await act(async () => {
+      pending[1]([{ filePath: '/root/b.md', fileName: 'b.md', lineNumber: 1, matchLine: 'second query row', type: 'content' }]);
+    });
+    await screen.findByText('second query row');
+
+    await act(async () => {
+      pending[0]([{ filePath: '/root/a.md', fileName: 'a.md', lineNumber: 1, matchLine: 'first query row', type: 'content' }]);
+      // Let the older call's continuation run before checking.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(screen.getByText('second query row')).toBeTruthy();
+    expect(screen.queryByText('first query row')).toBeNull();
   });
 });

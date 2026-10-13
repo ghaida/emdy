@@ -4,7 +4,9 @@ import path from 'node:path';
 import { nudgeTrackFileOpen } from './settings-store';
 import { addAllowedRoot, isPathAllowed } from './allowed-paths';
 import { noteRecent } from './recents';
-import { IGNORED_DIRS, scanDirectory } from './scan-directory';
+import { scanDirectory } from './scan-directory';
+import { registerSearch, searchFiles } from './search';
+import type { SearchScope } from '../renderer/lib/types';
 import { openPathInNewWindow } from './windows';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -99,82 +101,21 @@ export function registerFileHandlers() {
     return { opened: true };
   });
 
-  ipcMain.handle('search:everything', async (_event, query: string, rootPath: string) => {
+  // Each window's newest query wins: an older one stops between files. The
+  // generation is registered before anything else, so an empty query (a
+  // cleared field or a closed palette) stops the search in flight and reads
+  // nothing.
+  ipcMain.handle('search:everything', async (event, query: unknown, scope: unknown, generation: unknown) => {
+    if (typeof generation !== 'number') return [];
+    const isStale = registerSearch(event.sender.id, generation);
     if (typeof query !== 'string' || !query.trim()) return [];
-    if (typeof rootPath !== 'string' || !isPathAllowed(rootPath)) return [];
-    return searchEverything(rootPath, query.toLowerCase());
+    if (typeof scope !== 'object' || scope === null) return [];
+    const { rootPath, filePath } = scope as Record<string, unknown>;
+    const checked: SearchScope = {
+      rootPath: typeof rootPath === 'string' && isPathAllowed(rootPath) ? rootPath : null,
+      filePath: typeof filePath === 'string' && isPathAllowed(filePath) ? filePath : null,
+    };
+    if (!checked.rootPath && !checked.filePath) return [];
+    return searchFiles(checked, query, isStale);
   });
-}
-
-interface SearchResult {
-  filePath: string;
-  fileName: string;
-  matchLine?: string;
-  lineNumber?: number;
-  type: 'file' | 'content';
-}
-
-async function searchEverything(dirPath: string, query: string): Promise<SearchResult[]> {
-  const results: SearchResult[] = [];
-  const files = await collectAllFiles(dirPath);
-
-  for (const file of files) {
-    const fileName = path.basename(file);
-
-    // File name match
-    if (fileName.toLowerCase().includes(query)) {
-      results.push({ filePath: file, fileName, type: 'file' });
-    }
-
-    // Content search
-    try {
-      const content = await fs.readFile(file, 'utf-8');
-      const lines = content.split('\n');
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].toLowerCase().includes(query)) {
-          results.push({
-            filePath: file,
-            fileName,
-            matchLine: lines[i].substring(0, 120),
-            lineNumber: i + 1,
-            type: 'content',
-          });
-          // Limit content matches per file
-          if (results.filter((r) => r.filePath === file && r.type === 'content').length >= 3) break;
-        }
-      }
-    } catch {
-      // Can't read file
-    }
-
-    // Limit total results
-    if (results.length >= 50) break;
-  }
-
-  // Sort: file name matches first, then content matches
-  results.sort((a, b) => {
-    if (a.type !== b.type) return a.type === 'file' ? -1 : 1;
-    return a.fileName.localeCompare(b.fileName);
-  });
-
-  return results;
-}
-
-async function collectAllFiles(dirPath: string): Promise<string[]> {
-  const files: string[] = [];
-  try {
-    const items = await fs.readdir(dirPath, { withFileTypes: true });
-    for (const item of items) {
-      if (item.name.startsWith('.') || IGNORED_DIRS.has(item.name)) continue;
-      const fullPath = path.join(dirPath, item.name);
-      if (item.isDirectory()) {
-        files.push(...await collectAllFiles(fullPath));
-      } else if (/\.(md|markdown)$/i.test(item.name)) {
-        files.push(fullPath);
-      }
-    }
-  } catch {
-    // skip
-  }
-  return files;
 }

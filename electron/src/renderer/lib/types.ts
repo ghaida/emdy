@@ -38,6 +38,13 @@ export interface SearchResult {
   matchLine?: string;
   lineNumber?: number;
   type: 'file' | 'content';
+  /** Matches in the whole file, up to 1,000; set on content results. */
+  matchCount?: number;
+}
+
+export interface SearchScope {
+  rootPath: string | null;
+  filePath: string | null;
 }
 
 export type OpenDialogResult =
@@ -71,7 +78,7 @@ export interface ElectronAPI {
   scanDirectory: (dirPath: string) => Promise<FileEntry[]>;
   showItemInFolder: (filePath: string) => Promise<void>;
   openInNewWindow: (filePath: string) => Promise<void>;
-  searchEverything: (query: string, rootPath: string) => Promise<SearchResult[]>;
+  searchEverything: (query: string, scope: SearchScope, generation: number) => Promise<SearchResult[] | null>;
   watchFile: (filePath: string) => Promise<void>;
   unwatchFile: () => Promise<void>;
   onFileChanged: (callback: (filePath: string) => void) => () => void;
