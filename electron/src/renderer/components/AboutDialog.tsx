@@ -16,24 +16,30 @@ export function AboutDialog({ visible, onClose }: AboutDialogProps) {
   const { mounted, active } = useTransition(visible);
   const modalRef = useRef<HTMLDivElement>(null);
   const [version, setVersion] = useState('');
-  const [update, setUpdate] = useState<{ version: string } | null | 'checking'>('checking');
+  const [update, setUpdate] = useState<'checking' | 'up-to-date' | { version: string } | null>(null);
   useFocusTrap(modalRef, visible);
 
   useEffect(() => {
     if (visible) {
       window.electronAPI.getAppVersion().then(setVersion);
-      setUpdate('checking');
-      window.electronAPI.getUpdateStatus().then((result) => {
-        if (result.status === 'downloaded' && result.version) {
-          setUpdate({ version: result.version });
-        } else {
-          setUpdate(null);
-        }
-      });
+      setUpdate(null);
+      // Asked again on each update:status while About is open, so "Checking…"
+      // goes away when the check finishes.
+      const showUpdateStatus = () => {
+        window.electronAPI.getUpdateStatus().then((result) => {
+          if (result.status === 'downloaded' && result.version) setUpdate({ version: result.version });
+          else if (result.status === 'checking') setUpdate('checking');
+          else if (result.upToDate) setUpdate('up-to-date');
+          else setUpdate(null);
+        });
+      };
+      showUpdateStatus();
+      const removeStatus = window.electronAPI.onUpdateStatus(showUpdateStatus);
       if (modalRef.current) {
         const firstFocusable = modalRef.current.querySelector<HTMLElement>('button, [href], input');
         firstFocusable?.focus();
       }
+      return removeStatus;
     }
   }, [visible]);
 
@@ -64,11 +70,11 @@ export function AboutDialog({ visible, onClose }: AboutDialogProps) {
         <h2 id="about-modal-title" className="about-name">Emdy</h2>
         <p className="about-version">
           Version {version}
-          {update === 'checking' ? '' : update ? (
-            <> · <span className="about-update-link">{update.version} ready — restart to install</span></>
-          ) : (
+          {update === 'checking' ? ' · Checking…' : update === 'up-to-date' ? (
             <span className="about-up-to-date"> · Up to date</span>
-          )}
+          ) : update ? (
+            <> · <span className="about-update-link">{update.version} ready — restart to install</span></>
+          ) : null}
         </p>
         <p className="about-tagline">A Markdown reader for macOS</p>
         <button

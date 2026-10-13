@@ -76,6 +76,8 @@ export function App() {
   const [aboutVisible, setAboutVisible] = useState(false);
   const [updateVisible, setUpdateVisible] = useState(false);
   const [updateReady, setUpdateReady] = useState<{ version: string; notes: string | null } | null>(null);
+  // Counts Check for Updates… picks, so a pick while the dialog is open checks again.
+  const [updateCheckRequest, setUpdateCheckRequest] = useState(0);
   // 'checking' while awaiting main's reply; resolves to true (new window) or false (main window).
   const [pendingOpen, setPendingOpen] = useState<'checking' | boolean>('checking');
   const pendingShownAtRef = useRef<number>(Date.now());
@@ -586,7 +588,9 @@ export function App() {
         case 'theme-cool': display.setColorTheme('cool'); break;
         case 'theme-neutral': display.setColorTheme('neutral'); break;
         case 'show-about': setAboutVisible(true); break;
-        case 'check-for-updates': setUpdateVisible(true); break;
+        // Forget any update shown earlier, so the dialog asks main what it has
+        // now, even when it's already open.
+        case 'check-for-updates': setUpdateReady(null); setUpdateCheckRequest((n) => n + 1); setUpdateVisible(true); break;
       }
     });
 
@@ -838,6 +842,7 @@ export function App() {
         visible={updateVisible}
         onClose={() => setUpdateVisible(false)}
         readyVersion={updateReady}
+        checkRequest={updateCheckRequest}
       />
       <div className="main-layout">
         {dirEntries && (

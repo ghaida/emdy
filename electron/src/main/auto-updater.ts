@@ -2,6 +2,7 @@ import { app, autoUpdater, ipcMain, BrowserWindow } from 'electron';
 import fsSync from 'node:fs';
 import path from 'node:path';
 import { RECHECK_INTERVAL_MS, shouldCheckOnFocus } from './update-schedule';
+import { sendWhenReadyTo } from './windows';
 
 const isDev = !app.isPackaged;
 
@@ -41,6 +42,8 @@ let updateStatus: 'idle' | 'checking' | 'available' | 'downloaded' | 'error' = '
 let downloadedVersion: string | null = null;
 let downloadedNotes: string | null = null;
 let updateError: string | null = null;
+// About says "Up to date" only when the last check found nothing newer.
+let lastCheckFoundNothing = false;
 
 let lastFocusedWindow: BrowserWindow | null = null;
 
@@ -48,11 +51,11 @@ let lastFocusedWindow: BrowserWindow | null = null;
 // whether a window-focus event should trigger a fresh (stale) check.
 let lastCheckAt: number | null = null;
 
-// When a user clicks "Check for Updates" before autoUpdater has finished
-// downloading, we hold their webContents here so the eventual download
-// result can be delivered to that specific window — even if the user
-// previously skipped the version.
-let manualCheckSender: Electron.WebContents | null = null;
+// When users click "Check for Updates" before autoUpdater has finished
+// downloading, we hold each asking window's webContents here so the eventual
+// download result can be delivered to every one of them — even if the user
+// previously skipped the version. Emptied when the check ends.
+const manualCheckSenders = new Set<Electron.WebContents>();
 
 function broadcast(channel: string, ...args: unknown[]) {
   for (const win of BrowserWindow.getAllWindows()) {
@@ -114,6 +117,7 @@ export function setupAutoUpdater() {
 
   autoUpdater.on('checking-for-update', () => {
     updateStatus = 'checking';
+    lastCheckFoundNothing = false;
     broadcast('update:status', 'checking');
   });
 
@@ -124,7 +128,8 @@ export function setupAutoUpdater() {
 
   autoUpdater.on('update-not-available', () => {
     updateStatus = 'idle';
-    manualCheckSender = null;
+    lastCheckFoundNothing = true;
+    manualCheckSenders.clear();
     broadcast('update:status', 'not-available');
   });
 
@@ -134,16 +139,21 @@ export function setupAutoUpdater() {
     updateStatus = 'downloaded';
     downloadedVersion = version;
     downloadedNotes = releaseNotes || null;
+    // An open About asks again on any status; a skipped version still reads as idle.
+    broadcast('update:status', 'downloaded');
 
-    // If a manual "Check for Updates" is awaiting a result, deliver it
-    // straight to that window — the user explicitly asked, so the skip
-    // filter shouldn't silence them.
-    if (manualCheckSender && !manualCheckSender.isDestroyed()) {
-      manualCheckSender.send('update:ready', {
-        version: downloadedVersion,
-        notes: downloadedNotes,
-      });
-      manualCheckSender = null;
+    // If manual "Check for Updates" requests are awaiting a result, deliver
+    // it straight to each of those windows — the user explicitly asked, so
+    // the skip filter shouldn't silence them.
+    const askers = [...manualCheckSenders].filter((sender) => !sender.isDestroyed());
+    manualCheckSenders.clear();
+    if (askers.length > 0) {
+      for (const sender of askers) {
+        sendWhenReadyTo(sender, 'update:ready', {
+          version: downloadedVersion,
+          notes: downloadedNotes,
+        });
+      }
       return;
     }
 
@@ -152,16 +162,19 @@ export function setupAutoUpdater() {
     const state = loadState();
     if (version && state.skippedVersion === version) return;
 
-    targetWindow()?.webContents.send('update:ready', {
-      version: downloadedVersion,
-      notes: downloadedNotes,
-    });
+    const target = targetWindow();
+    if (target) {
+      sendWhenReadyTo(target.webContents, 'update:ready', {
+        version: downloadedVersion,
+        notes: downloadedNotes,
+      });
+    }
   });
 
   autoUpdater.on('error', (err) => {
     updateStatus = 'error';
     updateError = err?.message || 'Unknown error';
-    manualCheckSender = null;
+    manualCheckSenders.clear();
     broadcast('update:status', 'error');
   });
 
@@ -169,7 +182,10 @@ export function setupAutoUpdater() {
 
   // Check on launch, then periodically
   triggerCheck();
-  setInterval(() => triggerCheck(), RECHECK_INTERVAL_MS);
+  setInterval(() => {
+    // Not while a check or download is in flight, and not once an update is waiting.
+    if (updateStatus === 'idle' || updateStatus === 'error') triggerCheck();
+  }, RECHECK_INTERVAL_MS);
 }
 
 export function registerAutoUpdaterIPC() {
@@ -182,8 +198,15 @@ export function registerAutoUpdaterIPC() {
       return { status: 'downloaded', version: downloadedVersion, notes: downloadedNotes };
     }
 
+    // Squirrel refuses a second concurrent check and reports it as an error, so
+    // join the one in flight instead.
+    if (updateStatus === 'checking' || updateStatus === 'available') {
+      manualCheckSenders.add(event.sender);
+      return { status: 'checking' };
+    }
+
     updateError = null;
-    manualCheckSender = event.sender;
+    manualCheckSenders.add(event.sender);
     triggerCheck();
     return { status: 'checking' };
   });
@@ -202,14 +225,15 @@ export function registerAutoUpdaterIPC() {
     if (updateStatus === 'error') {
       return { status: 'error', error: updateError };
     }
-    return { status: updateStatus };
+    return { status: updateStatus, upToDate: updateStatus === 'idle' && lastCheckFoundNothing };
   });
 
-  // Restart and install
+  // Restart and install. False when there's no downloaded update to install,
+  // so the dialog can say so.
   ipcMain.handle('update:install', () => {
-    if (updateStatus === 'downloaded') {
-      autoUpdater.quitAndInstall();
-    }
+    if (updateStatus !== 'downloaded') return false;
+    autoUpdater.quitAndInstall();
+    return true;
   });
 
   // Skip this version. Suppresses the auto-pop on mount and the auto-

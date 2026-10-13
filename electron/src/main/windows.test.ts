@@ -18,8 +18,12 @@ vi.mock('electron', async () => {
     id = nextId++;
     sent: unknown[][] = [];
     openHandler: unknown = null;
+    destroyed = false;
     send(...args: unknown[]) {
       this.sent.push(args);
+    }
+    isDestroyed() {
+      return this.destroyed;
     }
     setWindowOpenHandler(handler: unknown) {
       this.openHandler = handler;
@@ -80,6 +84,7 @@ vi.mock('electron', async () => {
     close() {
       if (this.destroyed) return;
       this.destroyed = true;
+      this.webContents.destroyed = true;
       this.visible = false;
       setTimeout(() => this.emit('closed'), 0);
     }
@@ -376,6 +381,23 @@ describe("sending to a window's page", () => {
     expect(sent(win, 'menu:event')).toEqual([]);
     reportReady(win);
     expect(sent(win, 'menu:event')).toEqual([['menu:event', 'find']]);
+  });
+
+  it('sends nothing to a page that has been destroyed', () => {
+    // Like Electron's, a destroyed page throws when its id is read or it's sent to.
+    const destroyed = {
+      isDestroyed: () => true,
+      get id(): number {
+        throw new TypeError('Object has been destroyed');
+      },
+      send() {
+        throw new TypeError('Object has been destroyed');
+      },
+    };
+    const info = { version: '1.9.0', notes: null };
+    expect(() =>
+      windows.sendWhenReadyTo(destroyed as unknown as Electron.WebContents, 'update:ready', info),
+    ).not.toThrow();
   });
 });
 

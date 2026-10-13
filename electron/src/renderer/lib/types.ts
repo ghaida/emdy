@@ -110,8 +110,8 @@ export interface ElectronAPI {
   setNudgeSetting: (key: string, value: unknown) => Promise<void>;
   getAppVersion: () => Promise<string>;
   checkForUpdate: () => Promise<{ status: string; version?: string; notes?: string | null; error?: string }>;
-  getUpdateStatus: () => Promise<{ status: string; version?: string; notes?: string | null; error?: string }>;
-  installUpdate: () => Promise<void>;
+  getUpdateStatus: () => Promise<{ status: string; version?: string; notes?: string | null; error?: string; upToDate?: boolean }>;
+  installUpdate: () => Promise<boolean>;
   skipUpdate: (version: string) => Promise<void>;
   getSkippedVersion: () => Promise<string | null>;
   onUpdateReady: (callback: (info: { version: string; notes: string | null }) => void) => () => void;

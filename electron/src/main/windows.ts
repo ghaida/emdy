@@ -165,8 +165,10 @@ function sendWhenReady(record: WindowRecord, channel: string, ...args: unknown[]
 }
 
 // The same, for senders that hold a page rather than its record, such as the
-// menu. A page that isn't an Emdy window gets it straight away.
+// menu and the updater. A page that isn't an Emdy window gets it straight
+// away, and a closed one gets nothing (a destroyed page throws on wc.id).
 export function sendWhenReadyTo(wc: Electron.WebContents, channel: string, ...args: unknown[]) {
+  if (wc.isDestroyed()) return;
   const record = records.get(wc.id);
   if (record) sendWhenReady(record, channel, ...args);
   else wc.send(channel, ...args);

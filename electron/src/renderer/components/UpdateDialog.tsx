@@ -12,6 +12,8 @@ interface UpdateDialogProps {
   visible: boolean;
   onClose: () => void;
   readyVersion?: { version: string; notes: string | null } | null;
+  /** Changes with each Check for Updates… pick, so a pick while the dialog is open asks main again. */
+  checkRequest?: number;
 }
 
 type NotesBlock =
@@ -60,12 +62,14 @@ function UpdateNotes({ notes }: { notes: string }) {
   );
 }
 
-export function UpdateDialog({ visible, onClose, readyVersion }: UpdateDialogProps) {
+export function UpdateDialog({ visible, onClose, readyVersion, checkRequest }: UpdateDialogProps) {
   const { mounted, active } = useTransition(visible);
   const modalRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<DialogState>('checking');
   const [currentVersion, setCurrentVersion] = useState('');
   const [skippedVersion, setSkippedVersion] = useState<string | null>(null);
+  // Restart to Update found no downloaded update in main to install.
+  const [staleReady, setStaleReady] = useState(false);
   useFocusTrap(modalRef, visible);
 
   useEffect(() => {
@@ -74,6 +78,7 @@ export function UpdateDialog({ visible, onClose, readyVersion }: UpdateDialogPro
     let removeStatus: (() => void) | undefined;
     let removeReady: (() => void) | undefined;
 
+    setStaleReady(false);
     window.electronAPI.getAppVersion().then(setCurrentVersion);
     window.electronAPI.getSkippedVersion().then(setSkippedVersion);
 
@@ -100,7 +105,7 @@ export function UpdateDialog({ visible, onClose, readyVersion }: UpdateDialogPro
     }
 
     return () => { removeStatus?.(); removeReady?.(); };
-  }, [visible, readyVersion]);
+  }, [visible, readyVersion, checkRequest]);
 
   if (!mounted) return null;
 
@@ -135,6 +140,7 @@ export function UpdateDialog({ visible, onClose, readyVersion }: UpdateDialogPro
         {state === 'error' && (
           <p className="update-message">Could not check for updates. Check your internet connection.</p>
         )}
+        {staleReady && <p className="update-message">The update isn't ready to install yet. Check for Updates again.</p>}
         {typeof state === 'object' && (
           <>
             <p className="update-message">Emdy {state.version} is ready to install. You have {currentVersion}.</p>
@@ -142,7 +148,10 @@ export function UpdateDialog({ visible, onClose, readyVersion }: UpdateDialogPro
             <div className={`update-actions${skippedVersion === state.version ? ' single' : ''}`}>
               <button
                 className="update-download-btn"
-                onClick={() => window.electronAPI.installUpdate()}
+                onClick={async () => {
+                  const ok = await window.electronAPI.installUpdate();
+                  if (!ok) setStaleReady(true);
+                }}
               >
                 Restart to Update
               </button>
