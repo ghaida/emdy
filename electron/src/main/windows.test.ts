@@ -345,6 +345,20 @@ describe("sending to a window's page", () => {
     expect(welcome.webContents.sent).toEqual([['file:open', a, '# a.md\n']]);
   });
 
+  it('sends only to the window whose page says it is listening', async () => {
+    await windows.startWindows([]);
+    const a = file('a.md');
+    const b = file('b.md');
+    await windows.openFromOutside(a);
+    await windows.openFromOutside(b);
+    const [first, second] = live();
+    reportReady(second);
+    expect(second.webContents.sent).toEqual([['file:open', b, '# b.md\n']]);
+    expect(first.webContents.sent).toEqual([]);
+    reportReady(first);
+    expect(first.webContents.sent).toEqual([['file:open', a, '# a.md\n']]);
+  });
+
   it('sends nothing more when the page says again that it is listening', async () => {
     await windows.startWindows([]);
     const [welcome] = live();
