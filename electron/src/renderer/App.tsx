@@ -740,7 +740,7 @@ export function App() {
           <div className={`content-area${minimapVisible ? ' hide-scrollbar' : ''}`} ref={scrollContainerRef}>
             <MarkdownView
               ref={markdownViewRef}
-              content={designParsed ? designParsed.body : content}
+              content={content}
               designTokens={designParsed?.tokens ?? null}
               // Tokens read from CSS are still in the document's code blocks, so
               // only show them where a section heading names them.

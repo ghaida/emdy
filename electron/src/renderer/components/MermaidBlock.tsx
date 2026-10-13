@@ -8,6 +8,8 @@ import { DIAGRAM_BLOCK_CLASS, DIAGRAM_ERROR_CLASS, DIAGRAM_SOURCE_ATTR } from '.
 interface MermaidBlockProps {
   source: string;
   theme: DiagramTheme;
+  /** The line the fence starts on, which palette picks look for. */
+  line?: number;
   /** Shown in place of the diagram when the source doesn't render. */
   fallback: React.ReactNode;
 }
@@ -16,7 +18,7 @@ type Copied = 'source' | 'image' | null;
 
 const COPIED_FEEDBACK_MS = 2000;
 
-export function MermaidBlock({ source, theme, fallback }: MermaidBlockProps) {
+export function MermaidBlock({ source, theme, line, fallback }: MermaidBlockProps) {
   // The render for exactly this source and theme, if it has been drawn before.
   // Looked up while rendering, so a cached diagram paints on the first frame.
   const current = getCachedDiagram(source, theme);
@@ -87,7 +89,7 @@ export function MermaidBlock({ source, theme, fallback }: MermaidBlockProps) {
 
   if (result && !result.ok) {
     return (
-      <div className="mermaid-error-block">
+      <div className="mermaid-error-block" data-line={line}>
         {fallback}
         <div className={DIAGRAM_ERROR_CLASS} role="note">
           <div className="mermaid-error-title">Couldn’t render this Mermaid diagram</div>
@@ -97,7 +99,7 @@ export function MermaidBlock({ source, theme, fallback }: MermaidBlockProps) {
     );
   }
 
-  const blockProps = { className: DIAGRAM_BLOCK_CLASS, [DIAGRAM_SOURCE_ATTR]: source, 'aria-busy': !current };
+  const blockProps = { className: DIAGRAM_BLOCK_CLASS, [DIAGRAM_SOURCE_ATTR]: source, 'aria-busy': !current, 'data-line': line };
 
   return (
     <div {...blockProps}>

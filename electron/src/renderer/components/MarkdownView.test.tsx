@@ -5,6 +5,7 @@ import { MarkdownView, type MarkdownViewHandle, type HighlightState } from './Ma
 import { warm, cool } from '../lib/color-themes';
 import { parseDesignMd, type DesignTokens } from '../lib/design-md';
 import { FULL_CODE_ATTR } from '../lib/code-export';
+import { countShownMatches } from '../lib/remark-source-lines';
 
 const colors = warm.light;
 
@@ -159,7 +160,7 @@ function renderView(props: Partial<React.ComponentProps<typeof MarkdownView>> & 
 describe('MarkdownView design.md rendering', () => {
   function renderDesign() {
     const parsed = parseDesignMd(DESIGN_FILE)!;
-    return renderView({ content: parsed.body, designTokens: parsed.tokens });
+    return renderView({ content: DESIGN_FILE, designTokens: parsed.tokens });
   }
 
   it('renders the front-matter name and description as a header', () => {
@@ -459,5 +460,145 @@ describe('MarkdownView theme switch after find', () => {
     rerender(<MarkdownView {...props} colors={colors} highlight={null} />);
     expect(() => rerender(<MarkdownView {...props} colors={cool.light} highlight={null} />)).not.toThrow();
     expect(container.querySelector('.markdown-body')?.textContent).toBe('See docs.');
+  });
+});
+
+describe('MarkdownView focusMatchAtLine', () => {
+  it('maps source lines to the block that starts there', () => {
+    const doc = '# Setup\n\nInstall npm.\n\n## Usage\n\nRun npm start.\n';
+    const ref = createRef<MarkdownViewHandle>();
+    render(
+      <MarkdownView ref={ref} colors={colors} filePath="/x/a.md" content={doc}
+        highlight={{ query: 'npm', currentIndex: 0, mode: 'multi-persistent' }} onMatchesChanged={vi.fn()} />
+    );
+    expect([ref.current?.focusMatchAtLine(3), ref.current?.focusMatchAtLine(7)]).toEqual([0, 1]);
+  });
+
+  it('accounts for stripped front matter', () => {
+    const doc = '---\ntitle: T\n---\n\nInstall npm.\n\nRun npm start.\n';
+    const ref = createRef<MarkdownViewHandle>();
+    render(
+      <MarkdownView ref={ref} colors={colors} filePath="/x/a.md" content={doc}
+        highlight={{ query: 'npm', currentIndex: 0, mode: 'multi-persistent' }} onMatchesChanged={vi.fn()} />
+    );
+    // Search reports file lines: "Install npm." is line 5 of the file and "Run npm start." line 7.
+    expect(ref.current?.focusMatchAtLine(5)).toBe(0);
+    expect(ref.current?.focusMatchAtLine(7)).toBe(1);
+  });
+
+  it('lands inside a fenced code block', () => {
+    const doc = 'Use npm here.\n\n```bash\nnpm install\n```\n';
+    const ref = createRef<MarkdownViewHandle>();
+    render(
+      <MarkdownView ref={ref} colors={colors} filePath="/x/a.md" content={doc}
+        highlight={{ query: 'npm', currentIndex: 0, mode: 'multi-persistent' }} onMatchesChanged={vi.fn()} />
+    );
+    // "npm install" is line 4, in the fence that starts on line 3.
+    expect(ref.current?.focusMatchAtLine(4)).toBe(1);
+  });
+
+  // A pick as the palette makes one: the document is on screen, then the
+  // query arrives and a line is picked.
+  function pick(content: string, query: string, lines: number[], designTokens?: DesignTokens) {
+    const ref = createRef<MarkdownViewHandle>();
+    const props = { colors, filePath: '/x/a.md', content, designTokens, onMatchesChanged: vi.fn() };
+    const { rerender } = render(<MarkdownView ref={ref} {...props} highlight={null} />);
+    rerender(<MarkdownView ref={ref} {...props} highlight={{ query, currentIndex: 0, mode: 'multi-persistent' }} />);
+    return lines.map((line) => ref.current?.focusMatchAtLine(line));
+  }
+
+  it('lands on the picked line when a fence has matches on several lines', () => {
+    expect(pick('Intro.\n\n```bash\nnpm install\nnpm run build\n```\n', 'npm', [4, 5])).toEqual([0, 1]);
+  });
+
+  it('lands on the picked line in a list', () => {
+    expect(pick('- Install npm\n- Run npm start\n', 'npm', [1, 2])).toEqual([0, 1]);
+  });
+
+  it('lands on the picked line in a paragraph wrapped over two lines', () => {
+    expect(pick('Install npm first,\nthen run npm start.\n', 'npm', [1, 2])).toEqual([0, 1]);
+  });
+
+  it('lands on the last match when none comes at or after the line', () => {
+    // Line 5's "npm" is in the link's address, which isn't shown.
+    expect(pick('Install npm.\n\nRun npm start.\n\nSee [docs](https://npmjs.com).\n', 'npm', [5])).toEqual([1]);
+  });
+
+  it('lands on the picked line in a list of links', () => {
+    const items = ['a', 'b', 'c', 'd', 'e', 'f'].map((p) => `- [npm](https://www.npmjs.com/package/${p}) ${p}`);
+    expect(pick(`${items.join('\n')}\n\nAfter npm.\n`, 'npm', [1, 2, 3, 4, 5, 6])).toEqual([0, 1, 2, 3, 4, 5]);
+  });
+
+  it('lands on the picked line in a table of contents', () => {
+    const readme =
+      '# Emdy\n\n- [Install](#install)\n- [Usage](#usage)\n- [Install from source](#install-from-source)\n\n## Install\n\nRun the installer.\n';
+    expect(pick(readme, 'install', [3, 5, 7])).toEqual([0, 1, 2]);
+  });
+
+  it('lands on the picked line after a line with links', () => {
+    const doc = 'See [npm](https://www.npmjs.com) and [the npm docs](https://docs.npmjs.com),\nthen run npm start.\n\nAfter npm.\n';
+    expect(pick(doc, 'npm', [1, 2])).toEqual([0, 2]);
+  });
+
+  it('lands on the picked line in a fence whose language matches', () => {
+    expect(pick('```js\nconst js = 1;\nlog(js);\n```\n', 'js', [2, 3])).toEqual([0, 1]);
+  });
+
+  it('lands on the picked line after a line with an image', () => {
+    // The image's alt text isn't text on the page, so find doesn't mark it.
+    const doc = '![npm logo](npm.png) Install npm first,\nthen run npm start.\n\nAfter npm.\n';
+    expect(pick(doc, 'npm', [1, 2, 4])).toEqual([0, 1, 2]);
+  });
+
+  it("lands on the header for a line in a design file's front matter", () => {
+    const content = '---\nname: Acme\ncolors:\n  primary: "#ff6600"\n---\n\nAcme uses orange.\n';
+    // Line 2 is "name: Acme", which the header shows as its title.
+    expect(pick(content, 'acme', [2], parseDesignMd(content)?.tokens)).toEqual([0]);
+  });
+
+  const npm: HighlightState = { query: 'npm', currentIndex: 0, mode: 'multi-persistent' };
+
+  it('uses the new front matter length after a rerender', () => {
+    const body = '\nInstall npm.\n\nRun npm start.\n';
+    const ref = createRef<MarkdownViewHandle>();
+    const props = { colors, filePath: '/x/a.md', highlight: npm, onMatchesChanged: vi.fn() };
+    const { rerender } = render(<MarkdownView ref={ref} {...props} content={body} />);
+    // The same body under front matter: "Install npm." is now line 5.
+    rerender(<MarkdownView ref={ref} {...props} content={`---\ntitle: T\n---\n${body}`} />);
+    expect(ref.current?.focusMatchAtLine(5)).toBe(0);
+  });
+
+  it('counts matches in the document on screen after it changes', () => {
+    const ref = createRef<MarkdownViewHandle>();
+    const props = { colors, filePath: '/x/a.md', highlight: npm, onMatchesChanged: vi.fn() };
+    const { rerender } = render(<MarkdownView ref={ref} {...props} content={'Hello.\n\nWorld.\n'} />);
+    rerender(<MarkdownView ref={ref} {...props} content={'```\nnpm install\nnpm run build\n```\n'} />);
+    // "npm run build" is line 3, the fence's second match.
+    expect(ref.current?.focusMatchAtLine(3)).toBe(1);
+  });
+});
+
+describe('countShownMatches', () => {
+  it('counts on the lines from `from` up to, not including, `to`', () => {
+    const text = 'npm\nnpm npm\nnpm\n';
+    expect([countShownMatches(text, 'npm', 1, 1), countShownMatches(text, 'npm', 1, 3), countShownMatches(text, 'npm', 2, 9)]).toEqual([0, 3, 3]);
+  });
+
+  it('matches as find does: in any case, with the query as plain text', () => {
+    expect(countShownMatches('A.b a.B axb\n', 'a.b', 1, 2)).toBe(2);
+  });
+
+  it("leaves out images, link addresses and comments, which the page doesn't show", () => {
+    expect(countShownMatches('![npm logo](npm.png) [npm](https://npmjs.com) <!-- npm --> npm\n', 'npm', 1, 2)).toBe(2);
+    // A badge, an image inside a link, shows nothing.
+    expect(countShownMatches('[![npm](https://img.shields.io/npm/v/emdy.svg)](https://www.npmjs.com/package/emdy)\n', 'npm', 1, 2)).toBe(0);
+  });
+
+  it('counts an autolink, whose address is its text', () => {
+    expect(countShownMatches('<https://www.npmjs.com>\n', 'npm', 1, 2)).toBe(1);
+  });
+
+  it("leaves out a fence's opening line and counts its code as written", () => {
+    expect(countShownMatches('```js\nconst link = "[js](js.md)";\n```\n', 'js', 1, 3)).toBe(2);
   });
 });

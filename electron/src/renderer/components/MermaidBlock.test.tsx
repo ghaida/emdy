@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor, fireEvent, screen, act, within } from '@testing-library/react';
-import { MarkdownView } from './MarkdownView';
+import { MarkdownView, type HighlightState, type MarkdownViewHandle } from './MarkdownView';
 import { warm } from '../lib/color-themes';
 import { buildDiagramTheme } from '../lib/mermaid-theme';
 import { resetMermaidForTests } from '../lib/mermaid-render';
@@ -207,5 +207,29 @@ describe('Mermaid blocks in MarkdownView', () => {
     expect(container.querySelector('.mermaid-diagram svg')).not.toBeNull();
     expect(container.querySelector('.mermaid-loading')).toBeNull();
     expect(mermaid.render).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Mermaid blocks and palette line picks', () => {
+  const pick: HighlightState = { query: 'r', currentIndex: 0, mode: 'multi-persistent' };
+
+  it('lands on the first match after a diagram for a line inside its fence', async () => {
+    const ref = React.createRef<MarkdownViewHandle>();
+    const { container } = render(<MarkdownView ref={ref} content={DOC} colors={warm.light} highlight={pick} />);
+
+    // The fence starts on line 3: marked before the diagram renders, and after.
+    expect(container.querySelector('.mermaid-block')?.getAttribute('data-line')).toBe('3');
+    await waitFor(() => expect(container.querySelector('.mermaid-diagram svg')).not.toBeNull());
+    expect(container.querySelector('.mermaid-block')?.getAttribute('data-line')).toBe('3');
+    // "graph TD" is line 4. The matches are the r of "Before" and the r of "After".
+    expect(ref.current?.focusMatchAtLine(4)).toBe(1);
+  });
+
+  it('marks the line on the error block when the diagram does not render', async () => {
+    mermaid.render.mockRejectedValue(new Error('Parse error on line 2'));
+    const { container } = render(<MarkdownView content={DOC} colors={warm.light} />);
+
+    await waitFor(() => expect(container.querySelector('.mermaid-error-block')).not.toBeNull());
+    expect(container.querySelector('.mermaid-error-block')?.getAttribute('data-line')).toBe('3');
   });
 });

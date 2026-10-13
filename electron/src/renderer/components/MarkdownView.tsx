@@ -12,11 +12,12 @@ import { buildInjectionMap, TOKEN_CATEGORIES, type DesignTokens, type TokenCateg
 import { stripFrontMatter } from '../lib/front-matter';
 import { localImageUrl } from '../lib/image-url';
 import { remarkHideComments } from '../lib/remark-hide-comments';
+import { countShownMatches, remarkSourceLines } from '../lib/remark-source-lines';
 import { buildDiagramTheme, type DiagramTheme } from '../lib/mermaid-theme';
 import { TokenVisualization } from './design/TokenVisualization';
 import { MermaidBlock } from './MermaidBlock';
 
-const REMARK_PLUGINS = [remarkGfm, remarkHideComments];
+const REMARK_PLUGINS = [remarkGfm, remarkHideComments, remarkSourceLines];
 const MemoMarkdown = React.memo(Markdown);
 
 const CATEGORY_LABELS: Record<TokenCategory, string> = {
@@ -40,6 +41,12 @@ function documentKey(body: string, filePath: string | null | undefined, designTo
   let hash = 5381;
   for (let i = 0; i < text.length; i++) hash = ((hash * 33) ^ text.charCodeAt(i)) >>> 0;
   return `${filePath ?? ''}:${text.length}:${hash}`;
+}
+
+function countLines(text: string): number {
+  let n = 0;
+  for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) === 10) n++;
+  return n;
 }
 
 export type HighlightMode = 'multi-persistent' | 'none';
@@ -96,6 +103,12 @@ function mermaidSource(pre: HastNode | undefined): string | null {
   return isMermaid ? textContent(code).replace(/\n$/, '') : null;
 }
 
+/** The line remark-source-lines stamped on a block. For a fence it's on the <code>, not the <pre>. */
+function sourceLine(node: HastNode | undefined): number | undefined {
+  const line = node?.properties?.['data-line'];
+  return typeof line === 'number' ? line : undefined;
+}
+
 interface FenceContextValue {
   codeTheme: Record<string, React.CSSProperties>;
   diagramTheme: DiagramTheme;
@@ -118,6 +131,7 @@ function Pre({ node, children, ...props }: React.ComponentProps<'pre'> & ExtraPr
       key={fence.filePath ?? ''}
       source={source}
       theme={fence.diagramTheme}
+      line={sourceLine(node?.children.find((child) => child.type === 'element'))}
       fallback={
         <pre {...props}>
           <CodeBlock language="mermaid" codeTheme={fence.codeTheme}>
@@ -138,6 +152,8 @@ export const MarkdownView = React.memo(
     const diagramTheme = useMemo(() => buildDiagramTheme(colors), [colors]);
     const fence = useMemo(() => ({ codeTheme, diagramTheme, filePath }), [codeTheme, diagramTheme, filePath]);
     const body = useMemo(() => stripFrontMatter(content), [content]);
+    // Search reports file line numbers; the view has dropped the front matter.
+    const lineOffset = useMemo(() => countLines(content) - countLines(body), [content, body]);
     const docKey = useMemo(() => documentKey(body, filePath, designTokens), [body, filePath, designTokens]);
 
     const injectionMap = useMemo(
@@ -236,19 +252,31 @@ export const MarkdownView = React.memo(
           const root = bodyRef.current;
           const marks = matchElementsRef.current;
           if (!root || marks.length === 0) return null;
-          const blocks = Array.from(root.children);
-          if (blocks.length === 0) return null;
-          const blockIdx = Math.min(Math.max(lineNumber - 1, 0), blocks.length - 1);
-          const block = blocks[blockIdx];
-          for (let i = 0; i < marks.length; i++) {
-            if (block.contains(marks[i])) return i;
-            const pos = block.compareDocumentPosition(marks[i]);
-            if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return i;
+          const target = lineNumber - lineOffset;
+          // The block that starts closest before the line.
+          let block: HTMLElement | null = null;
+          for (const el of Array.from(root.querySelectorAll<HTMLElement>('[data-line]'))) {
+            if (Number(el.dataset.line) <= target) block = el;
+            else break;
           }
-          return null;
+          // Above the first block is front matter, which a design file shows in its header.
+          if (!block) return 0;
+          // A fence, a list or a wrapped paragraph can have matches on several
+          // lines: skip the block's matches on the lines before this one.
+          let skip = countShownMatches(body, highlight?.query ?? '', Number(block.dataset.line), target);
+          for (let i = 0; i < marks.length; i++) {
+            if (block.contains(marks[i])) {
+              if (skip === 0) return i;
+              skip--;
+            } else if (block.compareDocumentPosition(marks[i]) & Node.DOCUMENT_POSITION_FOLLOWING) {
+              return i;
+            }
+          }
+          // No match at or after the block: the last one is the nearest.
+          return marks.length - 1;
         },
       }),
-      []
+      [lineOffset, body, highlight?.query]
     );
 
     const components = useMemo<Components>(() => ({
@@ -292,7 +320,7 @@ export const MarkdownView = React.memo(
         const codeString = String(children).replace(/\n$/, '');
         if (match) {
           return (
-            <CodeBlock language={match[1]} codeTheme={codeTheme}>
+            <CodeBlock language={match[1]} codeTheme={codeTheme} line={sourceLine(props.node)}>
               {codeString}
             </CodeBlock>
           );
@@ -366,9 +394,11 @@ export const MarkdownView = React.memo(
 
 const MAX_HIGHLIGHTED_LINES = 200;
 
-function CodeBlock({ language, codeTheme, children }: {
+function CodeBlock({ language, codeTheme, line, children }: {
   language: string;
   codeTheme: Record<string, React.CSSProperties>;
+  /** The line the fence starts on, which palette picks look for. */
+  line?: number;
   children: string;
 }) {
   const [copied, setCopied] = useState(false);
@@ -386,7 +416,7 @@ function CodeBlock({ language, codeTheme, children }: {
     ? children.split('\n').slice(0, MAX_HIGHLIGHTED_LINES).join('\n')
     : children;
   // Print, PDF and Copy take a block cut short in full (see code-export).
-  const wrapperProps = { className: 'code-block-wrapper', [FULL_CODE_ATTR]: isTruncated ? children : undefined };
+  const wrapperProps = { className: 'code-block-wrapper', 'data-line': line, [FULL_CODE_ATTR]: isTruncated ? children : undefined };
 
   return (
     <div {...wrapperProps}>
