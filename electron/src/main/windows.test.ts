@@ -213,7 +213,14 @@ describe('restoring windows at launch', () => {
   });
 
   it('replaces a saved window whose file is gone with a welcome window, without showing it', async () => {
-    writeSession([{ dirPath: null, filePath: path.join(dir, 'gone.md'), scrollTop: 0, bounds: null }]);
+    const gone = path.join(dir, 'gone.md');
+    writeSession([{ dirPath: null, filePath: gone, scrollTop: 0, bounds: null }]);
+    // Settle the existence check without real I/O, so the window closes in the
+    // turn it was created, before its page can load and show it.
+    vi.spyOn(fsp, 'stat').mockImplementation(((p: fs.PathLike) =>
+      String(p) === gone
+        ? Promise.reject(Object.assign(new Error('ENOENT'), { code: 'ENOENT' }))
+        : realStat(p)) as unknown as typeof fsp.stat);
     await windows.startWindows([]);
     await sleep(50);
     expect(live()).toHaveLength(1);
