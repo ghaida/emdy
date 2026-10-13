@@ -10,6 +10,7 @@ import { findMatches, clearMatches } from '../lib/find-walker';
 import { findScrollParent } from '../lib/find-scroller';
 import { buildInjectionMap, TOKEN_CATEGORIES, type DesignTokens, type TokenCategory } from '../lib/design-md';
 import { stripFrontMatter } from '../lib/front-matter';
+import { localImageUrl } from '../lib/image-url';
 import { remarkHideComments } from '../lib/remark-hide-comments';
 import { buildDiagramTheme, type DiagramTheme } from '../lib/mermaid-theme';
 import { TokenVisualization } from './design/TokenVisualization';
@@ -291,11 +292,7 @@ export const MarkdownView = React.memo(
         );
       },
       img({ src, alt, ...props }) {
-        let resolvedSrc = src || '';
-        if (filePath && resolvedSrc && !resolvedSrc.startsWith('http') && !resolvedSrc.startsWith('data:') && !resolvedSrc.startsWith('file:')) {
-          const dir = filePath.replace(/\/[^/]+$/, '');
-          resolvedSrc = `local-file://${dir}/${encodeURIComponent(resolvedSrc).replace(/%2F/g, '/')}`;
-        }
+        const resolvedSrc = filePath && src ? localImageUrl(src, filePath) : src || '';
         return <img src={resolvedSrc} alt={alt || ''} {...props} />;
       },
       table({ children, ...props }) {
