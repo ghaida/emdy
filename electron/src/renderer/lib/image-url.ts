@@ -2,9 +2,11 @@
 // process serves. The host is a fixed word: local-file is a "standard" scheme,
 // so Chromium would otherwise read the first path segment as the host.
 
+import { LOCAL_FILE_HOST } from '../../shared/local-file';
+
 const HAS_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
 
-export const LOCAL_FILE_HOST = 'local';
+export { LOCAL_FILE_HOST };
 
 /**
  * The absolute path `src` points at, relative to the file's folder, or null

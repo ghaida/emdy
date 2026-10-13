@@ -141,7 +141,7 @@ async function withPrintDocument<T>(
 <html>
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' local-file: data: https:; font-src 'self'">
 <title>${safeTitle}</title>
 <link rel="stylesheet" href="print.css">
 </head>

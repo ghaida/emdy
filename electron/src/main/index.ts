@@ -1,5 +1,4 @@
 import { app, autoUpdater, BrowserWindow, ipcMain, protocol, net, session, systemPreferences, shell } from 'electron';
-import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import started from 'electron-squirrel-startup';
 import { registerFileHandlers } from './ipc-handlers';
@@ -8,6 +7,7 @@ import { registerFileWatcher } from './file-watcher';
 import { registerExportHandlers } from './pdf-export';
 import { buildMenu } from './menu';
 import { isPathAllowed } from './allowed-paths';
+import { localFilePathFromUrl } from './local-file';
 import { setupAutoUpdater, registerAutoUpdaterIPC } from './auto-updater';
 import { registerWindowHandlers, startWindows, openFromOutside, handleActivate, lastFocusedWindow, prepareForQuit } from './windows';
 import { clearRecents, forgetRecent, onRecentsChange, recentPaths } from './recents';
@@ -65,13 +65,14 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 app.on('ready', () => {
+  // Images next to an open file. The renderer builds these URLs (image-url.ts);
+  // anything else, or anything outside an opened folder, is refused.
   protocol.handle('local-file', (request) => {
-    const parsed = new URL(request.url);
-    const resolved = path.resolve(decodeURIComponent(parsed.pathname));
-    if (!isPathAllowed(resolved)) {
+    const filePath = localFilePathFromUrl(request.url);
+    if (!filePath || !isPathAllowed(filePath)) {
       return new Response('Forbidden', { status: 403 });
     }
-    return net.fetch(pathToFileURL(resolved).href);
+    return net.fetch(pathToFileURL(filePath).href);
   });
 
   // Content Security Policy — only applied in production (Vite HMR needs looser policy)
@@ -81,7 +82,7 @@ app.on('ready', () => {
         responseHeaders: {
           ...details.responseHeaders,
           'Content-Security-Policy': [
-            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' local-file: data:; font-src 'self'; connect-src 'self' https://emdyapp.com; object-src 'none'; base-uri 'self'; form-action 'none'",
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' local-file: data: https:; font-src 'self'; connect-src 'self' https://emdyapp.com; object-src 'none'; base-uri 'self'; form-action 'none'",
           ],
         },
       });
