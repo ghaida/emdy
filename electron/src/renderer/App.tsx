@@ -109,7 +109,6 @@ export function App() {
   const markdownViewRef = useRef<MarkdownViewHandle | null>(null);
 
   const [findState, setFindState] = useState<FindState | null>(null);
-  const [matchPositions, setMatchPositions] = useState<number[]>([]);
   const [pulseNonce, setPulseNonce] = useState(0);
 
   const isFreshPickRef = useRef(false);
@@ -141,7 +140,6 @@ export function App() {
     fadeTimerRef.current = setTimeout(() => {
       fadeTimerRef.current = null;
       setFindState(null);
-      setMatchPositions([]);
     }, FIND_FADE_MS);
   }, []);
 
@@ -169,8 +167,7 @@ export function App() {
   }, []);
 
   const handleMatchesChanged = useCallback(
-    (count: number, isCapped: boolean, positions: number[]) => {
-      setMatchPositions(positions);
+    (count: number, isCapped: boolean) => {
       const pending = pendingLineNumberRef.current;
       pendingLineNumberRef.current = null;
       const wasFreshPick = isFreshPickRef.current;
@@ -762,7 +759,6 @@ export function App() {
             contentRef={contentRef}
             scrollContainerRef={scrollContainerRef}
             contentWidth={display.contentWidth}
-            matchPositions={matchPositions}
             currentMatchIndex={findState?.currentIndex ?? null}
           />
         </div>

@@ -7,13 +7,14 @@ interface MinimapProps {
   contentRef: React.RefObject<HTMLDivElement | null>;
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
   contentWidth: ContentWidth;
-  matchPositions?: number[];
   currentMatchIndex?: number | null;
 }
 
 interface TickInfo {
   y: number;
   isCurrent: boolean;
+  /** The matches this tick stands for: marks less than 4px below it share it. */
+  markIndexes: number[];
 }
 
 /** Quiet period before re-cloning the document after it changes. */
@@ -26,9 +27,11 @@ export function Minimap({
   contentRef,
   scrollContainerRef,
   contentWidth,
-  matchPositions = [],
   currentMatchIndex = null,
 }: MinimapProps) {
+  // Read through a ref so the sync callbacks keep one identity across Cmd+G.
+  const currentMatchIndexRef = useRef(currentMatchIndex);
+  currentMatchIndexRef.current = currentMatchIndex;
   const containerRef = useRef<HTMLDivElement>(null);
   const cloneWrapperRef = useRef<HTMLDivElement>(null);
   const cloneRef = useRef<HTMLDivElement>(null);
@@ -59,28 +62,32 @@ export function Minimap({
     const wrapperTop = wrapper.getBoundingClientRect().top;
     const collected: TickInfo[] = marks.map((mark, i) => ({
       y: mark.getBoundingClientRect().top - wrapperTop,
-      isCurrent: i === currentMatchIndex,
+      isCurrent: i === currentMatchIndexRef.current,
+      markIndexes: [i],
     }));
     collected.sort((a, b) => a.y - b.y);
     const out: TickInfo[] = [];
     for (const t of collected) {
       const last = out[out.length - 1];
-      if (last && t.y - last.y < 4 && !t.isCurrent) continue;
+      if (last && t.y - last.y < 4) {
+        last.markIndexes.push(...t.markIndexes);
+        if (t.isCurrent) last.isCurrent = true;
+        continue;
+      }
       out.push(t);
     }
     setTicks(out);
-  }, [currentMatchIndex]);
+  }, []);
 
-  const syncContent = useCallback(() => {
-    perfMark('minimap-sync-start');
-    const content = contentRef.current;
+  // Fits the clone to the minimap's width. The clone is laid out at refWidth
+  // whatever that width is, so a new width only rescales it: no new copy.
+  const applyScale = useCallback(() => {
     const clone = cloneRef.current;
     const wrapper = cloneWrapperRef.current;
     const minimap = containerRef.current;
-    if (!content || !clone || !wrapper || !minimap) return;
-
-    const markdownBody = content.querySelector('.markdown-body') as HTMLElement | null;
-    if (!markdownBody) return;
+    if (!clone || !wrapper || !minimap) return;
+    const cloned = clone.firstElementChild as HTMLElement | null;
+    if (!cloned) return;
 
     const minimapStyle = getComputedStyle(minimap);
     const minimapInnerWidth = minimap.clientWidth
@@ -89,21 +96,31 @@ export function Minimap({
     if (minimapInnerWidth <= 0) return;
 
     const scale = minimapInnerWidth / refWidth;
-
     clone.style.transform = `scale(${scale})`;
+    wrapper.style.height = `${cloned.offsetHeight * scale}px`;
+    readTicksFromClone();
+  }, [refWidth, readTicksFromClone]);
+
+  // Copies the document: when it or its marks change, and once on opening,
+  // since a closed minimap doesn't watch it.
+  const syncContent = useCallback(() => {
+    perfMark('minimap-sync-start');
+    const content = contentRef.current;
+    const clone = cloneRef.current;
+    if (!content || !clone) return;
+
+    const markdownBody = content.querySelector('.markdown-body') as HTMLElement | null;
+    if (!markdownBody) return;
+
     clone.style.transformOrigin = 'top left';
     clone.style.width = `${refWidth}px`;
 
     while (clone.firstChild) clone.removeChild(clone.firstChild);
-    const cloned = markdownBody.cloneNode(true) as HTMLElement;
-    clone.appendChild(cloned);
+    clone.appendChild(markdownBody.cloneNode(true));
 
-    const clonedLayoutHeight = cloned.offsetHeight;
-    wrapper.style.height = `${clonedLayoutHeight * scale}px`;
-
-    readTicksFromClone();
+    applyScale();
     perfMeasure('minimap-sync', 'minimap-sync-start');
-  }, [contentRef, refWidth, readTicksFromClone]);
+  }, [contentRef, refWidth, applyScale]);
 
   const syncViewport = useCallback(() => {
     const container = scrollContainerRef.current;
@@ -179,15 +196,42 @@ export function Minimap({
     };
   }, [visible, syncContent, contentRef]);
 
+  // An image in the copy that arrives after the copy was measured makes it
+  // taller with no change to the document: measure it again, once a frame.
+  // load and error don't bubble, so the listener catches them on the way down.
   useEffect(() => {
     if (!visible) return;
-    readTicksFromClone();
-  }, [visible, currentMatchIndex, readTicksFromClone]);
+    const clone = cloneRef.current;
+    if (!clone) return;
+    let frame = 0;
+    const remeasure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        applyScale();
+        syncViewport();
+      });
+    };
+    clone.addEventListener('load', remeasure, true);
+    clone.addEventListener('error', remeasure, true);
+    return () => {
+      cancelAnimationFrame(frame);
+      clone.removeEventListener('load', remeasure, true);
+      clone.removeEventListener('error', remeasure, true);
+    };
+  }, [visible, applyScale, syncViewport]);
 
+  // A step to another match only moves which match is current: the tick, and
+  // the clone's copy of the mark, which the document's styles show as current.
   useEffect(() => {
-    if (!visible) return;
-    syncContent();
-  }, [visible, matchPositions.length, syncContent]);
+    setTicks((prev) => prev.map((t) => ({
+      ...t,
+      isCurrent: currentMatchIndex !== null && t.markIndexes.includes(currentMatchIndex),
+    })));
+    const clone = cloneRef.current;
+    if (!clone) return;
+    clone.querySelectorAll('mark[data-current]').forEach((m) => m.removeAttribute('data-current'));
+    if (currentMatchIndex !== null) clone.querySelectorAll('mark')[currentMatchIndex]?.setAttribute('data-current', 'true');
+  }, [currentMatchIndex]);
 
   useEffect(() => {
     if (!visible) return;
@@ -195,11 +239,13 @@ export function Minimap({
     const container = scrollContainerRef.current;
     if (!container) return;
 
+    // The MutationObserver effect takes the copy; this fits it to the column
+    // once the column has finished opening.
     let synced = false;
     const initialSync = () => {
       if (synced) return;
       synced = true;
-      syncContent();
+      applyScale();
       syncViewport();
       setViewportReady(true);
     };
@@ -219,8 +265,16 @@ export function Minimap({
     const onScroll = () => requestAnimationFrame(syncViewport);
     container.addEventListener('scroll', onScroll, { passive: true });
 
+    // The clone is laid out at a fixed reference width, so only the minimap's
+    // own width changes its scale, which needs no new copy (the column widens
+    // every frame while it opens); everything else just moves the viewport.
+    let lastMinimapWidth = minimap?.clientWidth ?? 0;
     const resizeObserver = new ResizeObserver(() => {
-      syncContent();
+      const width = minimap?.clientWidth ?? 0;
+      if (width !== lastMinimapWidth) {
+        lastMinimapWidth = width;
+        applyScale();
+      }
       requestAnimationFrame(syncViewport);
     });
     resizeObserver.observe(container);
@@ -232,7 +286,7 @@ export function Minimap({
       container.removeEventListener('scroll', onScroll);
       resizeObserver.disconnect();
     };
-  }, [visible, syncViewport, syncContent, scrollContainerRef]);
+  }, [visible, syncViewport, applyScale, scrollContainerRef]);
 
   const scrollToY = useCallback((clientY: number) => {
     const container = scrollContainerRef.current;

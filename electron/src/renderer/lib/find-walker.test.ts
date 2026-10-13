@@ -172,7 +172,7 @@ describe('clearMatches', () => {
     document.body.textContent = '';
   });
 
-  it('restores original text and normalizes split text nodes', () => {
+  it('restores original text and rejoins split text nodes', () => {
     const root = setup('<p>foo bar foo baz foo</p>');
     const originalText = root.textContent;
     findMatches(root, 'foo', 1000);
@@ -217,6 +217,22 @@ describe('clearMatches', () => {
     expect(p?.childNodes.length).toBe(1);
     expect(p?.firstChild).toBe(original);
     expect(p?.textContent).toBe('Hello world');
+  });
+
+  it('keeps two adjacent text nodes as the same two nodes', () => {
+    const root = setup('<p></p>');
+    const p = root.querySelector('p');
+    const first = document.createTextNode('one foo ');
+    const second = document.createTextNode('two foo');
+    p?.append(first, second);
+    expect(findMatches(root, 'foo', 1000).marks.length).toBe(2);
+
+    clearMatches(root);
+
+    expect(p?.childNodes.length).toBe(2);
+    expect(p?.childNodes[0]).toBe(first);
+    expect(p?.childNodes[1]).toBe(second);
+    expect([first.data, second.data]).toEqual(['one foo ', 'two foo']);
   });
 
   it('leaves a text node it did not split alone when the original is gone', () => {

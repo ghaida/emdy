@@ -71,7 +71,7 @@ interface MarkdownViewProps {
   style?: React.CSSProperties;
   contentRef?: React.RefObject<HTMLDivElement | null>;
   highlight?: HighlightState | null;
-  onMatchesChanged?: (count: number, isCapped: boolean, positions: number[]) => void;
+  onMatchesChanged?: (count: number, isCapped: boolean) => void;
   designTokens?: DesignTokens | null;
   /** Show token categories no section heading names in a section at the end. */
   designAppendix?: boolean;
@@ -168,116 +168,6 @@ export const MarkdownView = React.memo(
         (cat) => !injected.has(cat) && designTokens[cat] && Object.keys(designTokens[cat] as object).length > 0
       );
     }, [designTokens, injectionMap, designAppendix]);
-    const bodyRef = useRef<HTMLElement | null>(null);
-    const matchElementsRef = useRef<HTMLElement[]>([]);
-    // The document subtree's key is a generation that moves on when the document
-    // changes while find has marks in it. The change is judged against the last
-    // render's document, not the one the subtree was mounted for: after an
-    // in-place patch those differ, and going back to the mounted one must still
-    // remount. Reading the marks during render is deliberate: they're the ones
-    // the last commit left, in the DOM React is about to patch.
-    const shownKeyRef = useRef(docKey);
-    const generationRef = useRef(0);
-    if (docKey !== shownKeyRef.current) {
-      if (matchElementsRef.current.length > 0) generationRef.current += 1;
-      shownKeyRef.current = docKey;
-    }
-    const onMatchesChangedRef = useRef(onMatchesChanged);
-
-    useEffect(() => {
-      onMatchesChangedRef.current = onMatchesChanged;
-    }, [onMatchesChanged]);
-
-    useLayoutEffect(() => {
-      const root = bodyRef.current;
-      if (!root) return;
-      matchElementsRef.current = [];
-      const query = highlight?.query ?? '';
-      const mode = highlight?.mode ?? 'none';
-      if (!query || mode === 'none') {
-        clearMatches(root);
-        onMatchesChangedRef.current?.(0, false, []);
-        return;
-      }
-      const { marks, isCapped } = findMatches(root, query, MAX_MATCHES);
-      matchElementsRef.current = marks;
-      const baseTop = root.getBoundingClientRect().top;
-      const positions = marks.map((m) => m.getBoundingClientRect().top - baseTop);
-      onMatchesChangedRef.current?.(marks.length, isCapped, positions);
-      return () => {
-        clearMatches(root);
-        matchElementsRef.current = [];
-      };
-    }, [docKey, highlight?.query, highlight?.mode]);
-
-    useLayoutEffect(() => {
-      const marks = matchElementsRef.current;
-      marks.forEach((m) => m.removeAttribute('data-current'));
-      if (!highlight) return;
-      const current = marks[highlight.currentIndex];
-      if (current) current.setAttribute('data-current', 'true');
-    }, [highlight?.currentIndex]);
-
-    useLayoutEffect(() => {
-      const marks = matchElementsRef.current;
-      const dismissing = highlight?.dismissing === true;
-      marks.forEach((m) => {
-        if (dismissing) m.setAttribute('data-dismissed', 'true');
-        else m.removeAttribute('data-dismissed');
-      });
-    }, [highlight?.dismissing]);
-
-    useImperativeHandle(
-      ref,
-      () => ({
-        scrollToMatch(index: number) {
-          const el = matchElementsRef.current[index];
-          if (!el) return;
-          const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-          const scroller = findScrollParent(el);
-          if (!scroller) {
-            el.scrollIntoView({ block: 'start', behavior: prefersReducedMotion ? 'auto' : 'smooth' });
-            return;
-          }
-          const elRect = el.getBoundingClientRect();
-          const scrollerRect = scroller.getBoundingClientRect();
-          const offsetWithinScroller = elRect.top - scrollerRect.top + scroller.scrollTop;
-          const target = offsetWithinScroller - scroller.clientHeight / 3;
-          scroller.scrollTo({ top: target, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
-        },
-        getMatchCount() {
-          return matchElementsRef.current.length;
-        },
-        focusMatchAtLine(lineNumber: number) {
-          const root = bodyRef.current;
-          const marks = matchElementsRef.current;
-          if (!root || marks.length === 0) return null;
-          const target = lineNumber - lineOffset;
-          // The block that starts closest before the line.
-          let block: HTMLElement | null = null;
-          for (const el of Array.from(root.querySelectorAll<HTMLElement>('[data-line]'))) {
-            if (Number(el.dataset.line) <= target) block = el;
-            else break;
-          }
-          // Above the first block is front matter, which a design file shows in its header.
-          if (!block) return 0;
-          // A fence, a list or a wrapped paragraph can have matches on several
-          // lines: skip the block's matches on the lines before this one.
-          let skip = countShownMatches(body, highlight?.query ?? '', Number(block.dataset.line), target);
-          for (let i = 0; i < marks.length; i++) {
-            if (block.contains(marks[i])) {
-              if (skip === 0) return i;
-              skip--;
-            } else if (block.compareDocumentPosition(marks[i]) & Node.DOCUMENT_POSITION_FOLLOWING) {
-              return i;
-            }
-          }
-          // No match at or after the block: the last one is the nearest.
-          return marks.length - 1;
-        },
-      }),
-      [lineOffset, body, highlight?.query]
-    );
 
     const components = useMemo<Components>(() => ({
       h2({ node, children, ...props }) {
@@ -359,6 +249,119 @@ export const MarkdownView = React.memo(
         );
       },
     }), [filePath, codeTheme, injectionMap, designTokens]);
+
+    const bodyRef = useRef<HTMLElement | null>(null);
+    const matchElementsRef = useRef<HTMLElement[]>([]);
+    // The document subtree's key is a generation that moves on when the document
+    // changes while find has marks in it. The change is judged against the last
+    // render's document, not the one the subtree was mounted for: after an
+    // in-place patch those differ, and going back to the mounted one must still
+    // remount. Reading the marks during render is deliberate: they're the ones
+    // the last commit left, in the DOM React is about to patch.
+    const shownKeyRef = useRef(docKey);
+    const generationRef = useRef(0);
+    if (docKey !== shownKeyRef.current) {
+      if (matchElementsRef.current.length > 0) generationRef.current += 1;
+      shownKeyRef.current = docKey;
+    }
+    const onMatchesChangedRef = useRef(onMatchesChanged);
+
+    useEffect(() => {
+      onMatchesChangedRef.current = onMatchesChanged;
+    }, [onMatchesChanged]);
+
+    // A new `components` (a theme change) remounts the elements it renders,
+    // marks inside them included, so find runs again then too.
+    useLayoutEffect(() => {
+      const root = bodyRef.current;
+      if (!root) return;
+      matchElementsRef.current = [];
+      const query = highlight?.query ?? '';
+      const mode = highlight?.mode ?? 'none';
+      if (!query || mode === 'none') {
+        clearMatches(root);
+        onMatchesChangedRef.current?.(0, false);
+        return;
+      }
+      const { marks, isCapped } = findMatches(root, query, MAX_MATCHES);
+      matchElementsRef.current = marks;
+      // Marks found again after a reload or a theme change keep the current one's style.
+      if (highlight) marks[highlight.currentIndex]?.setAttribute('data-current', 'true');
+      onMatchesChangedRef.current?.(marks.length, isCapped);
+      return () => {
+        clearMatches(root);
+        matchElementsRef.current = [];
+      };
+    }, [docKey, highlight?.query, highlight?.mode, components]);
+
+    useLayoutEffect(() => {
+      const marks = matchElementsRef.current;
+      marks.forEach((m) => m.removeAttribute('data-current'));
+      if (!highlight) return;
+      const current = marks[highlight.currentIndex];
+      if (current) current.setAttribute('data-current', 'true');
+    }, [highlight?.currentIndex]);
+
+    useLayoutEffect(() => {
+      const marks = matchElementsRef.current;
+      const dismissing = highlight?.dismissing === true;
+      marks.forEach((m) => {
+        if (dismissing) m.setAttribute('data-dismissed', 'true');
+        else m.removeAttribute('data-dismissed');
+      });
+    }, [highlight?.dismissing]);
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        scrollToMatch(index: number) {
+          const el = matchElementsRef.current[index];
+          if (!el) return;
+          const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+          const scroller = findScrollParent(el);
+          if (!scroller) {
+            el.scrollIntoView({ block: 'start', behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+            return;
+          }
+          const elRect = el.getBoundingClientRect();
+          const scrollerRect = scroller.getBoundingClientRect();
+          const offsetWithinScroller = elRect.top - scrollerRect.top + scroller.scrollTop;
+          const target = offsetWithinScroller - scroller.clientHeight / 3;
+          scroller.scrollTo({ top: target, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+        },
+        getMatchCount() {
+          return matchElementsRef.current.length;
+        },
+        focusMatchAtLine(lineNumber: number) {
+          const root = bodyRef.current;
+          const marks = matchElementsRef.current;
+          if (!root || marks.length === 0) return null;
+          const target = lineNumber - lineOffset;
+          // The block that starts closest before the line.
+          let block: HTMLElement | null = null;
+          for (const el of Array.from(root.querySelectorAll<HTMLElement>('[data-line]'))) {
+            if (Number(el.dataset.line) <= target) block = el;
+            else break;
+          }
+          // Above the first block is front matter, which a design file shows in its header.
+          if (!block) return 0;
+          // A fence, a list or a wrapped paragraph can have matches on several
+          // lines: skip the block's matches on the lines before this one.
+          let skip = countShownMatches(body, highlight?.query ?? '', Number(block.dataset.line), target);
+          for (let i = 0; i < marks.length; i++) {
+            if (block.contains(marks[i])) {
+              if (skip === 0) return i;
+              skip--;
+            } else if (block.compareDocumentPosition(marks[i]) & Node.DOCUMENT_POSITION_FOLLOWING) {
+              return i;
+            }
+          }
+          // No match at or after the block: the last one is the nearest.
+          return marks.length - 1;
+        },
+      }),
+      [lineOffset, body, highlight?.query]
+    );
 
     return (
       <div className="markdown-view" style={style} ref={contentRef}>

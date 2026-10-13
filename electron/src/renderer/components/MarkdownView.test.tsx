@@ -1,7 +1,8 @@
-import React, { createRef } from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import React, { createRef, useRef } from 'react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, waitFor, act, screen, fireEvent } from '@testing-library/react';
 import { MarkdownView, type MarkdownViewHandle, type HighlightState } from './MarkdownView';
+import { Minimap } from './Minimap';
 import { warm, cool } from '../lib/color-themes';
 import { parseDesignMd, type DesignTokens } from '../lib/design-md';
 import { FULL_CODE_ATTR } from '../lib/code-export';
@@ -29,7 +30,7 @@ describe('MarkdownView highlight integration', () => {
     await waitFor(() => {
       expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(0);
     });
-    expect(onMatchesChanged).toHaveBeenCalledWith(0, false, []);
+    expect(onMatchesChanged).toHaveBeenCalledWith(0, false);
   });
 
   it('walks and wraps matches when highlight is present', async () => {
@@ -44,8 +45,6 @@ describe('MarkdownView highlight integration', () => {
     const lastCall = onMatchesChanged.mock.calls.at(-1)!;
     expect(lastCall[0]).toBe(3);
     expect(lastCall[1]).toBe(false);
-    expect(Array.isArray(lastCall[2])).toBe(true);
-    expect(lastCall[2].length).toBe(3);
   });
 
   it('marks the current match with data-current', async () => {
@@ -361,6 +360,26 @@ describe('MarkdownView live reload', () => {
     expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(1);
   });
 
+  it('leaves nothing behind after an edit that keeps the length', () => {
+    const typo: HighlightState = { query: 'typo', currentIndex: 0, mode: 'multi-persistent' };
+    const { container, rerender } = render(<MarkdownView {...props} content={'Fix teh typo.'} highlight={typo} />);
+    expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(1);
+    // A typo fix: the same file, and text of the same length.
+    rerender(<MarkdownView {...props} content={'Fix the typo.'} highlight={typo} />);
+    expect(container.querySelector('.markdown-body')?.textContent).toBe('Fix the typo.');
+    expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(1);
+  });
+
+  it('keeps the current match marked after a reload', () => {
+    const alpha: HighlightState = { query: 'alpha', currentIndex: 1, mode: 'multi-persistent' };
+    const { container, rerender } = render(<MarkdownView {...props} content={'alpha one alpha two'} highlight={alpha} />);
+    rerender(<MarkdownView {...props} content={'alpha one alpha three'} highlight={alpha} />);
+    const marks = container.querySelectorAll('mark[data-emdy-match]');
+    expect(marks.length).toBe(2);
+    expect(marks[1].getAttribute('data-current')).toBe('true');
+    expect(marks[0].getAttribute('data-current')).toBe(null);
+  });
+
   it('leaves none of the newer version behind when a reload goes back to the first one with find applied', () => {
     const base = { colors, filePath: '/x/a.md', onMatchesChanged: vi.fn() };
     const v1 = 'Alpha **one** text here.';
@@ -422,6 +441,8 @@ describe('MarkdownView find with raw HTML at the top level', () => {
     const edited = 'Intro edited.\n\n<h1 align="center">Emdy</h1>\n\nAfter paragraph.';
     const props = { colors, filePath: '/x/a.md', onMatchesChanged: vi.fn() };
     const { container, rerender } = render(<MarkdownView {...props} content={docA} highlight={emdy} />);
+    // Find skips text directly in the article, so the raw HTML gets no mark.
+    expect(props.onMatchesChanged).toHaveBeenLastCalledWith(0, false);
     rerender(<MarkdownView {...props} content={docA} highlight={null} />);
     expect(() =>
       act(() => {
@@ -460,6 +481,17 @@ describe('MarkdownView theme switch after find', () => {
     rerender(<MarkdownView {...props} colors={colors} highlight={null} />);
     expect(() => rerender(<MarkdownView {...props} colors={cool.light} highlight={null} />)).not.toThrow();
     expect(container.querySelector('.markdown-body')?.textContent).toBe('See docs.');
+  });
+
+  it('keeps every match and the count', () => {
+    // A theme change remounts the link, and the match inside it with it.
+    const props = { filePath: '/x/a.md', content: 'See [docs](https://example.com) and docs.', onMatchesChanged: vi.fn() };
+    const docs: HighlightState = { query: 'docs', currentIndex: 0, mode: 'multi-persistent' };
+    const { container, rerender } = render(<MarkdownView {...props} colors={colors} highlight={docs} />);
+    expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(2);
+    rerender(<MarkdownView {...props} colors={cool.light} highlight={docs} />);
+    expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(2);
+    expect(props.onMatchesChanged).toHaveBeenLastCalledWith(2, false);
   });
 });
 
@@ -575,6 +607,156 @@ describe('MarkdownView focusMatchAtLine', () => {
     rerender(<MarkdownView ref={ref} {...props} content={'```\nnpm install\nnpm run build\n```\n'} />);
     // "npm run build" is line 3, the fence's second match.
     expect(ref.current?.focusMatchAtLine(3)).toBe(1);
+  });
+});
+
+describe('MarkdownView with the minimap', () => {
+  // jsdom has no ResizeObserver: keep each one's callback so a test can fire it.
+  let resizeCallbacks: Array<() => void> = [];
+  let minimapWidth = 140;
+
+  beforeEach(() => {
+    resizeCallbacks = [];
+    minimapWidth = 140;
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(callback: () => void) {
+        resizeCallbacks.push(callback);
+      }
+      observe = vi.fn();
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+    });
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(function (this: HTMLElement) {
+      return this.classList.contains('minimap') ? minimapWidth : 0;
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  const onMatchesChanged = vi.fn();
+
+  function View({ visible = true, currentIndex = 0, content = 'alpha one alpha two alpha three' }: {
+    visible?: boolean;
+    currentIndex?: number;
+    content?: string;
+  }) {
+    const contentRef = useRef<HTMLDivElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    return (
+      <div ref={scrollRef}>
+        <MarkdownView
+          colors={colors}
+          filePath="/x/a.md"
+          content={content}
+          contentRef={contentRef}
+          highlight={{ query: 'alpha', currentIndex, mode: 'multi-persistent' }}
+          onMatchesChanged={onMatchesChanged}
+        />
+        <Minimap visible={visible} contentRef={contentRef} scrollContainerRef={scrollRef} contentWidth="default" currentMatchIndex={currentIndex} />
+      </div>
+    );
+  }
+
+  // Counts the copies of the document made from here on.
+  function copyCounter() {
+    const cloneNode = vi.spyOn(Node.prototype, 'cloneNode');
+    return () => cloneNode.mock.contexts.filter((node: unknown) => (node as Element).classList?.contains('markdown-body')).length;
+  }
+
+  // The column finishes opening, with the padding jsdom has no stylesheet for.
+  function finishOpening(minimap: HTMLElement | null) {
+    if (minimap) minimap.style.padding = '8px';
+    const end = new Event('transitionend');
+    Object.defineProperty(end, 'propertyName', { value: 'width' });
+    act(() => {
+      minimap?.dispatchEvent(end);
+    });
+  }
+
+  // jsdom lays nothing out: put each match at a given height, everything else at 0.
+  function placeMatches(top: (index: number) => number) {
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      const index = this.getAttribute('data-match-index');
+      const y = index === null ? 0 : top(Number(index));
+      return { top: y, bottom: y, left: 0, right: 0, width: 0, height: 0, x: 0, y, toJSON: () => ({}) } as DOMRect;
+    });
+  }
+
+  const ticks = (container: HTMLElement) =>
+    [...container.querySelectorAll<HTMLElement>('.minimap-tick')].map((t) => [t.style.top, t.classList.contains('current')]);
+
+  it("moves the copy's current match along with a step", () => {
+    const { container, rerender } = render(<View currentIndex={0} />);
+    rerender(<View currentIndex={2} />);
+    const current = container.querySelectorAll('.minimap-content mark[data-current]');
+    expect(current.length).toBe(1);
+    expect(current[0].getAttribute('data-match-index')).toBe('2');
+    expect(container.querySelector('.markdown-view mark[data-current]')?.getAttribute('data-match-index')).toBe('2');
+  });
+
+  it("lights a line's one tick for either match on it, and a step copies nothing", () => {
+    // Matches 0 and 1 share a line; match 2 sits lower.
+    placeMatches((index) => (index < 2 ? 10 : 50));
+    const { container, rerender } = render(<View currentIndex={1} />);
+    // Fitting the copy to the opened column reads the ticks again, with no step after.
+    finishOpening(container.querySelector<HTMLElement>('.minimap'));
+    expect(ticks(container)).toEqual([['10px', true], ['50px', false]]);
+    const copies = copyCounter();
+    rerender(<View currentIndex={2} />);
+    expect(ticks(container)).toEqual([['10px', false], ['50px', true]]);
+    rerender(<View currentIndex={1} />);
+    expect(ticks(container)).toEqual([['10px', true], ['50px', false]]);
+    expect(copies()).toBe(0);
+  });
+
+  it('copies the document once while the minimap opens', () => {
+    const { container, rerender } = render(<View visible={false} />);
+    const minimap = container.querySelector<HTMLElement>('.minimap');
+    // The open minimap's padding, which jsdom has no stylesheet for.
+    if (minimap) minimap.style.padding = '8px';
+    const copies = copyCounter();
+    minimapWidth = 16;
+    rerender(<View visible />);
+    // The column widens over its transition, with a resize notification each frame.
+    for (const width of [40, 80, 120, 140]) {
+      minimapWidth = width;
+      act(() => resizeCallbacks.at(-1)?.());
+    }
+    finishOpening(minimap);
+    expect(copies()).toBe(1);
+    // Scaled to the column's final width: 140 less 16 of padding, over 680.
+    expect(container.querySelector<HTMLElement>('.minimap-content')?.style.transform).toBe(`scale(${124 / 680})`);
+  });
+
+  it('measures the copy again when an image in it arrives, with no new copy', async () => {
+    // Before its image arrives the copy is 1000 px tall and the match below the
+    // image sits at 20; after, 1300 px and 75.
+    let arrived = false;
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (this: HTMLElement) {
+      const isCopy = this.classList.contains('markdown-body') && this.closest('.minimap-content') !== null;
+      return isCopy ? (arrived ? 1300 : 1000) : 0;
+    });
+    placeMatches((index) => (index === 0 ? 10 : arrived ? 75 : 20));
+    const { container } = render(<View content={'alpha above.\n\n![shot](https://example.com/shot.png)\n\nalpha below.'} />);
+    finishOpening(container.querySelector<HTMLElement>('.minimap'));
+    const scaler = container.querySelector<HTMLElement>('.minimap-scaler');
+    expect(scaler?.style.height).toBe(`${1000 * (124 / 680)}px`);
+    expect(ticks(container)).toEqual([['10px', true], ['20px', false]]);
+    const copies = copyCounter();
+    const image = container.querySelector('.minimap-content img');
+    expect(image).not.toBeNull();
+    // The document's elements don't change, so nothing copies it again: only the copy's image loads.
+    arrived = true;
+    await act(async () => {
+      image?.dispatchEvent(new Event('load'));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    });
+    expect(scaler?.style.height).toBe(`${1300 * (124 / 680)}px`);
+    expect(ticks(container)).toEqual([['10px', true], ['75px', false]]);
+    expect(copies()).toBe(0);
   });
 });
 
