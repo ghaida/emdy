@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, waitFor, act, screen, fireEvent } from '@testing-library/react';
 import { MarkdownView, type MarkdownViewHandle, type HighlightState } from './MarkdownView';
 import { warm, cool } from '../lib/color-themes';
-import { parseDesignMd } from '../lib/design-md';
+import { parseDesignMd, type DesignTokens } from '../lib/design-md';
 import { FULL_CODE_ATTR } from '../lib/code-export';
 
 const colors = warm.light;
@@ -311,6 +311,47 @@ describe('MarkdownView document switch while find is applied', () => {
     rerender(<MarkdownView ref={ref} {...props} filePath="/x/b.md" />);
     expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(2);
     expect(ref.current?.getMatchCount()).toBe(2);
+  });
+});
+
+describe('MarkdownView live reload', () => {
+  const longCode = Array.from({ length: 250 }, (_, i) => `log(${i + 1});`).join('\n');
+  const doc = (paragraph: string) => `# Notes\n\n${paragraph}\n\n\`\`\`js\n${longCode}\n\`\`\``;
+  const props = { colors, filePath: '/x/a.md', onMatchesChanged: vi.fn() };
+
+  it('patches the document in place while find has no marks in it', () => {
+    const { container, rerender } = render(<MarkdownView {...props} content={doc('Before the edit.')} highlight={null} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Show all 250 lines' }));
+    const heading = container.querySelector('h1');
+    rerender(<MarkdownView {...props} content={doc('After the edit.')} highlight={null} />);
+    expect(container.querySelector('h1')).toBe(heading);
+    expect(container.querySelector('p')?.textContent).toBe('After the edit.');
+    // The expanded code block stays expanded.
+    expect(screen.queryByRole('button', { name: 'Show all 250 lines' })).toBeNull();
+  });
+
+  it('mounts a new document while find has marks in it', () => {
+    const highlight: HighlightState = { query: 'edit', currentIndex: 0, mode: 'multi-persistent' };
+    const { container, rerender } = render(<MarkdownView {...props} content={doc('Before the edit.')} highlight={highlight} />);
+    expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(1);
+    const heading = container.querySelector('h1');
+    rerender(<MarkdownView {...props} content={doc('After the edit.')} highlight={highlight} />);
+    expect(container.querySelector('h1')).not.toBe(heading);
+    expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(1);
+  });
+
+  it('mounts a new document when only the design tokens change while find has marks in it', () => {
+    const tokens = (fontSize: string): DesignTokens => ({ name: '', typography: { h1: { fontSize } } });
+    const design = { ...props, filePath: '/x/DESIGN.md', content: '## Overview\n\nIntro text.\n' };
+    const highlight: HighlightState = { query: '18px', currentIndex: 0, mode: 'multi-persistent' };
+    const { container, rerender } = render(<MarkdownView {...design} designTokens={tokens('18px')} highlight={highlight} />);
+    expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(1);
+    const paragraph = container.querySelector('p');
+    // A front-matter edit: the tokens change and the body doesn't.
+    rerender(<MarkdownView {...design} designTokens={tokens('16px')} highlight={highlight} />);
+    expect(container.querySelector('p')).not.toBe(paragraph);
+    rerender(<MarkdownView {...design} designTokens={tokens('16px')} highlight={null} />);
+    expect(container.querySelector('.design-token-value')?.textContent).toBe('16px');
   });
 });
 

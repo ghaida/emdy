@@ -27,16 +27,19 @@ const CATEGORY_LABELS: Record<TokenCategory, string> = {
   components: 'Components',
 };
 
-// A new document gets a fresh DOM subtree. Find splits text nodes React owns;
-// if React patched those in place on a content change, pieces of the old
-// document would survive into the new one. A live reload counts as a new
-// document too, so a changed diagram shows its placeholder while it renders
-// again and an expanded code block collapses. That trade-off is deliberate:
-// remounting was chosen over moving find to the CSS Highlight API.
-function documentKey(body: string, filePath: string | null | undefined): string {
+// Find splits text nodes React owns; if React patched those in place on a
+// content change, pieces of the old document would survive into the new one.
+// So while find has marks in the document, a new document (a live reload
+// included) gets a fresh DOM subtree. Without marks React patches in place, so
+// a reload keeps a diagram on screen while it renders again and an expanded
+// code block open. Remounting was chosen over moving find to the CSS Highlight
+// API. The design tokens count as content: a front-matter edit changes them
+// and not the body.
+function documentKey(body: string, filePath: string | null | undefined, designTokens: DesignTokens | null | undefined): string {
+  const text = designTokens ? `${JSON.stringify(designTokens)}\n${body}` : body;
   let hash = 5381;
-  for (let i = 0; i < body.length; i++) hash = ((hash * 33) ^ body.charCodeAt(i)) >>> 0;
-  return `${filePath ?? ''}:${body.length}:${hash}`;
+  for (let i = 0; i < text.length; i++) hash = ((hash * 33) ^ text.charCodeAt(i)) >>> 0;
+  return `${filePath ?? ''}:${text.length}:${hash}`;
 }
 
 export type HighlightMode = 'multi-persistent' | 'none';
@@ -135,7 +138,7 @@ export const MarkdownView = React.memo(
     const diagramTheme = useMemo(() => buildDiagramTheme(colors), [colors]);
     const fence = useMemo(() => ({ codeTheme, diagramTheme, filePath }), [codeTheme, diagramTheme, filePath]);
     const body = useMemo(() => stripFrontMatter(content), [content]);
-    const docKey = useMemo(() => documentKey(body, filePath), [body, filePath]);
+    const docKey = useMemo(() => documentKey(body, filePath, designTokens), [body, filePath, designTokens]);
 
     const injectionMap = useMemo(
       () => (designTokens ? buildInjectionMap(body, designTokens) : null),
@@ -151,6 +154,11 @@ export const MarkdownView = React.memo(
     }, [designTokens, injectionMap, designAppendix]);
     const bodyRef = useRef<HTMLElement | null>(null);
     const matchElementsRef = useRef<HTMLElement[]>([]);
+    // The key the document is mounted under moves to a new document's key only
+    // while find has marks in it. Reading the marks during render is deliberate:
+    // they're the ones the last commit left, in the DOM React is about to patch.
+    const mountedKeyRef = useRef(docKey);
+    if (docKey !== mountedKeyRef.current && matchElementsRef.current.length > 0) mountedKeyRef.current = docKey;
     const onMatchesChangedRef = useRef(onMatchesChanged);
 
     useEffect(() => {
@@ -320,7 +328,7 @@ export const MarkdownView = React.memo(
     return (
       <div className="markdown-view" style={style} ref={contentRef}>
         <article className="markdown-body" ref={bodyRef}>
-          <React.Fragment key={docKey}>
+          <React.Fragment key={mountedKeyRef.current}>
             {designTokens?.name ? (
               <header className="design-header">
                 <h1>{designTokens.name}</h1>
