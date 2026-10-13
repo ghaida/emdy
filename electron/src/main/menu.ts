@@ -30,6 +30,7 @@ export function buildMenu(sendEvent: MenuCallback, hasFile: boolean, recent: Rec
         { label: 'Clear Menu', enabled: recent.paths.length > 0, click: recent.clear },
       ],
     },
+    { role: 'close' as const },
     ...(hasFile ? [
       { type: 'separator' as const },
       {

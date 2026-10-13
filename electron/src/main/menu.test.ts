@@ -64,3 +64,12 @@ describe('File > Open Recent', () => {
     expect(openRecent()).toEqual([expect.objectContaining({ label: 'Clear Menu', enabled: false })]);
   });
 });
+
+describe('File menu', () => {
+  it('has a Close item so Cmd+W closes the window, with or without a file open', () => {
+    buildMenu(vi.fn(), true, { paths: [], open: vi.fn(), clear: vi.fn() });
+    expect(fileMenu().some((item) => item.role === 'close')).toBe(true);
+    buildMenu(vi.fn(), false, { paths: [], open: vi.fn(), clear: vi.fn() });
+    expect(fileMenu().some((item) => item.role === 'close')).toBe(true);
+  });
+});
