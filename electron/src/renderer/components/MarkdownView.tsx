@@ -27,6 +27,15 @@ const CATEGORY_LABELS: Record<TokenCategory, string> = {
   components: 'Components',
 };
 
+// A new document gets a fresh DOM subtree. Find splits text nodes React owns;
+// if React patched those in place on a content change, pieces of the old
+// document would survive into the new one.
+function documentKey(body: string, filePath: string | null | undefined): string {
+  let hash = 5381;
+  for (let i = 0; i < body.length; i++) hash = ((hash * 33) ^ body.charCodeAt(i)) >>> 0;
+  return `${filePath ?? ''}:${body.length}:${hash}`;
+}
+
 export type HighlightMode = 'multi-persistent' | 'none';
 
 export interface HighlightState {
@@ -123,6 +132,7 @@ export const MarkdownView = React.memo(
     const diagramTheme = useMemo(() => buildDiagramTheme(colors), [colors]);
     const fence = useMemo(() => ({ codeTheme, diagramTheme, filePath }), [codeTheme, diagramTheme, filePath]);
     const body = useMemo(() => stripFrontMatter(content), [content]);
+    const docKey = useMemo(() => documentKey(body, filePath), [body, filePath]);
 
     const injectionMap = useMemo(
       () => (designTokens ? buildInjectionMap(body, designTokens) : null),
@@ -307,27 +317,29 @@ export const MarkdownView = React.memo(
     return (
       <div className="markdown-view" style={style} ref={contentRef}>
         <article className="markdown-body" ref={bodyRef}>
-          {designTokens?.name ? (
-            <header className="design-header">
-              <h1>{designTokens.name}</h1>
-              {designTokens.description && <p className="design-header-desc">{designTokens.description}</p>}
-            </header>
-          ) : null}
-          <FenceContext.Provider value={fence}>
-            <MemoMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>
-              {body}
-            </MemoMarkdown>
-          </FenceContext.Provider>
-          {appendixCategories.length > 0 && designTokens && (
-            <section className="design-appendix">
-              {appendixCategories.map((cat) => (
-                <div key={cat}>
-                  <h2>{CATEGORY_LABELS[cat]}</h2>
-                  <TokenVisualization category={cat} tokens={designTokens} />
-                </div>
-              ))}
-            </section>
-          )}
+          <React.Fragment key={docKey}>
+            {designTokens?.name ? (
+              <header className="design-header">
+                <h1>{designTokens.name}</h1>
+                {designTokens.description && <p className="design-header-desc">{designTokens.description}</p>}
+              </header>
+            ) : null}
+            <FenceContext.Provider value={fence}>
+              <MemoMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>
+                {body}
+              </MemoMarkdown>
+            </FenceContext.Provider>
+            {appendixCategories.length > 0 && designTokens && (
+              <section className="design-appendix">
+                {appendixCategories.map((cat) => (
+                  <div key={cat}>
+                    <h2>{CATEGORY_LABELS[cat]}</h2>
+                    <TokenVisualization category={cat} tokens={designTokens} />
+                  </div>
+                ))}
+              </section>
+            )}
+          </React.Fragment>
         </article>
       </div>
     );

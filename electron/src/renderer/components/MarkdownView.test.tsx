@@ -276,3 +276,29 @@ describe('MarkdownView code blocks', () => {
     expect(long.querySelector('code')!.textContent).toBe(longCode);
   });
 });
+
+describe('MarkdownView document switch while find is applied', () => {
+  const docA = 'Run npm install **first** before you start.\n\nSecond paragraph.';
+  const docB = 'Open the settings **panel** to begin.\n\nAnother paragraph.';
+  const highlight = (dismissing: boolean): HighlightState => ({
+    query: 'npm',
+    currentIndex: 0,
+    mode: 'multi-persistent',
+    dismissing,
+  });
+
+  it('leaves none of the old document behind in the new one', async () => {
+    const props = { colors, filePath: '/x/a.md', onMatchesChanged: vi.fn() };
+    const { container, rerender } = render(<MarkdownView {...props} content={docA} highlight={highlight(false)} />);
+    expect(container.querySelectorAll('mark[data-emdy-match]').length).toBe(1);
+    // Clicking another file: the new content and closeFind land in one render,
+    // and the query stays applied while the find bar fades out.
+    await act(async () => {
+      rerender(<MarkdownView {...props} filePath="/x/b.md" content={docB} highlight={highlight(true)} />);
+    });
+    await act(async () => {
+      rerender(<MarkdownView {...props} filePath="/x/b.md" content={docB} highlight={null} />);
+    });
+    expect(container.querySelector('p')!.textContent).toBe('Open the settings panel to begin.');
+  });
+});
