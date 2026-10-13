@@ -5,10 +5,14 @@ import os from 'node:os';
 import path from 'node:path';
 import type { EventEmitter } from 'node:events';
 
-// Just enough of Electron for windows.ts. A window's page "loads" 10 ms after
-// loadURL, which is when it emits ready-to-show.
+// Just enough of Electron for windows.ts. A window's page starts loading when
+// loadURL is called and "loads" 10 ms later, which is when it emits
+// ready-to-show. Tests play the page's part in saying it's listening.
 vi.mock('electron', async () => {
   const { EventEmitter } = await import('node:events');
+  // What windows.ts registers with ipcMain, by channel.
+  const listeners = new Map<string, (...args: unknown[]) => unknown>();
+  const register = (channel: string, listener: (...args: unknown[]) => unknown) => void listeners.set(channel, listener);
   let nextId = 1;
   class FakeWebContents extends EventEmitter {
     id = nextId++;
@@ -33,10 +37,9 @@ vi.mock('electron', async () => {
       FakeBrowserWindow.all.push(this);
     }
     loadURL() {
+      this.webContents.emit('did-start-loading');
       setTimeout(() => {
         if (this.destroyed) return;
-        this.webContents.emit('did-start-loading');
-        this.webContents.emit('did-finish-load');
         this.emit('ready-to-show');
       }, 10);
     }
@@ -97,7 +100,7 @@ vi.mock('electron', async () => {
       addRecentDocument: () => undefined,
     },
     BrowserWindow: FakeBrowserWindow,
-    ipcMain: { handle: () => undefined, on: () => undefined },
+    ipcMain: { handle: register, on: register, listeners },
     screen: {
       getAllDisplays: () => [{ workArea }],
       getPrimaryDisplay: () => ({ workArea }),
@@ -122,15 +125,24 @@ interface FakeWindowClass {
   focused: FakeWindow | null;
 }
 
+interface FakeIpcMain {
+  listeners: Map<string, (event: { sender: unknown }, ...args: unknown[]) => unknown>;
+}
+
 const realStat = fsp.stat;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 let windows: typeof import('./windows');
 let Fake: FakeWindowClass;
+let ipcMain: FakeIpcMain;
 let dir: string;
 
 const live = () => Fake.all.filter((w) => !w.destroyed);
 const sent = (win: FakeWindow, channel: string) => win.webContents.sent.filter(([c]) => c === channel);
+// The page has registered its listeners and says so, as App.tsx does.
+const reportReady = (win: FakeWindow) => ipcMain.listeners.get('window:ready')?.({ sender: win.webContents });
+// Files dropped on a window, as the preload sends them.
+const drop = (win: FakeWindow, paths: string[]) => ipcMain.listeners.get('drop:open')?.({ sender: win.webContents }, paths);
 
 function file(name: string): string {
   const filePath = path.join(dir, name);
@@ -159,7 +171,9 @@ beforeEach(async () => {
   Fake = electron.BrowserWindow as unknown as FakeWindowClass;
   Fake.all.length = 0;
   Fake.focused = null;
+  ipcMain = electron.ipcMain as unknown as FakeIpcMain;
   windows = await import('./windows');
+  windows.registerWindowHandlers();
 });
 
 afterEach(() => {
@@ -183,6 +197,7 @@ describe('restoring windows at launch', () => {
     void windows.startWindows([]);
     await sleep(100);
     expect(live()).toHaveLength(2);
+    reportReady(live()[0]);
     expect(sent(live()[0], 'window:restore')).toHaveLength(1);
   });
 
@@ -202,6 +217,7 @@ describe('restoring windows at launch', () => {
     await windows.startWindows([]);
     await sleep(50);
     expect(live()).toHaveLength(1);
+    reportReady(live()[0]);
     expect(sent(live()[0], 'window:restore')).toHaveLength(0);
     expect(Fake.all.filter((w) => w.destroyed && w.shown)).toHaveLength(0);
   });
@@ -232,6 +248,7 @@ describe('opening files from outside Emdy', () => {
     void windows.openFromOutside(path.join(dir, 'slow.md'));
     void windows.openFromOutside(fast);
     await sleep(100);
+    for (const win of live()) reportReady(win);
     const opened = live().filter((w) => sent(w, 'file:open').some(([, p]) => p === fast));
     expect(opened).toHaveLength(1);
     // slow.md arrived first, so it holds the welcome window.
@@ -247,6 +264,7 @@ describe('opening files from outside Emdy', () => {
     void windows.openFromOutside(a);
     void windows.openFromOutside(b);
     await sleep(200);
+    for (const win of live()) reportReady(win);
     expect(sent(Fake.all[0], 'file:open').map(([, p]) => p)).toEqual([a]);
     expect(live()).toHaveLength(2);
   });
@@ -279,5 +297,54 @@ describe('opening files from outside Emdy', () => {
     await expect(windows.openFromOutside(path.join(dir, 'gone.md'))).rejects.toThrow();
     await sleep(20);
     expect(live()).toHaveLength(1);
+  });
+});
+
+describe("sending to a window's page", () => {
+  it('holds what it sends until the page is listening, then sends it in order', async () => {
+    await windows.startWindows([]);
+    const [welcome] = live();
+    const a = file('a.md');
+    const b = file('b.md');
+    // Dropped on the window before its page has registered its listeners.
+    await drop(welcome, [a]);
+    await drop(welcome, [b]);
+    expect(welcome.webContents.sent).toEqual([]);
+    reportReady(welcome);
+    expect(welcome.webContents.sent).toEqual([
+      ['file:open', a, '# a.md\n'],
+      ['file:open', b, '# b.md\n'],
+    ]);
+  });
+
+  it('sends straight away once the page is listening', async () => {
+    await windows.startWindows([]);
+    const [welcome] = live();
+    reportReady(welcome);
+    const a = file('a.md');
+    await windows.openFromOutside(a);
+    expect(welcome.webContents.sent).toEqual([['file:open', a, '# a.md\n']]);
+  });
+
+  it('holds what it sends again while the page reloads', async () => {
+    await windows.startWindows([]);
+    const [welcome] = live();
+    reportReady(welcome);
+    welcome.webContents.emit('did-start-loading');
+    const a = file('a.md');
+    await windows.openFromOutside(a);
+    expect(welcome.webContents.sent).toEqual([]);
+    reportReady(welcome);
+    expect(welcome.webContents.sent).toEqual([['file:open', a, '# a.md\n']]);
+  });
+
+  it('sends nothing more when the page says again that it is listening', async () => {
+    await windows.startWindows([]);
+    const [welcome] = live();
+    const a = file('a.md');
+    await windows.openFromOutside(a);
+    reportReady(welcome);
+    reportReady(welcome);
+    expect(welcome.webContents.sent).toEqual([['file:open', a, '# a.md\n']]);
   });
 });

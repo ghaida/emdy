@@ -97,6 +97,8 @@ export interface ElectronAPI {
   onDirOpen: (callback: (dirPath: string, entries: FileEntry[]) => void) => () => void;
   onDropRejected: (callback: () => void) => () => void;
   onWindowRestore: (callback: (state: WindowRestoreState) => void) => () => void;
+  /** Tells main the listeners above are registered, so it sends what it held back. */
+  reportReady: () => void;
   getNudgeState: () => Promise<NudgeState>;
   setNudgeSetting: (key: string, value: unknown) => Promise<void>;
   getAppVersion: () => Promise<string>;

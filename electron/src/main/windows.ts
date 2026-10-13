@@ -31,8 +31,12 @@ interface WindowRecord {
   scrollTop: number;
   /** Shows the loading spinner until its first folder or file arrives. */
   pending: boolean;
-  /** False until the page has loaded; messages sent before then are lost. */
-  loaded: boolean;
+  /**
+   * False until the page says its listeners are registered (window:ready).
+   * A message sent before then would be lost, so it waits in queued.
+   */
+  ready: boolean;
+  queued: { channel: string; args: unknown[] }[];
   /** A file from outside is loading into it, so it no longer counts as empty. */
   claimed: boolean;
   lastFocusedAt: number;
@@ -86,7 +90,8 @@ export function createAppWindow(options: { bounds?: Rect | null; pending?: boole
     filePath: null,
     scrollTop: 0,
     pending: options.pending ?? false,
-    loaded: false,
+    ready: false,
+    queued: [],
     claimed: false,
     lastFocusedAt: Date.now(),
   };
@@ -101,11 +106,9 @@ export function createAppWindow(options: { bounds?: Rect | null; pending?: boole
   win.once('ready-to-show', showOnce);
   setTimeout(showOnce, SHOW_FALLBACK_MS);
 
+  // A reload drops the page's listeners; it says it's ready again once they're back.
   win.webContents.on('did-start-loading', () => {
-    record.loaded = false;
-  });
-  win.webContents.on('did-finish-load', () => {
-    record.loaded = true;
+    record.ready = false;
   });
   previousWindow = win;
   win.on('focus', () => {
@@ -145,14 +148,12 @@ function recordFor(win: BrowserWindow): WindowRecord | undefined {
   return win.isDestroyed() ? undefined : records.get(win.webContents.id);
 }
 
-// Messages sent before the page has loaded are lost, so wait if needed.
-function sendWhenLoaded(record: WindowRecord, channel: string, ...args: unknown[]) {
-  const { win } = record;
-  const send = () => {
-    if (!win.isDestroyed()) win.webContents.send(channel, ...args);
-  };
-  if (record.loaded) send();
-  else win.webContents.once('did-finish-load', send);
+// A message that reaches the page before its listeners are registered is lost.
+// In a packaged build they're registered after the page's load event, so
+// messages wait until the page says it's listening.
+function sendWhenReady(record: WindowRecord, channel: string, ...args: unknown[]) {
+  if (!record.ready) record.queued.push({ channel, args });
+  else if (!record.win.isDestroyed()) record.win.webContents.send(channel, ...args);
 }
 
 // Reads a folder or file before any window is touched, so a path that can't
@@ -177,18 +178,18 @@ function showPayload(win: BrowserWindow, payload: OpenPayload) {
     record.dirPath = payload.dirPath;
     record.filePath = null;
     record.scrollTop = 0;
-    sendWhenLoaded(record, 'dir:open', payload.dirPath, payload.entries);
+    sendWhenReady(record, 'dir:open', payload.dirPath, payload.entries);
   } else if (payload.kind === 'file') {
     // Same rule as the renderer: a file from outside the open folder closes it.
     if (record.dirPath !== null && !isInsideFolder(payload.filePath, record.dirPath)) record.dirPath = null;
     record.filePath = payload.filePath;
     record.scrollTop = 0;
-    sendWhenLoaded(record, 'file:open', payload.filePath, payload.content);
+    sendWhenReady(record, 'file:open', payload.filePath, payload.content);
   } else {
     record.dirPath = payload.state.dirPath;
     record.filePath = payload.state.filePath;
     record.scrollTop = payload.state.scrollTop;
-    sendWhenLoaded(record, 'window:restore', payload.state);
+    sendWhenReady(record, 'window:restore', payload.state);
   }
   scheduleSave();
 }
@@ -454,6 +455,16 @@ export function registerWindowHandlers() {
   // Not cleared on read: React StrictMode asks twice in dev. The renderer
   // clears its own spinner when its folder or file arrives.
   ipcMain.handle('window:is-pending-open', (event) => records.get(event.sender.id)?.pending ?? false);
+
+  // The page's listeners are registered (App.tsx): send what waited for them,
+  // in order. The page says so again each time it re-registers them, which
+  // finds nothing left to send.
+  ipcMain.on('window:ready', (event) => {
+    const record = records.get(event.sender.id);
+    if (!record) return;
+    record.ready = true;
+    for (const { channel, args } of record.queued.splice(0)) event.sender.send(channel, ...args);
+  });
 
   ipcMain.on('window:report-state', (event, state: unknown) => {
     const record = records.get(event.sender.id);

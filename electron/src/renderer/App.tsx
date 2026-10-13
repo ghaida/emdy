@@ -656,6 +656,11 @@ export function App() {
       clearPendingWithMinTime();
     });
 
+    // Main holds what it sends this window until now: a message that arrives
+    // before these listeners exist is lost. Saying so again when the effect
+    // re-runs is harmless.
+    window.electronAPI.reportReady();
+
     return () => { removeMenu(); removeFileOpen(); removeDirOpen(); removeDropRejected(); removeRestore(); };
   }, [handleOpen, handleExportPDF, handlePrint, display, addToast, closeFind, handleOpenPalette, cycleMatchNext, cycleMatchPrev]);
 

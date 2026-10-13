@@ -122,6 +122,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('window:restore', handler);
     return () => ipcRenderer.removeListener('window:restore', handler);
   },
+  // The listeners above are registered; main holds what it sends until then.
+  reportReady: () => ipcRenderer.send('window:ready'),
 
   // Nudge
   getNudgeState: () => ipcRenderer.invoke('nudge:get'),
