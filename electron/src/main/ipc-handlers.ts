@@ -10,7 +10,7 @@ import { scanDirectory } from './scan-directory';
 import { registerSearch, searchFiles } from './search';
 import { isTextDocument } from '../shared/paths';
 import type { SearchScope } from '../renderer/lib/types';
-import { loadedFilePath, openPathInNewWindow, windowPaths } from './windows';
+import { loadedFilePath, openPathInNewWindow, recordLoadedFile, windowPaths } from './windows';
 
 // Where Open… starts: the window's folder, else its file's folder. A window
 // that shows nothing starts at the newest Open Recent entry (in it when it's a
@@ -47,11 +47,16 @@ export function registerFileHandlers() {
     if (stat.isDirectory()) {
       addAllowedRoot(selected);
       noteRecent(selected);
-      return { type: 'directory' as const, dirPath: selected, entries: await scanDirectory(selected) };
+      const entries = await scanDirectory(selected);
+      // The window's file now comes from the folder, through the allowlist.
+      recordLoadedFile(event.sender, null);
+      return { type: 'directory' as const, dirPath: selected, entries };
     }
     const content = await readTextFile(selected);
     addAllowedRoot(path.dirname(selected));
     noteRecent(selected);
+    // Main hands the file to this window, so live reload may read it again.
+    recordLoadedFile(event.sender, selected);
     return { type: 'file' as const, filePath: selected, content };
   });
 
@@ -68,6 +73,7 @@ export function registerFileHandlers() {
     const content = await readTextFile(filePath);
     addAllowedRoot(path.dirname(filePath));
     noteRecent(filePath);
+    recordLoadedFile(event.sender, filePath);
     return { filePath, content };
   });
 
@@ -83,7 +89,8 @@ export function registerFileHandlers() {
     }
     if (!isPathAllowed(realPath)) throw new Error('Access denied');
     // Markdown and plain text, or the very file main sent this window, which
-    // can be a .mkd or a .log from Finder: live reload reads it again.
+    // can be a .mkd or a .log from Finder or the Open dialog: live reload
+    // reads it again.
     if (!isTextDocument(realPath) && filePath !== loadedFilePath(event.sender)) throw new Error('Access denied');
     nudgeTrackFileOpen();
     return readTextFile(realPath);

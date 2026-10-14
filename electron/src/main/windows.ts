@@ -32,8 +32,9 @@ interface WindowRecord {
   filePath: string | null;
   /**
    * The file main itself sent the page, which file:read serves whatever its
-   * extension. Unlike filePath, only showPayload sets it: what the page
-   * reports about itself never does.
+   * extension. Unlike filePath, only main sets it (showPayload, and the Open
+   * dialog through recordLoadedFile): what the page reports about itself
+   * never does.
    */
   loadedFilePath: string | null;
   scrollTop: number;
@@ -368,11 +369,24 @@ export function windowPaths(sender: Electron.WebContents): { dirPath: string | n
 
 /**
  * The file main itself sent a page's window (from Finder, Open Recent, a drop,
- * Open in New Window or a restored session), so live reload can read it again
- * whatever its extension. Never what the page reports about itself.
+ * Open in New Window, a restored session or the Open dialog), so live reload
+ * can read it again whatever its extension. Never what the page reports about
+ * itself.
  */
 export function loadedFilePath(sender: Electron.WebContents): string | null {
   return records.get(sender.id)?.loadedFilePath ?? null;
+}
+
+/**
+ * The Open dialog hands its file straight back to the window that asked, which
+ * is main opening it there just as a payload does. Null clears it, when the
+ * dialog picked a folder: the window's file then comes through the allowlist.
+ * A page that isn't an Emdy window, or has closed, is ignored.
+ */
+export function recordLoadedFile(sender: Electron.WebContents, filePath: string | null) {
+  if (sender.isDestroyed()) return;
+  const record = records.get(sender.id);
+  if (record) record.loadedFilePath = filePath;
 }
 
 /** Calls listener when another window takes focus, and when a window closes. */

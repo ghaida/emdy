@@ -721,4 +721,36 @@ describe('the file main sent a window', () => {
     expect(windows.windowPaths(page(win)).filePath).toBe(slow);
     expect(windows.loadedFilePath(page(win))).toBeNull();
   });
+
+  // The Open dialog hands its file straight back to the window that asked.
+  it('is the file the Open dialog handed the window, or nothing once it hands a folder, whatever the page reports', async () => {
+    await windows.startWindows([]);
+    // The folder makes its files ones a page may report.
+    await windows.openFromOutside(dir);
+    const [win] = live();
+    const notes = file('notes.mkd');
+    windows.recordLoadedFile(page(win), notes);
+    expect(windows.loadedFilePath(page(win))).toBe(notes);
+    const other = file('other.mkd');
+    report(win, other);
+    expect(windows.windowPaths(page(win)).filePath).toBe(other);
+    expect(windows.loadedFilePath(page(win))).toBe(notes);
+    windows.recordLoadedFile(page(win), null);
+    expect(windows.loadedFilePath(page(win))).toBeNull();
+  });
+
+  it('records nothing for a page that is not an Emdy window, or one that has been destroyed', () => {
+    const notes = file('notes.mkd');
+    const stranger = { id: 999, isDestroyed: () => false } as unknown as Electron.WebContents;
+    windows.recordLoadedFile(stranger, notes);
+    expect(windows.loadedFilePath(stranger)).toBeNull();
+    // Like Electron's, a destroyed page throws when its id is read.
+    const destroyed = {
+      isDestroyed: () => true,
+      get id(): number {
+        throw new TypeError('Object has been destroyed');
+      },
+    };
+    expect(() => windows.recordLoadedFile(destroyed as unknown as Electron.WebContents, notes)).not.toThrow();
+  });
 });

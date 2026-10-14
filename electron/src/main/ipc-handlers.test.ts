@@ -24,19 +24,24 @@ vi.mock('electron', () => ({
   shell: {},
 }));
 // The file main itself sent each window, by webContents id, as windows.ts
-// records it. Tests set it as main would.
+// records it. Tests set it as main would; the Open dialogs record it here.
 const loadedFiles = vi.hoisted(() => new Map<number, string>());
 
 // These reach Electron's app and windows as they load. The handlers tested here
 // use none of them, apart from file:read counting an open, which does nothing
 // here, and asking which file main sent the window, and the Open dialogs asking
-// what the window shows and what was opened recently.
+// what the window shows and what was opened recently, and recording the file
+// they hand the window.
 vi.mock('./settings-store', () => ({ nudgeTrackFileOpen: vi.fn() }));
 vi.mock('./recents', () => ({ noteRecent: vi.fn(), recentPaths: vi.fn(async () => []) }));
 vi.mock('./windows', () => ({
   openPathInNewWindow: vi.fn(),
   windowPaths: vi.fn(() => ({ dirPath: null, filePath: null })),
   loadedFilePath: vi.fn((sender: { id: number }) => loadedFiles.get(sender.id) ?? null),
+  recordLoadedFile: vi.fn((sender: { id: number }, filePath: string | null) => {
+    if (filePath === null) loadedFiles.delete(sender.id);
+    else loadedFiles.set(sender.id, filePath);
+  }),
 }));
 
 let dir: string;
@@ -176,6 +181,48 @@ describe('file:read', () => {
     fs.writeFileSync(notes, '# Notes\n');
     loadedFiles.set(1, notes);
     await expect(read(notes, 1)).rejects.toThrow('Access denied');
+  });
+});
+
+// The Open dialog hands the file it picks straight back to the window that
+// asked, so live reload covers it as it does a file main sends.
+describe('file:read after an Open dialog', () => {
+  // The person picks `picked` in the dialog `channel` opens, in the window with webContents id `sender`.
+  async function pick(channel: string, picked: string, sender = 1): Promise<unknown> {
+    vi.mocked(dialog.showOpenDialog).mockResolvedValueOnce({ canceled: false, filePaths: [picked] });
+    const handler = handlers.get(channel);
+    if (!handler) throw new Error(`${channel} is not registered`);
+    return handler({ sender: { id: sender } });
+  }
+
+  it.each(['open:dialog', 'file:open-dialog'])(
+    'serves a file %s picked whatever its extension, and only to the window that picked it',
+    async (channel) => {
+      const notes = write('notes.mkd', '# Notes\n');
+      expect(await pick(channel, notes, 1)).toMatchObject({ filePath: notes, content: '# Notes\n' });
+      expect(await read(notes, 1)).toBe('# Notes\n');
+      await expect(read(notes, 2)).rejects.toThrow('Access denied');
+    },
+  );
+
+  it('refuses it again once open:dialog picks a folder, whose files come through the allowlist', async () => {
+    const notes = write('notes.mkd', '# Notes\n');
+    await pick('file:open-dialog', notes, 1);
+    expect(await read(notes, 1)).toBe('# Notes\n');
+    const folder = path.join(dir, 'folder');
+    fs.mkdirSync(folder);
+    expect(await pick('open:dialog', folder, 1)).toMatchObject({ type: 'directory', dirPath: folder });
+    await expect(read(notes, 1)).rejects.toThrow('Access denied');
+  });
+
+  it('still serves it after dir:open-dialog picks a folder', async () => {
+    const notes = write('notes.mkd', '# Notes\n');
+    await pick('file:open-dialog', notes, 1);
+    expect(await read(notes, 1)).toBe('# Notes\n');
+    const folder = path.join(dir, 'folder');
+    fs.mkdirSync(folder);
+    expect(await pick('dir:open-dialog', folder, 1)).toMatchObject({ dirPath: folder });
+    expect(await read(notes, 1)).toBe('# Notes\n');
   });
 });
 
