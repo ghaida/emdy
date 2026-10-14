@@ -1,6 +1,7 @@
 import type { DiagramResult } from './mermaid-render';
 import { inlineDiagramsForPrint, renderExportDiagrams } from './diagram-export';
 import { prepareCodeForExport, type ViewTheme } from './code-export';
+import { stripLiveMarkup } from './live-markup';
 
 /**
  * Print/PDF payload with diagrams swapped for their print renders. The content
@@ -23,9 +24,10 @@ export async function preparePrintPayload(
  * document from the live Markdown view. Used by BOTH "Export as PDF" and
  * "Print" so the two paths render the exact same document.
  *
- * Clones `.markdown-body`, swaps Mermaid diagrams for their print renders
- * (see renderExportDiagrams), prepares code blocks for export from `theme`
- * (see prepareCodeForExport: no buttons, full code, print palette from a
+ * Clones `.markdown-body`, drops find's highlights and the view's own
+ * attributes (see stripLiveMarkup), swaps Mermaid diagrams for their print
+ * renders (see renderExportDiagrams), prepares code blocks for export from
+ * `theme` (see prepareCodeForExport: no buttons, full code, print palette from a
  * dark theme), strips inline flex layouts / fixed heights / hidden overflow
  * that only make sense in the live themed viewer, and returns the sanitized
  * innerHTML plus a title derived from the file path.
@@ -45,6 +47,7 @@ export function buildPrintPayload(
 
   // Clone and sanitize for print — strip flex layouts and fixed heights
   const clone = markdownBody.cloneNode(true) as HTMLElement;
+  stripLiveMarkup(clone);
   inlineDiagramsForPrint(clone, diagrams);
   prepareCodeForExport(clone, theme);
   clone.querySelectorAll('*').forEach((el) => {

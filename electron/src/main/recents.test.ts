@@ -36,12 +36,12 @@ afterEach(() => {
 });
 
 describe('Open Recent list', () => {
-  it('puts a newly opened file at the top, saves the list and tells macOS', () => {
+  it('puts a newly opened file at the top, saves the list and tells macOS', async () => {
     const a = file('a.md');
     const b = file('b.md');
     recents.noteRecent(a);
     recents.noteRecent(b);
-    expect(recents.recentPaths()).toEqual([b, a]);
+    await expect(recents.recentPaths()).resolves.toEqual([b, a]);
     expect(saved()).toEqual([b, a]);
     expect(electronApp.addRecentDocument).toHaveBeenCalledWith(b);
   });
@@ -53,13 +53,13 @@ describe('Open Recent list', () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
-  it('leaves out files that have been moved or deleted', () => {
+  it('leaves out files that have been moved or deleted', async () => {
     const a = file('a.md');
     const gone = file('gone.md');
     recents.noteRecent(a);
     recents.noteRecent(gone);
     fs.unlinkSync(gone);
-    expect(recents.recentPaths()).toEqual([a]);
+    await expect(recents.recentPaths()).resolves.toEqual([a]);
   });
 
   it('forgets a path that turns out not to open', () => {
@@ -71,10 +71,10 @@ describe('Open Recent list', () => {
     expect(saved()).toEqual([a]);
   });
 
-  it('clears the list and macOS\'s list', () => {
+  it('clears the list and macOS\'s list', async () => {
     recents.noteRecent(file('a.md'));
     recents.clearRecents();
-    expect(recents.recentPaths()).toEqual([]);
+    await expect(recents.recentPaths()).resolves.toEqual([]);
     expect(saved()).toEqual([]);
     expect(electronApp.clearRecentDocuments).toHaveBeenCalled();
   });
@@ -84,6 +84,6 @@ describe('Open Recent list', () => {
     fs.writeFileSync(path.join(dir, 'recents.json'), JSON.stringify([a, 'not-absolute.md']));
     vi.resetModules();
     recents = await import('./recents');
-    expect(recents.recentPaths()).toEqual([a]);
+    await expect(recents.recentPaths()).resolves.toEqual([a]);
   });
 });

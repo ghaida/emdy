@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { buildPrintPayload, preparePrintPayload } from './print-payload';
 import { warm } from './color-themes';
+import { findMatches } from './find-walker';
 
 const renderDiagram = vi.hoisted(() => vi.fn());
 vi.mock('./mermaid-render', async (importOriginal) => ({
@@ -172,5 +173,33 @@ describe('buildPrintPayload', () => {
   it('derives the title from the file path basename', () => {
     host.innerHTML = '<div class="markdown-body"><p>Hi</p></div>';
     expect(buildPrintPayload(host, '/a/b/notes.md')!.title).toBe('notes.md');
+  });
+
+  it('prints without the find highlights, which stay on screen', () => {
+    host.innerHTML = '<div class="markdown-body"><p>Find the word here, and the word there.</p></div>';
+    findMatches(host, 'word', 10);
+
+    expect(buildPrintPayload(host, '/docs/readme.md')?.html).toBe('<p>Find the word here, and the word there.</p>');
+    expect(host.querySelectorAll('mark[data-emdy-match]')).toHaveLength(2);
+  });
+
+  // The live view's own attributes: the source line palette picks look for,
+  // the hast node react-markdown hands its overrides (it reaches the DOM as
+  // text), and the tabindex a followed footnote gets.
+  const LIVE_VIEW =
+    '<div class="markdown-body"><p data-line="1">See the note<sup>' +
+    '<a href="#user-content-fn-1" id="user-content-fnref-1" data-footnote-ref="" node="[object Object]">1</a></sup>.</p>' +
+    '<section data-footnotes="" class="footnotes"><ol>' +
+    '<li id="user-content-fn-1" tabindex="-1" node="[object Object]"><p>The note.</p></li>' +
+    '</ol></section></div>';
+
+  it.each(['data-line', 'node', 'tabindex'])('prints without the %s attributes only the live view uses', (attribute) => {
+    host.innerHTML = LIVE_VIEW;
+    const doc = new DOMParser().parseFromString(buildPrintPayload(host, '/docs/readme.md')?.html ?? '', 'text/html');
+
+    expect(doc.querySelector(`[${attribute}]`)).toBeNull();
+    expect(doc.querySelector('a[href="#user-content-fn-1"]')?.id).toBe('user-content-fnref-1');
+    expect(doc.getElementById('user-content-fn-1')?.textContent).toBe('The note.');
+    expect(host.querySelector(`[${attribute}]`)).not.toBeNull();
   });
 });

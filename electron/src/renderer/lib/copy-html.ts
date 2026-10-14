@@ -16,19 +16,21 @@
 //     cells carry shading and explicit widths, and strips the sized <span>/<div>
 //     primitives (mini-swatches, radius squares, bar divs) that RTF discards.
 //
-// For plain (non-design) markdown, this is a no-op that returns the source
-// innerHTML unchanged, preserving the exact pre-feature clipboard behavior,
-// with two exceptions. Mermaid diagrams are swapped for PNG images, since RTF
-// drops SVG entirely (see renderCopyImages). Code blocks lose their buttons,
-// come back in full when cut short on screen, and from a dark theme are
-// re-highlighted in the print palette, since its colors paste as light-gray
-// text (see prepareCodeForExport).
+// For plain (non-design) markdown, the copy is the page's own HTML, except
+// where that markup only works in the app. Mermaid diagrams are swapped for
+// PNG images, since RTF drops SVG entirely (see renderCopyImages). Code blocks
+// lose their buttons, come back in full when cut short on screen, and from a
+// dark theme are re-highlighted in the print palette, since its colors paste
+// as light-gray text (see prepareCodeForExport). Find's highlights and the
+// view's own attributes are left out (see stripLiveMarkup), and images next to
+// the file point at the file itself (see pointImagesAtFiles).
 
 import {
   DESIGN_PRINT_STYLES,
   DESIGN_COMPONENT_TD_CSS,
   DESIGN_COMPONENT_TD_FIRST_WIDTH,
 } from '../../shared/design-print-styles';
+import { LOCAL_FILE_HOST } from '../../shared/local-file';
 import { isValidCssColor } from './design-md';
 import { parseRgba, toHex, type Rgba } from './color';
 import { CODE_BLOCK_SELECTOR, prepareCodeForExport, type ViewTheme } from './code-export';
@@ -39,6 +41,7 @@ import {
   renderCopyImages,
   type DiagramImage,
 } from './diagram-export';
+import { stripLiveMarkup } from './live-markup';
 
 // Neutral bar/chip colors and column widths for the rebuilt tables. All literal
 // print values — never `var(--…)`, never viewer-computed.
@@ -432,11 +435,27 @@ export function buildCopyHtml(
   return clone.innerHTML;
 }
 
+// Images next to the file reach the page as local-file: URLs, which only Emdy
+// serves. The copy points them at the file itself, for the apps that open file
+// URLs. Both URLs percent-encode the path, so it carries over as it is.
+const LOCAL_IMAGE_PREFIX = `local-file://${LOCAL_FILE_HOST}/`;
+
+function pointImagesAtFiles(root: HTMLElement): void {
+  root.querySelectorAll('img').forEach((img) => {
+    const src = img.getAttribute('src');
+    if (src?.startsWith(LOCAL_IMAGE_PREFIX)) img.setAttribute('src', `file:///${src.slice(LOCAL_IMAGE_PREFIX.length)}`);
+  });
+}
+
 /**
- * Clipboard HTML with diagrams rendered to PNGs. The content is snapshotted
- * before rendering starts, so a file opened meanwhile can't be what's copied.
+ * Clipboard HTML with diagrams rendered to PNGs, without the view's own markup
+ * (see stripLiveMarkup) and with images next to the file pointing at it. The
+ * content is snapshotted before rendering starts, so a file opened meanwhile
+ * can't be what's copied.
  */
 export async function prepareCopyHtml(source: HTMLElement, theme?: ViewTheme): Promise<string> {
   const snapshot = source.cloneNode(true) as HTMLElement;
+  stripLiveMarkup(snapshot);
+  pointImagesAtFiles(snapshot);
   return buildCopyHtml(snapshot, await renderCopyImages(snapshot), theme);
 }

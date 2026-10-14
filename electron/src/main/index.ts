@@ -114,7 +114,11 @@ app.on('ready', () => {
 
   void startWindows(launchPaths);
   nudgeTrackAppLaunch();
-  rebuildMenu();
+  // Until Emdy sets its menu, Electron's default one is up, with Reload and
+  // Toggle Developer Tools. So it goes in now, and again once the recent
+  // paths have been checked.
+  buildMenu(sendMenuEvent, focusedWindowHasFile(), { paths: [], open: openRecent, clear: clearRecents });
+  void rebuildMenu();
   onRecentsChange(rebuildMenu);
   onWindowFocus(rebuildMenu);
   setupAutoUpdater();
@@ -162,15 +166,20 @@ app.on('open-file', (event, filePath) => {
 
 ipcMain.handle('menu:set-has-file', (event, hasFile: unknown) => {
   setWindowHasFile(event.sender, Boolean(hasFile));
-  rebuildMenu();
+  void rebuildMenu();
 });
 
 // The menu describes the focused window, so it's rebuilt when focus moves or a
-// window closes.
+// window closes. Rebuilds wait on the recent paths' checks and can finish out
+// of order (focus A, B, then A again), so only the latest one builds, with the
+// window that has focus by then.
 let lastMenuSignature = '';
-function rebuildMenu() {
+let menuRun = 0;
+async function rebuildMenu() {
+  const run = ++menuRun;
+  const paths = await recentPaths();
+  if (run !== menuRun) return;
   const hasFile = focusedWindowHasFile();
-  const paths = recentPaths();
   const signature = `${hasFile}|${paths.join('\n')}`;
   if (signature === lastMenuSignature) return;
   lastMenuSignature = signature;

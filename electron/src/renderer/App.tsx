@@ -533,8 +533,8 @@ export function App() {
     if (!contentRef.current) return;
     announceDiagramPrep();
     const html = await prepareCopyHtml(contentRef.current, viewTheme);
-    await window.electronAPI.writeClipboardHTML(html);
-    addToast('Copied to clipboard', 'success');
+    if (await window.electronAPI.writeClipboardHTML(html)) addToast('Copied to clipboard', 'success');
+    else addToast('Copy failed', 'error');
   }, [addToast, announceDiagramPrep, viewTheme]);
 
   useFileWatcher(filePath, {

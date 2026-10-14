@@ -94,7 +94,8 @@ export interface ElectronAPI {
   reportWindowState: (state: WindowState) => void;
   exportPDF: (opts: { html: string; title: string }) => Promise<PdfExportResult>;
   print: (opts: { html: string; title: string }) => Promise<PrintResult>;
-  writeClipboardHTML: (html: string) => Promise<void>;
+  /** False when main refused the HTML (past the export limit) and wrote nothing. */
+  writeClipboardHTML: (html: string) => Promise<boolean>;
   /** `scale` is device pixels per point, so the image pastes at its logical size. */
   writeClipboardImage: (png: Uint8Array, scale: number) => Promise<boolean>;
   getAccentColor: () => Promise<string>;

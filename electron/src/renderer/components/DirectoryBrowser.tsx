@@ -11,7 +11,7 @@ interface DirectoryBrowserProps {
   onOpenInNewWindow: (filePath: string) => void;
 }
 
-export function DirectoryBrowser({ entries, activePath, onFileSelect, onFileContextMenu, onOpenInNewWindow }: DirectoryBrowserProps) {
+export const DirectoryBrowser = React.memo(function DirectoryBrowser({ entries, activePath, onFileSelect, onFileContextMenu, onOpenInNewWindow }: DirectoryBrowserProps) {
   const handleTreeKeyDown = useCallback((e: React.KeyboardEvent) => {
     const tree = e.currentTarget;
     const items = Array.from(tree.querySelectorAll<HTMLElement>('button.tree-item, button.tree-folder'));
@@ -87,7 +87,7 @@ export function DirectoryBrowser({ entries, activePath, onFileSelect, onFileCont
       </ul>
     </div>
   );
-}
+});
 
 function FileItem({ entry, activePath, nested, onSelect, onContextMenu, onOpenInNewWindow }: {
   entry: FileEntry;

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useMemo, useState, useCallback, useEf
 import { Copy, Check } from 'lucide-react';
 import Markdown, { type Components, type ExtraProps } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { SyntaxHighlighter } from '../lib/prism-languages';
 import { buildPrismTheme } from '../lib/prism-theme';
 import { FULL_CODE_ATTR } from '../lib/code-export';
 import type { ColorScale } from '../lib/color-themes';

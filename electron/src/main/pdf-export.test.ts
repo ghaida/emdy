@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { dialog } from 'electron';
+import { clipboard, dialog } from 'electron';
 import fsp from 'node:fs/promises';
 import { MAX_EXPORT_HTML_LENGTH, registerExportHandlers } from './pdf-export';
 
@@ -44,6 +44,7 @@ vi.mock('electron', () => {
   }
   return {
     BrowserWindow: FakePrintWindow,
+    clipboard: { writeHTML: vi.fn() },
     dialog: { showSaveDialog: vi.fn() },
     ipcMain: {
       handle: (channel: string, handler: (event: { sender: unknown }, ...args: unknown[]) => unknown) =>
@@ -153,6 +154,11 @@ describe('a long document', () => {
   it('is printed', async () => {
     expect(await ask('export:print', print.appPage, codeHeavy)).toBe('printed');
   });
+
+  it('is copied as HTML', async () => {
+    expect(await ask('clipboard:write-html', print.appPage, codeHeavy.html)).toBe(true);
+    expect(clipboard.writeHTML).toHaveBeenCalledWith(codeHeavy.html);
+  });
 });
 
 describe('a request no page of Emdy sends', () => {
@@ -174,6 +180,16 @@ describe('a request no page of Emdy sends', () => {
   it.each(requests)('Print answers failed for %s, without opening a print window', async (_what, request) => {
     expect(await ask('export:print', print.appPage, request)).toBe('failed');
     expect(print.windowsOpened).toBe(0);
+  });
+
+  // Copy as HTML sends only the HTML. Its answer tells the page whether
+  // anything was written.
+  it.each([
+    ['html that is not text', 42],
+    ['html longer than the export limit', 'x'.repeat(MAX_EXPORT_HTML_LENGTH + 1)],
+  ] as const)('Copy as HTML answers false for %s, and writes nothing', async (_what, html) => {
+    expect(await ask('clipboard:write-html', print.appPage, html)).toBe(false);
+    expect(clipboard.writeHTML).not.toHaveBeenCalled();
   });
 });
 

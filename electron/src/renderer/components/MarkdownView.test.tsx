@@ -277,6 +277,38 @@ describe('MarkdownView code blocks', () => {
     expect(long.hasAttribute(FULL_CODE_ATTR)).toBe(false);
     expect(long.querySelector('code')!.textContent).toBe(longCode);
   });
+
+  // Highlighted code comes out as a span per token; plain text has none.
+  const tokens = () => document.querySelectorAll('.code-block-wrapper code .token');
+
+  it.each([
+    ['ts', 'const total: number = 1;'],
+    ['js', "const name = 'Emdy';"],
+    ['json', '{ "name": "Emdy" }'],
+    ['bash', 'echo "$HOME"'],
+    ['zsh', 'echo "$HOME"'],
+    ['python', 'def greet(): return "hi"'],
+    ['rs', 'fn main() { let x = 1; }'],
+    ['less', '@accent: #d47418;'],
+    ['gdscript', 'func _ready(): print("hello")'],
+    ['ini', 'port = 8080'],
+    ['powershell', 'Write-Host "Hello"'],
+    ['ps1', 'Write-Host "Hello"'],
+    ['pwsh', 'Write-Host "Hello"'],
+    ['mjs', "export const name = 'Emdy';"],
+    ['cjs', "const fs = require('fs');"],
+    ['jsonc', '{ "name": "Emdy" } // a comment'],
+    ['console', '$ echo "hello"'],
+  ])('highlights a %s block', (language, code) => {
+    renderView({ content: '```' + language + '\n' + code + '\n```' });
+    expect(tokens().length).toBeGreaterThan(0);
+  });
+
+  it('shows a block in a language it has no grammar for as plain text', () => {
+    renderView({ content: '```nosuchlanguage\nconst name = "Emdy";\n```' });
+    expect(document.querySelector('.code-block-wrapper code')?.textContent).toBe('const name = "Emdy";');
+    expect(tokens()).toHaveLength(0);
+  });
 });
 
 describe('MarkdownView links within the document', () => {

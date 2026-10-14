@@ -24,6 +24,7 @@ const api = {
   openInNewWindow: vi.fn<ElectronAPI['openInNewWindow']>(async () => undefined),
   exportPDF: vi.fn<ElectronAPI['exportPDF']>(async () => 'saved'),
   print: vi.fn<ElectronAPI['print']>(async () => 'printed'),
+  writeClipboardHTML: vi.fn<ElectronAPI['writeClipboardHTML']>(async () => true),
   reportWindowState: vi.fn<ElectronAPI['reportWindowState']>(),
   getUpdateStatus: vi.fn<ElectronAPI['getUpdateStatus']>(async () => ({ status: 'idle' })),
   checkForUpdate: vi.fn<ElectronAPI['checkForUpdate']>(async () => ({ status: 'checking' })),
@@ -389,5 +390,22 @@ describe('Export as PDF and Print', () => {
     api.print.mockRejectedValueOnce(new Error('No handler registered for export:print'));
     await chooseWithDocument('print');
     expect(toastMessages()).toEqual(['Print failed']);
+  });
+});
+
+describe('Copy to clipboard', () => {
+  it.each([
+    ['wrote', ['Copied to clipboard'], true],
+    ['refused', ['Copy failed'], false],
+  ] as const)('answers a copy main %s with %j', async (_what, toasts, written) => {
+    api.writeClipboardHTML.mockResolvedValueOnce(written);
+    await renderApp();
+    await openFile('/notes/a.md', '# Notes\n\nbody text');
+    await screen.findAllByText('body text');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Copy to clipboard' }));
+    });
+    await waitFor(() => expect(toastMessages()).toEqual(toasts));
+    expect(api.writeClipboardHTML).toHaveBeenCalledTimes(1);
   });
 });

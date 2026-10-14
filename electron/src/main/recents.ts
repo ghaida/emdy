@@ -52,9 +52,15 @@ export function clearRecents() {
   save([]);
 }
 
-/** The list for the menu, newest first, leaving out anything moved or deleted since. */
-export function recentPaths(): string[] {
-  return load().filter((p) => fs.existsSync(p));
+/**
+ * The list for the menu, newest first, leaving out anything moved or deleted
+ * since. The menu is rebuilt whenever focus moves, so the checks don't block:
+ * a path on a slow or sleeping drive would hold up the whole app.
+ */
+export async function recentPaths(): Promise<string[]> {
+  const list = load();
+  const checks = await Promise.all(list.map((p) => fs.promises.access(p).then(() => true, () => false)));
+  return list.filter((_, i) => checks[i]);
 }
 
 export function onRecentsChange(listener: () => void) {

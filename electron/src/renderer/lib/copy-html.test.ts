@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { buildCopyHtml, flattenColor, prepareCopyHtml } from './copy-html';
 import { warm } from './color-themes';
+import { findMatches } from './find-walker';
 
 const renderDiagram = vi.hoisted(() => vi.fn());
 vi.mock('./mermaid-render', async (importOriginal) => ({
@@ -377,6 +378,47 @@ describe('buildCopyHtml', () => {
     expect(html).toContain('From A');
     expect(html).not.toContain('From B');
     expect(html).toContain('<code class="language-mermaid">graph TD</code>');
+  });
+
+  it('copies without the find highlights, which stay on screen', async () => {
+    host.innerHTML = '<div class="markdown-body"><p>Find the word here, and the word there.</p></div>';
+    findMatches(host, 'word', 10);
+
+    expect(await prepareCopyHtml(host)).toBe('<div class="markdown-body"><p>Find the word here, and the word there.</p></div>');
+    expect(host.querySelectorAll('mark[data-emdy-match]')).toHaveLength(2);
+  });
+
+  // The live view's own attributes: the source line palette picks look for,
+  // the hast node react-markdown hands its overrides (it reaches the DOM as
+  // text), and the tabindex a followed footnote gets.
+  const LIVE_VIEW =
+    '<div class="markdown-body"><p data-line="1">See the note<sup>' +
+    '<a href="#user-content-fn-1" id="user-content-fnref-1" data-footnote-ref="" node="[object Object]">1</a></sup>.</p>' +
+    '<section data-footnotes="" class="footnotes"><ol>' +
+    '<li id="user-content-fn-1" tabindex="-1" node="[object Object]"><p>The note.</p></li>' +
+    '</ol></section></div>';
+
+  it.each(['data-line', 'node', 'tabindex'])('copies without the %s attributes only the live view uses', async (attribute) => {
+    host.innerHTML = LIVE_VIEW;
+    const doc = new DOMParser().parseFromString(await prepareCopyHtml(host), 'text/html');
+
+    expect(doc.querySelector(`[${attribute}]`)).toBeNull();
+    expect(doc.querySelector('a[href="#user-content-fn-1"]')?.id).toBe('user-content-fnref-1');
+    expect(doc.getElementById('user-content-fn-1')?.textContent).toBe('The note.');
+    expect(host.querySelector(`[${attribute}]`)).not.toBeNull();
+  });
+
+  it('points images next to the file at the file itself, so they paste where file URLs open', async () => {
+    host.innerHTML =
+      '<div class="markdown-body"><p><img src="local-file://local/Users/me/notes/pic%201.png" alt="Local">' +
+      '<img src="https://example.com/a.png" alt="Remote"></p></div>';
+    const out = await prepareCopyHtml(host);
+
+    expect(out).toContain('src="file:///Users/me/notes/pic%201.png"');
+    expect(out).toContain('src="https://example.com/a.png"');
+    expect(out).not.toContain('local-file:');
+    // The page keeps the URL the app serves.
+    expect(host.innerHTML).toContain('src="local-file://local/Users/me/notes/pic%201.png"');
   });
 
   it('triggers on a bare design-header without a design-block', () => {

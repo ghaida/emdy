@@ -9,7 +9,7 @@
 import React from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { SyntaxHighlighter } from './prism-languages';
 import type { ColorScale } from './color-themes';
 import { buildPrismTheme } from './prism-theme';
 import { PRINT_PALETTE } from './print-palette';

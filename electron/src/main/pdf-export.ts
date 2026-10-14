@@ -9,10 +9,10 @@ import { DIAGRAM_BLOCK_CLASS } from '../shared/diagram-markup';
 import type { PdfExportResult, PrintResult } from '../renderer/lib/types';
 import { MAX_FILE_BYTES } from './read-text';
 
-// The longest HTML Export as PDF and Print take: a guard against absurd
-// payloads, not a limit a document should reach. Documents are read up to
-// MAX_FILE_BYTES, and highlighted code comes out at 16 to 19 times its
-// Markdown (an inline-styled span per token), so 25 times leaves headroom.
+// The longest HTML Export as PDF, Print and Copy as HTML take: a guard
+// against absurd payloads, not a limit a document should reach. Documents are
+// read up to MAX_FILE_BYTES, and highlighted code comes out at 16 to 19 times
+// its Markdown (an inline-styled span per token), so 25 times leaves headroom.
 export const MAX_EXPORT_HTML_LENGTH = MAX_FILE_BYTES * 25;
 
 // The print page's load waits for every image, and a remote one for as long as
@@ -36,9 +36,10 @@ const PRINT_CSS = `
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
 }
-span, a, strong, em, del, code, kbd, sub, sup, abbr {
+span, a, strong, em, del, code, kbd, sub, sup, abbr, mark {
   display: inline !important;
 }
+input { display: inline-block !important; }
 table { display: table !important; break-inside: auto !important; }
 thead { display: table-header-group !important; }
 tbody { display: table-row-group !important; }
@@ -246,16 +247,17 @@ export function registerExportHandlers() {
     }
   });
 
-  ipcMain.handle('clipboard:write-html', async (_event, html: string) => {
-    if (typeof html !== 'string') return;
-    // Guard-rail: reject absurdly large payloads (>20 MB) before writing.
-    if (html.length > 20_000_000) return;
+  // Answers whether the HTML was written, so the page doesn't report a copy
+  // that didn't happen.
+  ipcMain.handle('clipboard:write-html', async (_event, html: unknown): Promise<boolean> => {
+    if (typeof html !== 'string' || html.length > MAX_EXPORT_HTML_LENGTH) return false;
     const { clipboard } = await import('electron');
     clipboard.writeHTML(html);
+    return true;
   });
 
   ipcMain.handle('clipboard:write-image', async (_event, png: unknown, scale: unknown) => {
-    // Same guard-rail as the HTML clipboard: bytes only, nothing absurd.
+    // Like the HTML clipboard: bytes only, nothing absurd.
     if (!(png instanceof Uint8Array) || png.byteLength === 0 || png.byteLength > 20_000_000) return false;
     const { clipboard, nativeImage } = await import('electron');
     // Diagram PNGs are rendered above 1x; mark them with the scale they were
