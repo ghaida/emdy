@@ -862,6 +862,7 @@ export function App() {
           x={contextMenu.x}
           y={contextMenu.y}
           filePath={contextMenu.filePath}
+          isOpenFile={contextMenu.filePath === filePath}
           onClose={() => setContextMenu(null)}
           onCopyHTML={handleCopyHTML}
           onExportPDF={handleExportPDF}
