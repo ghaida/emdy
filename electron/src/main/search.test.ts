@@ -14,6 +14,15 @@ function write(rel: string, text: string): string {
   return p;
 }
 
+// Sparse: the file reports `bytes` as its size without taking up the space.
+// It ends with `tail`; everything before is NUL bytes on one line.
+function sparse(rel: string, bytes: number, tail: string): string {
+  const p = write(rel, '');
+  fs.truncateSync(p, bytes - Buffer.byteLength(tail));
+  fs.appendFileSync(p, tail);
+  return p;
+}
+
 // A slow drive: every read takes a few milliseconds. `third` settles when the
 // third read starts, so a test can act while the search is mid-walk.
 function slowReads(): { count: () => number; third: Promise<void> } {
@@ -223,5 +232,65 @@ describe('searchFiles', () => {
     expect(reads).toBe(2);
     const { counted, held } = cacheTotals();
     expect(counted).toBe(held);
+  });
+});
+
+// The document on screen is searched whatever the walk makes of it: find is
+// reached only through the palette.
+describe('searchFiles and the open document', () => {
+  const MB = 1024 * 1024;
+  // Over the walk's 2 MB cap and under the 10 MB read cap, with its matches at the end.
+  const bigFile = (rel: string) => sparse(rel, 3 * MB, '\nalpha near the end\nalpha again\n');
+
+  it('searches an open document over 2 MB on its own', async () => {
+    const big = bigFile('big.md');
+    const results = await searchFiles({ rootPath: null, filePath: big }, 'alpha', never);
+    expect(results?.map((r) => [r.filePath, r.lineNumber, r.matchLine, r.matchCount])).toEqual([
+      [big, 2, 'alpha near the end', 2],
+      [big, 3, 'alpha again', 2],
+    ]);
+  });
+
+  it('searches an open document over 2 MB in its folder, first, and still skips the folder\'s other files over 2 MB', async () => {
+    write('a-small.md', 'alpha\n');
+    bigFile('other-big.md');
+    const big = bigFile('big.md');
+    const results = await searchFiles({ rootPath: dir, filePath: big }, 'alpha', never);
+    expect(results?.map((r) => [r.fileName, r.lineNumber, r.matchCount])).toEqual([
+      ['big.md', 2, 2],
+      ['big.md', 3, 2],
+      ['a-small.md', 1, 1],
+    ]);
+  });
+
+  it('searches an open document the folder walk leaves out, unless it is a link that leads to something else', async () => {
+    const todo = write('todo.txt', 'alpha in a text file\n');
+    const hidden = write('.obsidian/notes.md', 'alpha in a dot folder\n');
+    const dep = write('node_modules/pkg/README.md', 'alpha in a package\n');
+    write('.env', 'alpha=secret-value\n');
+    const setup = path.join(dir, 'setup.md');
+    fs.symlinkSync('.env', setup);
+    const kept = write('kept.md', 'alpha\n');
+    const rows = async (open: string) =>
+      (await searchFiles({ rootPath: dir, filePath: open }, 'alpha', never))?.map((r) => [r.filePath, r.lineNumber]);
+    expect(await rows(todo)).toEqual([[todo, 1], [kept, 1]]);
+    expect(await rows(hidden)).toEqual([[hidden, 1], [kept, 1]]);
+    expect(await rows(dep)).toEqual([[dep, 1], [kept, 1]]);
+    expect(await rows(setup)).toEqual([[kept, 1]]);
+  });
+
+  it('keeps an open document over 2 MB in the cache, counted at its size', async () => {
+    const big = bigFile('big.md');
+    const reads = vi.spyOn(fsp, 'readFile');
+    await searchFiles({ rootPath: null, filePath: big }, 'alpha', never);
+    expect((await searchFiles({ rootPath: null, filePath: big }, 'again', never))?.map((r) => r.lineNumber)).toEqual([3]);
+    expect(reads).toHaveBeenCalledTimes(1);
+    const { counted, held } = cacheTotals();
+    expect(counted).toBe(held);
+  });
+
+  it('skips an open document that has grown past the 10 MB read cap', async () => {
+    const huge = sparse('huge.md', 10 * MB + 1, '\nalpha\n');
+    expect(await searchFiles({ rootPath: null, filePath: huge }, 'alpha', never)).toEqual([]);
   });
 });

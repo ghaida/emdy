@@ -1,11 +1,14 @@
 // The command palette's search. Names first, then contents, each alphabetical
 // with the open file ahead of the rest; file text is cached by mtime and size
 // so a query stats files instead of re-reading them; a query that's been
-// superseded stops between files.
+// superseded stops between files. The folder walk skips files over 2 MB, but
+// the open document is searched whatever the walk makes of it, up to the
+// 10 MB cap it was opened under: find is reached only through the palette.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { SearchResult, SearchScope } from '../renderer/lib/types';
 import { isTextDocument } from '../shared/paths';
+import { MAX_FILE_BYTES } from './read-text';
 import { IGNORED_DIRS } from './scan-directory';
 
 const MD_FILE = /\.(md|markdown)$/i;
@@ -75,14 +78,17 @@ async function leadsToTextDocument(filePath: string): Promise<boolean> {
   }
 }
 
-async function loadText(file: string): Promise<CacheEntry | null> {
+// The cache counts every entry at twice its size on disk, whatever the cap it
+// was read under, so the open document (up to 10 MB, 20 MB counted) stays in
+// it like any other file and isn't read again for every query.
+async function loadText(file: string, maxBytes: number): Promise<CacheEntry | null> {
   let stat;
   try {
     stat = await fs.stat(file);
   } catch {
     return null;
   }
-  if (!stat.isFile() || stat.size > MAX_SEARCH_FILE_BYTES) return null;
+  if (!stat.isFile() || stat.size > maxBytes) return null;
   const cached = cache.get(file);
   if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) return cached;
   let text: string;
@@ -146,13 +152,14 @@ export async function searchFiles(scope: SearchScope, query: string, isStale: ()
   const inText = new RegExp(source, 'giu');
   const files: string[] = [];
   if (scope.rootPath) await listFiles(scope.rootPath, files);
-  else if (scope.filePath && (await leadsToTextDocument(scope.filePath))) files.push(scope.filePath);
-  if (scope.filePath && scope.rootPath) {
-    const i = files.indexOf(scope.filePath);
-    if (i > 0) {
-      files.splice(i, 1);
-      files.unshift(scope.filePath);
-    }
+  // The open document goes first, and is searched where the walk leaves it
+  // out too: a .txt, a file under a dot or ignored folder, a link (judged by
+  // where it leads).
+  const open = scope.filePath;
+  if (open) {
+    const i = files.indexOf(open);
+    if (i !== -1) files.splice(i, 1);
+    if (i !== -1 || (await leadsToTextDocument(open))) files.unshift(open);
   }
 
   const names: SearchResult[] = [];
@@ -166,7 +173,7 @@ export async function searchFiles(scope: SearchScope, query: string, isStale: ()
   for (const file of files) {
     if (isStale()) return null;
     if (contents.length >= MAX_RESULTS) break;
-    const entry = await loadText(file);
+    const entry = await loadText(file, file === open ? MAX_FILE_BYTES : MAX_SEARCH_FILE_BYTES);
     if (!entry) continue;
     const fileName = path.basename(file);
     let matchCount = 0;
