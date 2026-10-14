@@ -1,16 +1,35 @@
-import { ipcMain, dialog, BrowserWindow, shell } from 'electron';
+import { app, ipcMain, dialog, BrowserWindow, shell } from 'electron';
 import { realpathSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { nudgeTrackFileOpen } from './settings-store';
 import { addAllowedRoot, isPathAllowed } from './allowed-paths';
-import { noteRecent } from './recents';
+import { noteRecent, recentPaths } from './recents';
 import { readTextFile } from './read-text';
 import { scanDirectory } from './scan-directory';
 import { registerSearch, searchFiles } from './search';
 import { isTextDocument } from '../shared/paths';
 import type { SearchScope } from '../renderer/lib/types';
-import { openPathInNewWindow } from './windows';
+import { openPathInNewWindow, windowPaths } from './windows';
+
+// Where Open… starts: the window's folder, else its file's folder. A window
+// that shows nothing starts at the newest Open Recent entry (in it when it's a
+// folder, else in its folder), else at home. With no defaultPath, Electron (43
+// and later) would start in Downloads.
+async function openDialogStart(sender: Electron.WebContents): Promise<string> {
+  const { dirPath, filePath } = windowPaths(sender);
+  if (dirPath) return dirPath;
+  if (filePath) return path.dirname(filePath);
+  const [newest] = await recentPaths();
+  if (newest) {
+    try {
+      return (await fs.stat(newest)).isDirectory() ? newest : path.dirname(newest);
+    } catch {
+      // Gone since the list was checked.
+    }
+  }
+  return app.getPath('home');
+}
 
 export function registerFileHandlers() {
   // Combined open dialog — allows selecting either a file or a directory
@@ -18,6 +37,7 @@ export function registerFileHandlers() {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return null;
     const result = await dialog.showOpenDialog(win, {
+      defaultPath: await openDialogStart(event.sender),
       properties: ['openFile', 'openDirectory'],
       filters: [{ name: 'Markdown', extensions: ['md', 'markdown', 'txt'] }],
     });
@@ -39,6 +59,7 @@ export function registerFileHandlers() {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return null;
     const result = await dialog.showOpenDialog(win, {
+      defaultPath: await openDialogStart(event.sender),
       properties: ['openFile'],
       filters: [{ name: 'Markdown', extensions: ['md', 'markdown', 'txt'] }],
     });
@@ -70,6 +91,7 @@ export function registerFileHandlers() {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return null;
     const result = await dialog.showOpenDialog(win, {
+      defaultPath: await openDialogStart(event.sender),
       properties: ['openDirectory'],
     });
     if (result.canceled || result.filePaths.length === 0) return null;
@@ -100,6 +122,7 @@ export function registerFileHandlers() {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return null;
     const result = await dialog.showOpenDialog(win, {
+      defaultPath: await openDialogStart(event.sender),
       properties: ['openFile', 'openDirectory'],
       filters: [{ name: 'Markdown', extensions: ['md', 'markdown', 'txt'] }],
     });

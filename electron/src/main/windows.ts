@@ -350,6 +350,12 @@ export function setWindowHasFile(sender: Electron.WebContents, hasFile: boolean)
   if (record) record.hasFile = hasFile;
 }
 
+/** The folder and file a page's window shows, for Open… to start from. */
+export function windowPaths(sender: Electron.WebContents): { dirPath: string | null; filePath: string | null } {
+  const record = records.get(sender.id);
+  return { dirPath: record?.dirPath ?? null, filePath: record?.filePath ?? null };
+}
+
 /** Calls listener when another window takes focus, and when a window closes. */
 export function onWindowFocus(listener: () => void) {
   focusListeners.push(listener);

@@ -251,23 +251,27 @@ export function registerExportHandlers() {
   // that didn't happen.
   ipcMain.handle('clipboard:write-html', async (_event, html: unknown): Promise<boolean> => {
     if (typeof html !== 'string' || html.length > MAX_EXPORT_HTML_LENGTH) return false;
-    const { clipboard } = await import('electron');
-    clipboard.writeHTML(html);
+    const { clipboard, ClipboardItem } = await import('electron');
+    await clipboard.write([new ClipboardItem({ 'text/html': html })]);
     return true;
   });
 
   ipcMain.handle('clipboard:write-image', async (_event, png: unknown, scale: unknown) => {
     // Like the HTML clipboard: bytes only, nothing absurd.
     if (!(png instanceof Uint8Array) || png.byteLength === 0 || png.byteLength > 20_000_000) return false;
-    const { clipboard, nativeImage } = await import('electron');
-    // Diagram PNGs are rendered above 1x; mark them with the scale they were
-    // drawn at so they paste at their logical size.
+    const { clipboard, ClipboardItem, nativeImage } = await import('electron');
+    // Diagram PNGs are drawn above 1x (2x from MermaidBlock). The scale only
+    // sets the image's logical size here: toPNG() hands the clipboard every
+    // pixel, so the PNG pastes at its full pixel size, twice the size on
+    // screen at 2x.
     const scaleFactor = typeof scale === 'number' && scale >= 0.25 && scale <= 4 ? scale : 1;
     const image = nativeImage.createFromBuffer(Buffer.from(png.buffer, png.byteOffset, png.byteLength), {
       scaleFactor,
     });
     if (image.isEmpty()) return false;
-    clipboard.writeImage(image);
+    // The clipboard takes an image as PNG bytes (Electron 44 removed writeImage).
+    const pngBytes = new Uint8Array(image.toPNG());
+    await clipboard.write([new ClipboardItem({ 'image/png': new Blob([pngBytes], { type: 'image/png' }) })]);
     return true;
   });
 }

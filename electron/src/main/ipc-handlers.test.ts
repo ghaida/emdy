@@ -3,9 +3,12 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { dialog } from 'electron';
 import type { SearchResult } from '../renderer/lib/types';
 import { registerFileHandlers } from './ipc-handlers';
 import { addAllowedRoot } from './allowed-paths';
+import { recentPaths } from './recents';
+import { windowPaths } from './windows';
 
 type Handler = (event: { sender: { id: number } }, ...args: unknown[]) => unknown;
 
@@ -13,16 +16,23 @@ type Handler = (event: { sender: { id: number } }, ...args: unknown[]) => unknow
 const handlers = vi.hoisted(() => new Map<string, Handler>());
 
 vi.mock('electron', () => ({
+  app: { getPath: (name: string) => (name === 'home' ? '/Users/me' : `/unexpected/${name}`) },
   ipcMain: { handle: (channel: string, handler: Handler) => handlers.set(channel, handler) },
-  dialog: {},
-  BrowserWindow: {},
+  // The person cancels every Open dialog here; the tests read how it was opened.
+  dialog: { showOpenDialog: vi.fn(async () => ({ canceled: true, filePaths: [] })) },
+  BrowserWindow: { fromWebContents: () => ({ appWindow: true }) },
   shell: {},
 }));
 // These reach Electron's app and windows as they load. The handlers tested here
-// use none of them, apart from file:read counting an open, which does nothing here.
+// use none of them, apart from file:read counting an open, which does nothing
+// here, and the Open dialogs asking what the window shows and what was opened
+// recently.
 vi.mock('./settings-store', () => ({ nudgeTrackFileOpen: vi.fn() }));
-vi.mock('./recents', () => ({ noteRecent: vi.fn() }));
-vi.mock('./windows', () => ({ openPathInNewWindow: vi.fn() }));
+vi.mock('./recents', () => ({ noteRecent: vi.fn(), recentPaths: vi.fn(async () => []) }));
+vi.mock('./windows', () => ({
+  openPathInNewWindow: vi.fn(),
+  windowPaths: vi.fn(() => ({ dirPath: null, filePath: null })),
+}));
 
 let dir: string;
 
@@ -138,5 +148,60 @@ describe('file:read', () => {
     fs.symlinkSync(notes, alias);
     await expect(read(setup)).rejects.toThrow('Access denied');
     expect(await read(alias)).toBe('# Notes\n');
+  });
+});
+
+// Electron 43 and later start a dialog with no defaultPath in Downloads.
+describe('the Open dialogs', () => {
+  const channels = ['open:dialog', 'file:open-dialog', 'dir:open-dialog', 'open:dialog-in-new-window'];
+  // The page of the window that asks.
+  const sender = { id: 1 };
+  let recentFolder: string;
+
+  beforeEach(() => {
+    // A folder opened recently. It counts only for a window that shows nothing.
+    recentFolder = path.join(dir, 'recent');
+    fs.mkdirSync(recentFolder);
+    vi.mocked(recentPaths).mockResolvedValue([recentFolder]);
+  });
+
+  // Asks for the dialog as the window's page would, and gives the folder it
+  // opened in.
+  async function startFolder(channel: string): Promise<unknown> {
+    vi.mocked(dialog.showOpenDialog).mockClear();
+    vi.mocked(windowPaths).mockClear();
+    await handlers.get(channel)?.({ sender });
+    expect(windowPaths).toHaveBeenCalledWith(sender);
+    // Called as showOpenDialog(window, options), which the typings list first.
+    const [, options] = vi.mocked(dialog.showOpenDialog).mock.calls[0] as unknown as [unknown, Electron.OpenDialogOptions];
+    return options.defaultPath;
+  }
+
+  it.each(channels)("%s opens in the window's folder", async (channel) => {
+    vi.mocked(windowPaths).mockReturnValue({ dirPath: '/Users/me/notes', filePath: '/Users/me/notes/drafts/plan.md' });
+    expect(await startFolder(channel)).toBe('/Users/me/notes');
+  });
+
+  it.each(channels)("%s opens in the folder of the window's file when no folder is open", async (channel) => {
+    vi.mocked(windowPaths).mockReturnValue({ dirPath: null, filePath: '/Users/me/notes/drafts/plan.md' });
+    expect(await startFolder(channel)).toBe('/Users/me/notes/drafts');
+  });
+
+  it.each(channels)('%s opens in the newest recent folder when the window shows nothing', async (channel) => {
+    vi.mocked(windowPaths).mockReturnValue({ dirPath: null, filePath: null });
+    expect(await startFolder(channel)).toBe(recentFolder);
+  });
+
+  it.each(channels)('%s opens in the folder of the newest recent file when the window shows nothing', async (channel) => {
+    const plan = write('drafts/plan.md', '# Plan\n');
+    vi.mocked(recentPaths).mockResolvedValue([plan, recentFolder]);
+    vi.mocked(windowPaths).mockReturnValue({ dirPath: null, filePath: null });
+    expect(await startFolder(channel)).toBe(path.join(dir, 'drafts'));
+  });
+
+  it.each(channels)('%s opens in the home folder when the window shows nothing and nothing is recent', async (channel) => {
+    vi.mocked(recentPaths).mockResolvedValue([]);
+    vi.mocked(windowPaths).mockReturnValue({ dirPath: null, filePath: null });
+    expect(await startFolder(channel)).toBe('/Users/me');
   });
 });

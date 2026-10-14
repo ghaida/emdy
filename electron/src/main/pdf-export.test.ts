@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { clipboard, dialog } from 'electron';
+import { clipboard, dialog, nativeImage } from 'electron';
 import fsp from 'node:fs/promises';
 import { MAX_EXPORT_HTML_LENGTH, registerExportHandlers } from './pdf-export';
 
@@ -42,14 +42,20 @@ vi.mock('electron', () => {
       return page === print.appPage ? { appWindow: true } : null;
     }
   }
+  // Keeps what it was given, so tests can read what reached the clipboard.
+  class FakeClipboardItem {
+    constructor(readonly payloads: Record<string, unknown>) {}
+  }
   return {
     BrowserWindow: FakePrintWindow,
-    clipboard: { writeHTML: vi.fn() },
+    ClipboardItem: FakeClipboardItem,
+    clipboard: { write: vi.fn() },
     dialog: { showSaveDialog: vi.fn() },
     ipcMain: {
       handle: (channel: string, handler: (event: { sender: unknown }, ...args: unknown[]) => unknown) =>
         void print.handlers.set(channel, handler),
     },
+    nativeImage: { createFromBuffer: vi.fn() },
   };
 });
 
@@ -84,6 +90,12 @@ async function ask(channel: string, sender: unknown = print.appPage, request: un
 
 const choosePath = (filePath: string) =>
   vi.mocked(dialog.showSaveDialog).mockResolvedValueOnce({ canceled: false, filePath });
+
+// What the copies wrote: each clipboard item's payloads, by MIME type.
+const written = () =>
+  vi.mocked(clipboard.write).mock.calls.flatMap(([items]) =>
+    items.map((item) => (item as unknown as { payloads: Record<string, unknown> }).payloads),
+  );
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -139,6 +151,33 @@ describe('Print', () => {
   });
 });
 
+describe('Copy as PNG', () => {
+  // A diagram drawn at 2x, as MermaidBlock sends it.
+  const drawn = new Uint8Array([137, 80, 78, 71]);
+  const copyImage = () => print.handlers.get('clipboard:write-image')?.({ sender: print.appPage }, drawn, 2);
+
+  it('puts the image on the clipboard as PNG bytes', async () => {
+    vi.mocked(nativeImage.createFromBuffer).mockReturnValue({
+      isEmpty: () => false,
+      toPNG: () => Buffer.from([1, 2, 3]),
+    } as unknown as Electron.NativeImage);
+    expect(await copyImage()).toBe(true);
+    // The bytes sent are the ones checked, and what's written is all of
+    // toPNG()'s output: every pixel, whatever scale the diagram was drawn at.
+    expect(vi.mocked(nativeImage.createFromBuffer).mock.calls[0][0]).toEqual(Buffer.from(drawn));
+    const [payloads] = written();
+    const png = payloads['image/png'] as Blob;
+    expect(png.type).toBe('image/png');
+    expect(new Uint8Array(await png.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
+  });
+
+  it("answers false, and writes nothing, for bytes that aren't an image", async () => {
+    vi.mocked(nativeImage.createFromBuffer).mockReturnValue({ isEmpty: () => true } as unknown as Electron.NativeImage);
+    expect(await copyImage()).toBe(false);
+    expect(clipboard.write).not.toHaveBeenCalled();
+  });
+});
+
 describe('a long document', () => {
   // What Export and Print get for 1.1 MB of fenced code: highlighting makes it
   // about 19 times the Markdown, one inline-styled span per token.
@@ -157,7 +196,7 @@ describe('a long document', () => {
 
   it('is copied as HTML', async () => {
     expect(await ask('clipboard:write-html', print.appPage, codeHeavy.html)).toBe(true);
-    expect(clipboard.writeHTML).toHaveBeenCalledWith(codeHeavy.html);
+    expect(written()).toEqual([{ 'text/html': codeHeavy.html }]);
   });
 });
 
@@ -189,7 +228,7 @@ describe('a request no page of Emdy sends', () => {
     ['html longer than the export limit', 'x'.repeat(MAX_EXPORT_HTML_LENGTH + 1)],
   ] as const)('Copy as HTML answers false for %s, and writes nothing', async (_what, html) => {
     expect(await ask('clipboard:write-html', print.appPage, html)).toBe(false);
-    expect(clipboard.writeHTML).not.toHaveBeenCalled();
+    expect(clipboard.write).not.toHaveBeenCalled();
   });
 });
 

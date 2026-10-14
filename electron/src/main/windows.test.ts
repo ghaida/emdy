@@ -646,3 +646,22 @@ describe('the menu follows the focused window', () => {
     expect(windows.focusedWindowHasFile()).toBe(false);
   });
 });
+
+describe('what Open… starts from', () => {
+  it('is the folder and file the window shows', async () => {
+    await windows.startWindows([]);
+    const [welcome] = live();
+    const page = welcome.webContents as unknown as Electron.WebContents;
+    expect(windows.windowPaths(page)).toEqual({ dirPath: null, filePath: null });
+    await windows.openFromOutside(dir);
+    expect(windows.windowPaths(page)).toEqual({ dirPath: dir, filePath: null });
+    // A file picked in the sidebar, as the page reports it.
+    const notes = file('notes.md');
+    ipcMain.listeners.get('window:report-state')?.({ sender: welcome.webContents }, { dirPath: dir, filePath: notes, scrollTop: 0 });
+    expect(windows.windowPaths(page)).toEqual({ dirPath: dir, filePath: notes });
+  });
+
+  it("is nothing for a page that isn't an Emdy window", () => {
+    expect(windows.windowPaths({ id: 999 } as unknown as Electron.WebContents)).toEqual({ dirPath: null, filePath: null });
+  });
+});

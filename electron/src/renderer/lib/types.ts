@@ -96,7 +96,7 @@ export interface ElectronAPI {
   print: (opts: { html: string; title: string }) => Promise<PrintResult>;
   /** False when main refused the HTML (past the export limit) and wrote nothing. */
   writeClipboardHTML: (html: string) => Promise<boolean>;
-  /** `scale` is device pixels per point, so the image pastes at its logical size. */
+  /** `scale` is the device pixels per CSS pixel it was drawn at; the image still pastes at its full pixel size. */
   writeClipboardImage: (png: Uint8Array, scale: number) => Promise<boolean>;
   getAccentColor: () => Promise<string>;
   onAccentColorChanged: (callback: (color: string) => void) => () => void;
