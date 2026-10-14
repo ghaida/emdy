@@ -5,13 +5,16 @@ import { App } from './App';
 import type { ElectronAPI } from './lib/types';
 
 // What main sends a window, the call that tells main the page is listening,
-// and the update checks.
+// file reads and the update checks.
 const api = {
   onMenuEvent: vi.fn<ElectronAPI['onMenuEvent']>(() => () => undefined),
-  onFileOpen: vi.fn(() => () => undefined),
+  onFileOpen: vi.fn<ElectronAPI['onFileOpen']>(() => () => undefined),
   onDirOpen: vi.fn(() => () => undefined),
   onDropRejected: vi.fn(() => () => undefined),
   onWindowRestore: vi.fn(() => () => undefined),
+  onFileChanged: vi.fn<ElectronAPI['onFileChanged']>(() => () => undefined),
+  onFileDeleted: vi.fn<ElectronAPI['onFileDeleted']>(() => () => undefined),
+  readFile: vi.fn<ElectronAPI['readFile']>(async () => ''),
   reportReady: vi.fn(),
   getUpdateStatus: vi.fn<ElectronAPI['getUpdateStatus']>(async () => ({ status: 'idle' })),
   checkForUpdate: vi.fn<ElectronAPI['checkForUpdate']>(async () => ({ status: 'checking' })),
@@ -96,5 +99,34 @@ describe('App', () => {
     expect(api.checkForUpdate).toHaveBeenCalledTimes(2);
     expect(screen.getByText('Checking for updates…')).toBeInTheDocument();
     expect(screen.queryByText(/The update isn't ready to install yet/)).not.toBeInTheDocument();
+  });
+
+  it('shows the document again when a deleted file comes back', async () => {
+    // The minimap watches its size, and jsdom has no ResizeObserver.
+    vi.stubGlobal('ResizeObserver', class {
+      observe() {
+        return undefined;
+      }
+      unobserve() {
+        return undefined;
+      }
+      disconnect() {
+        return undefined;
+      }
+    });
+    await act(async () => {
+      render(<App />);
+    });
+    await act(async () => api.onFileOpen.mock.calls.at(-1)?.[0]('/notes/a.md', '# Notes\n\nfirst text'));
+    // The page and the minimap's copy of it.
+    expect(await screen.findAllByText('first text')).not.toHaveLength(0);
+
+    // Moved to the Trash, then put back: main says it's gone, then that it changed.
+    await act(async () => api.onFileDeleted.mock.calls.at(-1)?.[0]('/notes/a.md'));
+    expect(screen.getByText('This file has been deleted.')).toBeInTheDocument();
+    api.readFile.mockResolvedValueOnce('# Notes\n\nrestored text');
+    await act(async () => api.onFileChanged.mock.calls.at(-1)?.[0]('/notes/a.md'));
+    expect(await screen.findAllByText('restored text')).not.toHaveLength(0);
+    expect(screen.queryByText('This file has been deleted.')).not.toBeInTheDocument();
   });
 });

@@ -494,6 +494,8 @@ export function App() {
       try {
         const fileContent = await window.electronAPI.readFile(path);
         setContent(fileContent);
+        setFileDeleted(false);
+        setFileError(null);
         addToast('File updated', 'info');
       } catch {
         setFileError('File changed but could not be re-read.');
