@@ -76,6 +76,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSettings: () => ipcRenderer.invoke('settings:get'),
   getSettingsSync: () => ipcRenderer.sendSync('settings:get-sync'),
   setSetting: (key: string, value: unknown) => ipcRenderer.invoke('settings:set', key, value),
+  onSettingChanged: (callback: (key: string, value: unknown) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, key: string, value: unknown) => callback(key, value);
+    ipcRenderer.on('settings:changed', handler);
+    return () => ipcRenderer.removeListener('settings:changed', handler);
+  },
 
   // System
   getAccentColor: () => ipcRenderer.invoke('system:accent-color'),

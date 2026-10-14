@@ -1,4 +1,4 @@
-import { ipcMain, app } from 'electron';
+import { ipcMain, app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import { sanitizeSettings, validateSetting, type Settings } from './settings-schema';
@@ -32,10 +32,16 @@ export function registerSettingsHandlers() {
     event.returnValue = { ...current };
   });
 
-  ipcMain.handle('settings:set', (_event, key: string, value: unknown) => {
+  ipcMain.handle('settings:set', (event, key: string, value: unknown) => {
     if (typeof key !== 'string' || !validateSetting(key, value)) return;
     (current as unknown as Record<string, unknown>)[key] = value;
     save(current);
+    // Other windows follow; the sender already applied it.
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (!win.isDestroyed() && win.webContents.id !== event.sender.id) {
+        win.webContents.send('settings:changed', key, value);
+      }
+    }
   });
 }
 

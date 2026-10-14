@@ -103,6 +103,7 @@ export interface ElectronAPI {
   getSettings: () => Promise<DisplaySettings>;
   getSettingsSync: () => DisplaySettings;
   setSetting: (key: string, value: unknown) => Promise<void>;
+  onSettingChanged: (callback: (key: string, value: unknown) => void) => () => void;
   onMenuEvent: (callback: (event: string) => void) => () => void;
   onFileOpen: (callback: (filePath: string, content: string) => void) => () => void;
   onDirOpen: (callback: (dirPath: string, entries: FileEntry[]) => void) => () => void;

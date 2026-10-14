@@ -65,6 +65,13 @@ export function useDisplaySettings() {
     });
   }, []);
 
+  // A change made in another window.
+  useEffect(() => {
+    return window.electronAPI.onSettingChanged((key, value) => {
+      setSettings((s) => (key in s ? { ...s, [key]: value } : s));
+    });
+  }, []);
+
   // Subscribe to system accent color changes
   useEffect(() => {
     window.electronAPI.getAccentColor().then(setSystemAccentColor);
