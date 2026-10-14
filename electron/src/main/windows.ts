@@ -63,6 +63,11 @@ let startupDone = false;
 // Once quitting starts, windows closing must not remove themselves from the
 // saved session.
 let quitting = false;
+// The quit began as an update restart, which Squirrel can still fail.
+let restartingForUpdate = false;
+// After a failed update restart, session.json keeps the windows from before
+// it until a window shows something again (cancelQuit).
+let keepSavedSession = false;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 // Run when another window takes focus or a window closes (onWindowFocus).
 const focusListeners: Array<() => void> = [];
@@ -300,7 +305,8 @@ export async function startWindows(launchPaths: string[]): Promise<void> {
 
 /** Clicking the Dock icon with no windows open: a fresh welcome window. */
 export function handleActivate() {
-  if (startupDone && records.size === 0) createAppWindow();
+  const live = [...records.values()].some((r) => !r.win.isDestroyed());
+  if (startupDone && !live) createAppWindow();
 }
 
 // The menu items that still make sense with no window open. The others act on
@@ -377,8 +383,14 @@ function saveSession() {
       lastFocusedAt: record.lastFocusedAt,
     });
   }
+  const session = buildSession(windows);
+  // Nor must quitting after a failed update, before any window shows something.
+  if (keepSavedSession) {
+    if (session.length === 0) return;
+    keepSavedSession = false;
+  }
   try {
-    writeTextAtomic(sessionPath(), serializeSession(buildSession(windows)));
+    writeTextAtomic(sessionPath(), serializeSession(session));
   } catch {
     // userData isn't writable; the next launch just won't restore anything.
   }
@@ -398,6 +410,29 @@ export function prepareForQuit() {
   }
   saveSession();
   quitting = true;
+}
+
+/** The same for before-quit-for-update, a quit that cancelQuit can call off. */
+export function prepareForUpdateRestart() {
+  if (!quitting) restartingForUpdate = true;
+  prepareForQuit();
+}
+
+/**
+ * Squirrel failed after the windows closed: let the Dock icon work again.
+ * Only an update restart is called off; an updater error during an ordinary
+ * quit (⌘Q) leaves that quit alone. As at launch, session.json isn't replaced
+ * until a window shows something, so quitting now still brings back the
+ * windows from before the restart.
+ */
+export function cancelQuit() {
+  if (!restartingForUpdate) return;
+  restartingForUpdate = false;
+  quitting = false;
+  keepSavedSession = true;
+  for (const [id, record] of records) if (record.win.isDestroyed()) records.delete(id);
+  // The windows closed during the quit without rebuilding the menu.
+  for (const listener of focusListeners) listener();
 }
 
 function readSession(): SavedWindow[] {

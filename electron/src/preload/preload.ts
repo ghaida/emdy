@@ -16,6 +16,7 @@ function allowFileDrop(event: DragEvent) {
 window.addEventListener('dragenter', allowFileDrop);
 window.addEventListener('dragover', allowFileDrop);
 window.addEventListener('drop', (event) => {
+  if (!event.isTrusted) return;
   if (!carriesFiles(event)) return;
   event.preventDefault();
   const files = event.dataTransfer ? Array.from(event.dataTransfer.files) : [];

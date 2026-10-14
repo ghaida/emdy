@@ -506,6 +506,95 @@ describe('the menu with no window open', () => {
   });
 });
 
+describe('an update that fails to install', () => {
+  // The update restart starts the quit (before-quit-for-update) and closes
+  // every window. If Squirrel then can't install, Emdy keeps running with none.
+  async function closeEveryWindowForUpdate(...paths: string[]) {
+    await windows.startWindows([]);
+    for (const pathToOpen of paths) await windows.openFromOutside(pathToOpen);
+    windows.prepareForUpdateRestart();
+    for (const win of live()) win.close();
+    await sleep(10);
+  }
+
+  const savedFiles = () =>
+    JSON.parse(fs.readFileSync(path.join(dir, 'session.json'), 'utf-8')).windows.map(
+      (w: { filePath: string | null }) => w.filePath,
+    );
+
+  it('keeps the windows from before the update in session.json when Emdy quits next', async () => {
+    const a = file('a.md');
+    await closeEveryWindowForUpdate(a);
+    // Saved as the restart began.
+    expect(savedFiles()).toEqual([a]);
+    windows.cancelQuit();
+    windows.prepareForQuit();
+    expect(savedFiles()).toEqual([a]);
+  });
+
+  it('keeps them while the only window open shows nothing', async () => {
+    const a = file('a.md');
+    await closeEveryWindowForUpdate(a);
+    windows.cancelQuit();
+    windows.handleActivate();
+    windows.prepareForQuit();
+    expect(savedFiles()).toEqual([a]);
+  });
+
+  it('saves a window that shows a file again', async () => {
+    await closeEveryWindowForUpdate(file('a.md'));
+    windows.cancelQuit();
+    const b = file('b.md');
+    await windows.openFromOutside(b);
+    windows.prepareForQuit();
+    expect(savedFiles()).toEqual([b]);
+  });
+
+  it('leaves the windows and the session alone when an update check fails in everyday use', async () => {
+    const a = file('a.md');
+    writeSession([{ dirPath: null, filePath: a, scrollTop: 0, bounds: null }]);
+    await windows.startWindows([]);
+    // An offline check, every 4 hours or on focus, with no quit under way.
+    windows.cancelQuit();
+    expect(live()).toHaveLength(1);
+    for (const win of live()) win.close();
+    await sleep(10);
+    windows.prepareForQuit();
+    expect(savedFiles()).toEqual([]);
+  });
+
+  it('lets the Dock icon open a window once the updater reports the error', async () => {
+    await closeEveryWindowForUpdate();
+    windows.cancelQuit();
+    windows.handleActivate();
+    expect(live()).toHaveLength(1);
+  });
+
+  it('lets Open… from the menu open a window once the updater reports the error', async () => {
+    await closeEveryWindowForUpdate();
+    windows.cancelQuit();
+    windows.sendMenuEventWithoutWindow('open');
+    expect(live()).toHaveLength(1);
+  });
+
+  it('counts only windows that still exist when the Dock icon is clicked', async () => {
+    // Before any error, the closed windows are still kept for the saved session.
+    await closeEveryWindowForUpdate();
+    windows.handleActivate();
+    expect(live()).toHaveLength(1);
+  });
+
+  it('leaves an ordinary quit (⌘Q) in place when the updater reports an error', async () => {
+    await windows.startWindows([]);
+    windows.prepareForQuit();
+    for (const win of live()) win.close();
+    await sleep(10);
+    windows.cancelQuit();
+    windows.sendMenuEventWithoutWindow('open');
+    expect(live()).toHaveLength(0);
+  });
+});
+
 describe('the menu follows the focused window', () => {
   // Stands in for index.ts's rebuildMenu, which asks focusedWindowHasFile each
   // time it runs.
@@ -527,6 +616,20 @@ describe('the menu follows the focused window', () => {
     b.focus();
     expect(rebuild).toHaveBeenCalledTimes(2);
     expect(windows.focusedWindowHasFile()).toBe(false);
+  });
+
+  it('is rebuilt when a failed update calls off the quit', async () => {
+    const a = windows.createAppWindow();
+    windows.setWindowHasFile(a.webContents, true);
+    const rebuild = watchRebuilds();
+    windows.prepareForUpdateRestart();
+    a.close();
+    await sleep(10);
+    // Windows closing during a quit leave the menu as it was.
+    expect(rebuild).not.toHaveBeenCalled();
+    windows.cancelQuit();
+    expect(rebuild).toHaveBeenCalledTimes(1);
+    expect(rebuild).toHaveLastReturnedWith(false);
   });
 
   it('is rebuilt without the last window once it closes', async () => {

@@ -7,6 +7,13 @@ import { buildDesignPrintCss } from '../shared/design-print-styles';
 import { PRINT_COLORS } from '../shared/print-colors';
 import { DIAGRAM_BLOCK_CLASS } from '../shared/diagram-markup';
 import type { PdfExportResult, PrintResult } from '../renderer/lib/types';
+import { MAX_FILE_BYTES } from './read-text';
+
+// The longest HTML Export as PDF and Print take: a guard against absurd
+// payloads, not a limit a document should reach. Documents are read up to
+// MAX_FILE_BYTES, and highlighted code comes out at 16 to 19 times its
+// Markdown (an inline-styled span per token), so 25 times leaves headroom.
+export const MAX_EXPORT_HTML_LENGTH = MAX_FILE_BYTES * 25;
 
 // The print page's load waits for every image, and a remote one for as long as
 // its host takes to answer, which may be never. Past this, print what has loaded.
@@ -171,7 +178,7 @@ ${html}
     return await action(printWin);
   } finally {
     if (printWin && !printWin.isDestroyed()) printWin.close();
-    await fs.rm(tmpDir, { recursive: true }).catch(() => {});
+    await fs.rm(tmpDir, { recursive: true }).catch(() => undefined);
   }
 }
 
@@ -179,6 +186,9 @@ export function registerExportHandlers() {
   ipcMain.handle('export:pdf', async (event, { html, title }: { html: string; title: string }): Promise<PdfExportResult> => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return 'failed';
+    // Print's checks, before the save dialog opens.
+    if (typeof html !== 'string' || typeof title !== 'string') return 'failed';
+    if (html.length > MAX_EXPORT_HTML_LENGTH) return 'failed';
 
     const savePath = await dialog.showSaveDialog(win, {
       defaultPath: `${title.replace(/\.[^.]+$/, '')}.pdf`,
@@ -203,10 +213,10 @@ export function registerExportHandlers() {
   });
 
   ipcMain.handle('export:print', async (_event, { html, title }: { html: string; title: string }): Promise<PrintResult> => {
-    // Validate payload — reject non-strings and absurdly large HTML (>20 MB)
-    // before spinning up a window (mirrors the clipboard guard-rail).
+    // Validate payload — reject non-strings and absurdly large HTML before
+    // spinning up a window.
     if (typeof html !== 'string' || typeof title !== 'string') return 'failed';
-    if (html.length > 20_000_000) return 'failed';
+    if (html.length > MAX_EXPORT_HTML_LENGTH) return 'failed';
 
     try {
       return await withPrintDocument(html, title, (printWin) =>

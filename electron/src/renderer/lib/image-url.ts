@@ -6,8 +6,6 @@ import { LOCAL_FILE_HOST } from '../../shared/local-file';
 
 const HAS_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
 
-export { LOCAL_FILE_HOST };
-
 /**
  * The absolute path `src` points at, relative to the file's folder, or null
  * when src is a URL with a scheme (https, data, …) and should be left alone.

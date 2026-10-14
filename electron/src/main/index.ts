@@ -16,6 +16,8 @@ import {
   handleActivate,
   lastFocusedWindow,
   prepareForQuit,
+  prepareForUpdateRestart,
+  cancelQuit,
   sendMenuEventWithoutWindow,
   sendWhenReadyTo,
   focusedWindowHasFile,
@@ -64,7 +66,7 @@ ipcMain.handle('app:open-external', (_event, url: string) => {
   try {
     const parsed = new URL(url);
     if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
-      shell.openExternal(url);
+      shell.openExternal(parsed.href);
     }
   } catch {
     // Invalid URL — ignore
@@ -77,6 +79,15 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 app.on('ready', () => {
+  // Electron would approve every permission a page asks for. Emdy's pages need
+  // one: clipboard-sanitized-write, which navigator.clipboard.writeText uses
+  // for the Copy buttons on code blocks and diagrams. Camera, microphone,
+  // location, notifications and the rest are refused.
+  session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) =>
+    callback(permission === 'clipboard-sanitized-write'),
+  );
+  session.defaultSession.setPermissionCheckHandler((_wc, permission) => permission === 'clipboard-sanitized-write');
+
   // Images next to an open file. The renderer builds these URLs (image-url.ts);
   // anything else, or anything outside an opened folder, is refused.
   protocol.handle('local-file', (request) => {
@@ -128,9 +139,13 @@ app.on('window-all-closed', () => {
 app.on('activate', handleActivate);
 
 // Save the open windows before quitting. An update restart closes the windows
-// before before-quit fires, so it needs its own hook.
+// before before-quit fires, so it needs its own hook. If Squirrel then fails
+// to install the update, Emdy keeps running and the restart is called off.
+// Electron retries a failed install the next time the last window closes, so
+// ⌘W can restart Emdy into the update, and cancelQuit must be safe to run again.
 app.on('before-quit', prepareForQuit);
-autoUpdater.on('before-quit-for-update', prepareForQuit);
+autoUpdater.on('before-quit-for-update', prepareForUpdateRestart);
+autoUpdater.on('error', cancelQuit);
 
 // Opening files and folders from outside Emdy: double-click, Dock drop, Open
 // With, the Dock icon's recent list.

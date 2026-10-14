@@ -12,7 +12,7 @@ export async function scanDirectory(dirPath: string): Promise<FileEntry[]> {
   try {
     const items = await fs.readdir(dirPath, { withFileTypes: true });
     for (const item of items) {
-      if (item.name.startsWith('.') || IGNORED_DIRS.has(item.name)) continue;
+      if (item.name.startsWith('.') || IGNORED_DIRS.has(item.name) || item.isSymbolicLink()) continue;
       const fullPath = path.join(dirPath, item.name);
       if (item.isDirectory()) {
         const children = await scanDirectory(fullPath);

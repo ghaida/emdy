@@ -15,6 +15,15 @@ describe('localFilePathFromUrl', () => {
     expect(localFilePathFromUrl('local-file://local/Users/me/notes/../pic.png')).toBe('/Users/me/pic.png');
   });
 
+  it('resolves a .. that only appears once an encoded slash is decoded', () => {
+    // The URL parser leaves ..%2F in place, so this one is down to path.resolve.
+    expect(localFilePathFromUrl('local-file://local/Users/me/notes/..%2Fpic.png')).toBe('/Users/me/pic.png');
+  });
+
+  it('decodes an encoded % only once', () => {
+    expect(localFilePathFromUrl('local-file://local/Users/me/a%2520b.png')).toBe('/Users/me/a%20b.png');
+  });
+
   it('refuses the old triple-slash form, other hosts and other schemes', () => {
     expect(localFilePathFromUrl('local-file:///Users/me/pic.png')).toBeNull();
     expect(localFilePathFromUrl('local-file://users/me/pic.png')).toBeNull();

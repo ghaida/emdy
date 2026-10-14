@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { dialog } from 'electron';
 import fsp from 'node:fs/promises';
-import { registerExportHandlers } from './pdf-export';
+import { MAX_EXPORT_HTML_LENGTH, registerExportHandlers } from './pdf-export';
 
 // The print windows pdf-export.ts opens, played by tests: how the page's load
 // goes, what printToPDF gives back, and what the print dialog reports.
@@ -67,9 +67,9 @@ const doc = { html: '<h1>Notes</h1>', title: 'notes.md' };
 // Asks as a page does (the app window's, unless told otherwise) and plays
 // every wait out on the fake clock. Gives what the handler answered, or says
 // it hasn't.
-async function ask(channel: string, sender: unknown = print.appPage): Promise<unknown> {
+async function ask(channel: string, sender: unknown = print.appPage, request: unknown = doc): Promise<unknown> {
   let answer: unknown = 'no answer yet';
-  void Promise.resolve(print.handlers.get(channel)?.({ sender }, doc)).then(
+  void Promise.resolve(print.handlers.get(channel)?.({ sender }, request)).then(
     (value) => {
       answer = value;
     },
@@ -135,6 +135,45 @@ describe('Print', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     print.dialogReports = [...reports];
     expect(await ask('export:print')).toBe(answer);
+  });
+});
+
+describe('a long document', () => {
+  // What Export and Print get for 1.1 MB of fenced code: highlighting makes it
+  // about 19 times the Markdown, one inline-styled span per token.
+  const token = '<span style="color:#50a14f">"x"</span>';
+  const codeHeavy = { html: token.repeat(Math.ceil((1.1 * 1024 * 1024 * 19) / token.length)), title: 'notes.md' };
+
+  it('is exported as a PDF, though its HTML is past the old 20 MB limit', async () => {
+    expect(codeHeavy.html.length).toBeGreaterThan(20_000_000);
+    choosePath('/out/notes.pdf');
+    expect(await ask('export:pdf', print.appPage, codeHeavy)).toBe('saved');
+  });
+
+  it('is printed', async () => {
+    expect(await ask('export:print', print.appPage, codeHeavy)).toBe('printed');
+  });
+});
+
+describe('a request no page of Emdy sends', () => {
+  const requests = [
+    ['html that is not text', { html: 42, title: 'notes.md' }],
+    ['a title that is not text', { html: '<h1>Notes</h1>', title: null }],
+    // repeat builds this as a rope, so the test doesn't hold 250 MB; the
+    // handlers only read its length.
+    ['html longer than the export limit', { html: 'x'.repeat(MAX_EXPORT_HTML_LENGTH + 1), title: 'notes.md' }],
+  ] as const;
+
+  it.each(requests)('Export as PDF answers failed for %s, without asking where to save', async (_what, request) => {
+    choosePath('/out/notes.pdf');
+    expect(await ask('export:pdf', print.appPage, request)).toBe('failed');
+    expect(dialog.showSaveDialog).not.toHaveBeenCalled();
+    expect(print.windowsOpened).toBe(0);
+  });
+
+  it.each(requests)('Print answers failed for %s, without opening a print window', async (_what, request) => {
+    expect(await ask('export:print', print.appPage, request)).toBe('failed');
+    expect(print.windowsOpened).toBe(0);
   });
 });
 
