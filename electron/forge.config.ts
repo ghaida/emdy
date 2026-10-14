@@ -14,14 +14,19 @@ const config: ForgeConfig = {
     asar: true,
     name: 'Emdy',
     icon: path.resolve(__dirname, 'src/main/emdy'),
-    osxSign: {
-      identity: 'Developer ID Application',
-    },
-    osxNotarize: {
-      appleId: process.env.APPLE_ID!,
-      appleIdPassword: process.env.APPLE_ID_PASSWORD!,
-      teamId: '6RS25SR36X',
-    },
+    // Signing and notarization need the user's Apple credentials; without them
+    // a local `npm run package` produces an unsigned build for testing. CI
+    // checks the secrets exist before it builds, so a release can't ship unsigned.
+    ...(process.env.APPLE_ID && process.env.APPLE_ID_PASSWORD
+      ? {
+          osxSign: { identity: 'Developer ID Application' },
+          osxNotarize: {
+            appleId: process.env.APPLE_ID,
+            appleIdPassword: process.env.APPLE_ID_PASSWORD,
+            teamId: '6RS25SR36X',
+          },
+        }
+      : {}),
     extendInfo: {
       CFBundleDocumentTypes: [
         {
@@ -91,6 +96,7 @@ const config: ForgeConfig = {
       [FuseV1Options.EnableNodeCliInspectArguments]: false,
       [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
+      [FuseV1Options.GrantFileProtocolExtraPrivileges]: false,
     }),
   ],
 };

@@ -41,6 +41,16 @@ jobs:
 
       - run: npm ci
 
+      - name: Check signing secrets
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+        run: |
+          if [ -z "$APPLE_ID" ] || [ -z "$APPLE_ID_PASSWORD" ]; then
+            echo "Apple signing secrets are missing; refusing to build an unsigned release." >&2
+            exit 1
+          fi
+
       - run: npm run make
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}

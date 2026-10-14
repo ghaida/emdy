@@ -1,4 +1,5 @@
 import { app, autoUpdater, BrowserWindow, ipcMain, protocol, net, session, systemPreferences, shell } from 'electron';
+import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import started from 'electron-squirrel-startup';
 import { registerFileHandlers } from './ipc-handlers';
@@ -7,6 +8,7 @@ import { registerFileWatcher } from './file-watcher';
 import { registerExportHandlers } from './pdf-export';
 import { buildMenu } from './menu';
 import { isPathAllowed } from './allowed-paths';
+import { APP_CSP, serveAppFile } from './app-protocol';
 import { localFilePathFromUrl } from './local-file';
 import { setupAutoUpdater, registerAutoUpdaterIPC } from './auto-updater';
 import {
@@ -73,9 +75,11 @@ ipcMain.handle('app:open-external', (_event, url: string) => {
   }
 });
 
-// Register protocol to serve local files for markdown images
+// Register protocols: local-file serves the images in Markdown files, app the
+// packaged renderer (secure, so the page keeps navigator.clipboard).
 protocol.registerSchemesAsPrivileged([
   { scheme: 'local-file', privileges: { supportFetchAPI: true, standard: true } },
+  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
 ]);
 
 app.on('ready', () => {
@@ -98,15 +102,20 @@ app.on('ready', () => {
     return net.fetch(pathToFileURL(filePath).href);
   });
 
+  // The packaged renderer. Served from a scheme of its own so file:// (and the
+  // extra privileges Electron grants it) stays out of the renderer entirely.
+  if (!MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    const rendererDir = path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}`);
+    protocol.handle('app', (request) => serveAppFile(request.url, rendererDir));
+  }
+
   // Content Security Policy — only applied in production (Vite HMR needs looser policy)
   if (!MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
       callback({
         responseHeaders: {
           ...details.responseHeaders,
-          'Content-Security-Policy': [
-            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' local-file: data: https:; font-src 'self'; connect-src 'self' https://emdyapp.com; object-src 'none'; base-uri 'self'; form-action 'none'",
-          ],
+          'Content-Security-Policy': [APP_CSP],
         },
       });
     });
