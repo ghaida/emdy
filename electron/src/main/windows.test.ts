@@ -665,3 +665,60 @@ describe('what Open… starts from', () => {
     expect(windows.windowPaths({ id: 999 } as unknown as Electron.WebContents)).toEqual({ dirPath: null, filePath: null });
   });
 });
+
+// file:read serves this file whatever its extension, so a .mkd from Finder
+// reloads. Only main sets it; what a page reports about itself never does.
+describe('the file main sent a window', () => {
+  const page = (win: FakeWindow) => win.webContents as unknown as Electron.WebContents;
+  // What a page reports about itself, as useWindowState does.
+  const report = (win: FakeWindow, filePath: string) =>
+    ipcMain.listeners.get('window:report-state')?.({ sender: win.webContents }, { dirPath: null, filePath, scrollTop: 0 });
+
+  it('is the file main opened in each window, whatever the page reports', async () => {
+    await windows.startWindows([]);
+    const a = file('a.mkd');
+    const b = file('b.mkd');
+    await windows.openFromOutside(a);
+    await windows.openFromOutside(b);
+    const [first, second] = live();
+    expect([windows.loadedFilePath(page(first)), windows.loadedFilePath(page(second))]).toEqual([a, b]);
+    const c = file('c.mkd');
+    report(first, c);
+    // Taken for what the window shows, as the session saves it, but not for what main sent.
+    expect(windows.windowPaths(page(first)).filePath).toBe(c);
+    expect(windows.loadedFilePath(page(first))).toBe(a);
+  });
+
+  it('is nothing for a window main has sent no file, whatever its page reports', async () => {
+    await windows.startWindows([]);
+    await windows.openFromOutside(file('a.mkd'));
+    windows.createAppWindow();
+    const fresh = live()[1];
+    const c = file('c.mkd');
+    report(fresh, c);
+    expect(windows.windowPaths(page(fresh)).filePath).toBe(c);
+    expect(windows.loadedFilePath(page(fresh))).toBeNull();
+    expect(windows.loadedFilePath({ id: 999 } as unknown as Electron.WebContents)).toBeNull();
+  });
+
+  it('is the file of a restored window once main has sent it, and nothing once main sends a folder', async () => {
+    const notes = file('notes.mkd');
+    writeSession([{ dirPath: null, filePath: notes, scrollTop: 0, bounds: null }]);
+    await windows.startWindows([]);
+    const [win] = live();
+    await vi.waitFor(() => expect(windows.loadedFilePath(page(win))).toBe(notes));
+    await drop(win, [dir]);
+    expect(windows.loadedFilePath(page(win))).toBeNull();
+  });
+
+  it('is nothing while a restored window is still loading its file', async () => {
+    file('slow.md');
+    const slow = path.join(dir, 'slow.md');
+    writeSession([{ dirPath: null, filePath: slow, scrollTop: 0, bounds: null }]);
+    makeSlowFilesHang();
+    await Promise.race([windows.startWindows([]), sleep(500)]);
+    const [win] = live();
+    expect(windows.windowPaths(page(win)).filePath).toBe(slow);
+    expect(windows.loadedFilePath(page(win))).toBeNull();
+  });
+});

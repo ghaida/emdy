@@ -10,7 +10,7 @@ import { scanDirectory } from './scan-directory';
 import { registerSearch, searchFiles } from './search';
 import { isTextDocument } from '../shared/paths';
 import type { SearchScope } from '../renderer/lib/types';
-import { openPathInNewWindow, windowPaths } from './windows';
+import { loadedFilePath, openPathInNewWindow, windowPaths } from './windows';
 
 // Where Open… starts: the window's folder, else its file's folder. A window
 // that shows nothing starts at the newest Open Recent entry (in it when it's a
@@ -71,7 +71,7 @@ export function registerFileHandlers() {
     return { filePath, content };
   });
 
-  ipcMain.handle('file:read', async (_event, filePath: string) => {
+  ipcMain.handle('file:read', async (event, filePath: string) => {
     if (typeof filePath !== 'string') throw new Error('Invalid argument');
     // A link is checked and read where it leads, so a setup.md that links to
     // .env is refused.
@@ -82,7 +82,9 @@ export function registerFileHandlers() {
       throw new Error('File not found');
     }
     if (!isPathAllowed(realPath)) throw new Error('Access denied');
-    if (!isTextDocument(realPath)) throw new Error('Access denied');
+    // Markdown and plain text, or the very file main sent this window, which
+    // can be a .mkd or a .log from Finder: live reload reads it again.
+    if (!isTextDocument(realPath) && filePath !== loadedFilePath(event.sender)) throw new Error('Access denied');
     nudgeTrackFileOpen();
     return readTextFile(realPath);
   });

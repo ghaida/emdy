@@ -30,6 +30,12 @@ interface WindowRecord {
   win: BrowserWindow;
   dirPath: string | null;
   filePath: string | null;
+  /**
+   * The file main itself sent the page, which file:read serves whatever its
+   * extension. Unlike filePath, only showPayload sets it: what the page
+   * reports about itself never does.
+   */
+  loadedFilePath: string | null;
   scrollTop: number;
   /** Shows the loading spinner until its first folder or file arrives. */
   pending: boolean;
@@ -99,6 +105,7 @@ export function createAppWindow(options: { bounds?: Rect | null; pending?: boole
     win,
     dirPath: null,
     filePath: null,
+    loadedFilePath: null,
     scrollTop: 0,
     pending: options.pending ?? false,
     ready: false,
@@ -202,17 +209,20 @@ function showPayload(win: BrowserWindow, payload: OpenPayload) {
   if (payload.kind === 'dir') {
     record.dirPath = payload.dirPath;
     record.filePath = null;
+    record.loadedFilePath = null;
     record.scrollTop = 0;
     sendWhenReady(record, 'dir:open', payload.dirPath, payload.entries);
   } else if (payload.kind === 'file') {
     // Same rule as the renderer: a file from outside the open folder closes it.
     if (record.dirPath !== null && !isInsideFolder(payload.filePath, record.dirPath)) record.dirPath = null;
     record.filePath = payload.filePath;
+    record.loadedFilePath = payload.filePath;
     record.scrollTop = 0;
     sendWhenReady(record, 'file:open', payload.filePath, payload.content);
   } else {
     record.dirPath = payload.state.dirPath;
     record.filePath = payload.state.filePath;
+    record.loadedFilePath = payload.state.filePath;
     record.scrollTop = payload.state.scrollTop;
     sendWhenReady(record, 'window:restore', payload.state);
   }
@@ -354,6 +364,15 @@ export function setWindowHasFile(sender: Electron.WebContents, hasFile: boolean)
 export function windowPaths(sender: Electron.WebContents): { dirPath: string | null; filePath: string | null } {
   const record = records.get(sender.id);
   return { dirPath: record?.dirPath ?? null, filePath: record?.filePath ?? null };
+}
+
+/**
+ * The file main itself sent a page's window (from Finder, Open Recent, a drop,
+ * Open in New Window or a restored session), so live reload can read it again
+ * whatever its extension. Never what the page reports about itself.
+ */
+export function loadedFilePath(sender: Electron.WebContents): string | null {
+  return records.get(sender.id)?.loadedFilePath ?? null;
 }
 
 /** Calls listener when another window takes focus, and when a window closes. */

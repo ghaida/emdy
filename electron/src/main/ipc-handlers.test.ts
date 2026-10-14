@@ -23,15 +23,20 @@ vi.mock('electron', () => ({
   BrowserWindow: { fromWebContents: () => ({ appWindow: true }) },
   shell: {},
 }));
+// The file main itself sent each window, by webContents id, as windows.ts
+// records it. Tests set it as main would.
+const loadedFiles = vi.hoisted(() => new Map<number, string>());
+
 // These reach Electron's app and windows as they load. The handlers tested here
 // use none of them, apart from file:read counting an open, which does nothing
-// here, and the Open dialogs asking what the window shows and what was opened
-// recently.
+// here, and asking which file main sent the window, and the Open dialogs asking
+// what the window shows and what was opened recently.
 vi.mock('./settings-store', () => ({ nudgeTrackFileOpen: vi.fn() }));
 vi.mock('./recents', () => ({ noteRecent: vi.fn(), recentPaths: vi.fn(async () => []) }));
 vi.mock('./windows', () => ({
   openPathInNewWindow: vi.fn(),
   windowPaths: vi.fn(() => ({ dirPath: null, filePath: null })),
+  loadedFilePath: vi.fn((sender: { id: number }) => loadedFiles.get(sender.id) ?? null),
 }));
 
 let dir: string;
@@ -50,11 +55,12 @@ function search(sender: number, query: unknown, scope: unknown, generation: unkn
   return Promise.resolve(handler({ sender: { id: sender } }, query, scope, generation)) as Promise<SearchResult[] | null>;
 }
 
-// Invokes file:read as a window's sidebar click or live reload would.
-function read(filePath: unknown): Promise<string> {
+// Invokes file:read as a window's sidebar click or live reload would, from the
+// window with webContents id `sender`.
+function read(filePath: unknown, sender = 1): Promise<string> {
   const handler = handlers.get('file:read');
   if (!handler) throw new Error('file:read is not registered');
-  return Promise.resolve(handler({ sender: { id: 1 } }, filePath)) as Promise<string>;
+  return Promise.resolve(handler({ sender: { id: sender } }, filePath)) as Promise<string>;
 }
 
 // A slow drive, as in search.test.ts: every read takes a few milliseconds, and
@@ -80,6 +86,7 @@ beforeAll(() => {
 beforeEach(() => {
   dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'emdy-ipc-search-')));
   addAllowedRoot(dir);
+  loadedFiles.clear();
 });
 
 afterEach(() => {
@@ -148,6 +155,27 @@ describe('file:read', () => {
     fs.symlinkSync(notes, alias);
     await expect(read(setup)).rejects.toThrow('Access denied');
     expect(await read(alias)).toBe('# Notes\n');
+  });
+
+  // Finder hands Emdy any file of the Markdown and plain-text types, such as a
+  // .mkd, and main opens it; each save then reloads it through file:read.
+  it('serves the file main sent the asking window whatever its extension, and only to that window', async () => {
+    const notes = write('notes.mkd', '# Notes\n');
+    const other = write('other.mkd', '# Other\n');
+    loadedFiles.set(1, notes);
+    expect(await read(notes, 1)).toBe('# Notes\n');
+    await expect(read(notes, 2)).rejects.toThrow('Access denied');
+    // Another file of the kind, which main didn't send, as a page may ask for after reporting it.
+    await expect(read(other, 1)).rejects.toThrow('Access denied');
+  });
+
+  it('still refuses the file main sent the window once it is outside the opened folders', async () => {
+    const outside = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'emdy-ipc-outside-')));
+    onTestFinished(() => fs.rmSync(outside, { recursive: true, force: true }));
+    const notes = path.join(outside, 'notes.mkd');
+    fs.writeFileSync(notes, '# Notes\n');
+    loadedFiles.set(1, notes);
+    await expect(read(notes, 1)).rejects.toThrow('Access denied');
   });
 });
 
