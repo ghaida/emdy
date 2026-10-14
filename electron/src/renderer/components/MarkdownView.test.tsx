@@ -299,6 +299,19 @@ describe('MarkdownView code blocks', () => {
     ['cjs', "const fs = require('fs');"],
     ['jsonc', '{ "name": "Emdy" } // a comment'],
     ['console', '$ echo "hello"'],
+    ['dart', "void main() { print('hello'); }"],
+    ['scala', 'object Main { def greet(): Unit = println("hi") }'],
+    ['r', 'total <- sum(c(1, 2, 3))'],
+    ['objectivec', '@interface Greeter : NSObject\n@end'],
+    ['objc', '@interface Greeter : NSObject\n@end'],
+    ['lua', 'local name = "Emdy"'],
+    ['perl', 'my $name = "Emdy";'],
+    ['haskell', 'main = putStrLn "hello"'],
+    ['hs', 'main = putStrLn "hello"'],
+    ['elixir', 'defmodule Greeter do\nend'],
+    ['hcl', 'resource "aws_s3_bucket" "site" { bucket = "emdy" }'],
+    ['makefile', 'build:\n\tnpm run build'],
+    ['nginx', 'server { listen 80; }'],
   ])('highlights a %s block', (language, code) => {
     renderView({ content: '```' + language + '\n' + code + '\n```' });
     expect(tokens().length).toBeGreaterThan(0);

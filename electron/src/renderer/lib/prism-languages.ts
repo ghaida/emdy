@@ -34,14 +34,27 @@ import less from 'react-syntax-highlighter/dist/esm/languages/prism/less';
 import gdscript from 'react-syntax-highlighter/dist/esm/languages/prism/gdscript';
 import ini from 'react-syntax-highlighter/dist/esm/languages/prism/ini';
 import powershell from 'react-syntax-highlighter/dist/esm/languages/prism/powershell';
+import objectivec from 'react-syntax-highlighter/dist/esm/languages/prism/objectivec';
+import scala from 'react-syntax-highlighter/dist/esm/languages/prism/scala';
+import dart from 'react-syntax-highlighter/dist/esm/languages/prism/dart';
+import r from 'react-syntax-highlighter/dist/esm/languages/prism/r';
+import lua from 'react-syntax-highlighter/dist/esm/languages/prism/lua';
+import perl from 'react-syntax-highlighter/dist/esm/languages/prism/perl';
+import haskell from 'react-syntax-highlighter/dist/esm/languages/prism/haskell';
+import elixir from 'react-syntax-highlighter/dist/esm/languages/prism/elixir';
+import hcl from 'react-syntax-highlighter/dist/esm/languages/prism/hcl';
+import makefile from 'react-syntax-highlighter/dist/esm/languages/prism/makefile';
+import nginx from 'react-syntax-highlighter/dist/esm/languages/prism/nginx';
 
 // A grammar is registered under its own name and the aliases it brings (html,
-// js, ts, sh, py, yml, …), whatever name it's given here.
+// js, ts, sh, py, yml, objc, hs, …), whatever name it's given here. One that
+// builds on another comes after it: objectivec after c, scala after java.
 const languages: Record<string, unknown> = {
   markup, html: markup, xml: markup, svg: markup, css, javascript, js: javascript, typescript, ts: typescript,
   jsx, tsx, json, bash, sh: bash, shell: bash, python, py: python, yaml, yml: yaml, markdown, md: markdown,
   go, rust, java, c, cpp, csharp, cs: csharp, sql, diff, ruby, rb: ruby, php, swift, kotlin,
   kt: kotlin, toml, docker, dockerfile: docker, graphql, scss, less, gdscript, ini, powershell,
+  objectivec, objc: objectivec, scala, dart, r, lua, perl, haskell, hs: haskell, elixir, hcl, makefile, nginx,
 };
 
 for (const [name, grammar] of Object.entries(languages)) {
