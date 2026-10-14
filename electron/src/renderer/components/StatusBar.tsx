@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { isInsideFolder } from '../../shared/paths';
 
 interface StatusBarProps {
   filePath: string | null;
@@ -14,8 +15,8 @@ export function StatusBar({ filePath, rootPath, content }: StatusBarProps) {
 
   const displayPath = useMemo(() => {
     if (!filePath) return null;
-    if (rootPath) {
-      return filePath.replace(rootPath, '').replace(/^\//, '');
+    if (rootPath && isInsideFolder(filePath, rootPath)) {
+      return filePath.slice(rootPath.replace(/\/$/, '').length + 1);
     }
     return filePath.split('/').pop() || filePath;
   }, [filePath, rootPath]);

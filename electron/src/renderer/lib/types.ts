@@ -52,6 +52,10 @@ export type OpenDialogResult =
   | { type: 'directory'; dirPath: string; entries: FileEntry[] }
   | null;
 
+/** How Export as PDF (export:pdf) and Print (export:print) went. */
+export type PdfExportResult = 'saved' | 'cancelled' | 'failed';
+export type PrintResult = 'printed' | 'cancelled' | 'failed';
+
 /** What a window shows, reported to main (see useWindowState). */
 export interface WindowState {
   filePath: string | null;
@@ -88,8 +92,8 @@ export interface ElectronAPI {
   onDirEntriesUpdated: (callback: (entries: FileEntry[]) => void) => () => void;
   setMenuHasFile: (hasFile: boolean) => Promise<void>;
   reportWindowState: (state: WindowState) => void;
-  exportPDF: (opts: { html: string; title: string }) => Promise<boolean>;
-  print: (opts: { html: string; title: string }) => Promise<boolean>;
+  exportPDF: (opts: { html: string; title: string }) => Promise<PdfExportResult>;
+  print: (opts: { html: string; title: string }) => Promise<PrintResult>;
   writeClipboardHTML: (html: string) => Promise<void>;
   /** `scale` is device pixels per point, so the image pastes at its logical size. */
   writeClipboardImage: (png: Uint8Array, scale: number) => Promise<boolean>;
@@ -102,7 +106,7 @@ export interface ElectronAPI {
   onMenuEvent: (callback: (event: string) => void) => () => void;
   onFileOpen: (callback: (filePath: string, content: string) => void) => () => void;
   onDirOpen: (callback: (dirPath: string, entries: FileEntry[]) => void) => () => void;
-  onDropRejected: (callback: () => void) => () => void;
+  onDropRejected: (callback: (info: { unsupported: number; unreadable: number }) => void) => () => void;
   onWindowRestore: (callback: (state: WindowRestoreState) => void) => () => void;
   /** Tells main the listeners above are registered, so it sends what it held back. */
   reportReady: () => void;

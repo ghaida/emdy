@@ -401,6 +401,28 @@ describe("sending to a window's page", () => {
   });
 });
 
+describe("dropping files Emdy can't open", () => {
+  it("says how many were of another kind and how many couldn't be read", async () => {
+    await windows.startWindows([]);
+    const [welcome] = live();
+    reportReady(welcome);
+    const png = file('picture.png');
+    const locked = file('locked.md');
+    fs.chmodSync(locked, 0o000);
+    await drop(welcome, [png, locked]);
+    expect(sent(welcome, 'drop:rejected')).toEqual([['drop:rejected', { unsupported: 1, unreadable: 1 }]]);
+  });
+
+  it('holds the message until the page is listening', async () => {
+    await windows.startWindows([]);
+    const [welcome] = live();
+    await drop(welcome, [file('picture.png')]);
+    expect(sent(welcome, 'drop:rejected')).toEqual([]);
+    reportReady(welcome);
+    expect(sent(welcome, 'drop:rejected')).toEqual([['drop:rejected', { unsupported: 1, unreadable: 0 }]]);
+  });
+});
+
 describe('the menu with no window open', () => {
   // Launch, then close every window, as ⌘W on the last one does.
   async function closeEveryWindow() {

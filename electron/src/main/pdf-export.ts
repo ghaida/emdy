@@ -6,6 +6,16 @@ import { hardenWindow, escapeHtml } from './allowed-paths';
 import { buildDesignPrintCss } from '../shared/design-print-styles';
 import { PRINT_COLORS } from '../shared/print-colors';
 import { DIAGRAM_BLOCK_CLASS } from '../shared/diagram-markup';
+import type { PdfExportResult, PrintResult } from '../renderer/lib/types';
+
+// The print page's load waits for every image, and a remote one for as long as
+// its host takes to answer, which may be never. Past this, print what has loaded.
+const PRINT_LOAD_WAIT_MS = 5000;
+
+// Electron reports a print dialog the person cancelled as a failed print with
+// this reason (PrintReasonFromPrintStatus in Electron's
+// patches/chromium/printing.patch). Check it again after an Electron upgrade.
+const PRINT_CANCELED_REASON = 'Print job canceled';
 
 const PRINT_CSS = `
 @page { margin: 20mm; }
@@ -103,8 +113,9 @@ ${buildDesignPrintCss()}
 /**
  * Build a hidden, hardened BrowserWindow that renders the neutral,
  * print-styled document (same PRINT_CSS + CSP + tmp-dir layout used by both
- * "Export as PDF" and "Print"), run `action` against it once settled, then
- * ALWAYS close the window and remove the tmp dir.
+ * "Export as PDF" and "Print"), run `action` against it once it has loaded
+ * (or PRINT_LOAD_WAIT_MS has passed) and settled, then ALWAYS close the window
+ * and remove the tmp dir.
  *
  * `action` owns the lifetime of the work: the window is only torn down after
  * the returned promise settles. For printToPDF this is a plain await; for
@@ -150,7 +161,11 @@ ${html}
 </body>
 </html>`, 'utf-8');
 
-    await printWin.loadFile(path.join(tmpDir, 'index.html'));
+    const load = printWin.loadFile(path.join(tmpDir, 'index.html'));
+    // Closing the window once printing is done rejects a load still waiting on
+    // an image; nothing waits for it by then.
+    load.catch(() => undefined);
+    await Promise.race([load, new Promise((resolve) => setTimeout(resolve, PRINT_LOAD_WAIT_MS))]);
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     return await action(printWin);
@@ -161,51 +176,64 @@ ${html}
 }
 
 export function registerExportHandlers() {
-  ipcMain.handle('export:pdf', async (event, { html, title }: { html: string; title: string }) => {
+  ipcMain.handle('export:pdf', async (event, { html, title }: { html: string; title: string }): Promise<PdfExportResult> => {
     const win = BrowserWindow.fromWebContents(event.sender);
-    if (!win) return false;
+    if (!win) return 'failed';
 
     const savePath = await dialog.showSaveDialog(win, {
       defaultPath: `${title.replace(/\.[^.]+$/, '')}.pdf`,
       filters: [{ name: 'PDF', extensions: ['pdf'] }],
     });
 
-    if (savePath.canceled || !savePath.filePath) return false;
+    if (savePath.canceled || !savePath.filePath) return 'cancelled';
+    const pdfPath = savePath.filePath;
 
-    return withPrintDocument(html, title, async (printWin) => {
-      const pdfData = await printWin.webContents.printToPDF({
-        printBackground: true,
-        preferCSSPageSize: false,
+    try {
+      await withPrintDocument(html, title, async (printWin) => {
+        const pdfData = await printWin.webContents.printToPDF({
+          printBackground: true,
+          preferCSSPageSize: false,
+        });
+        await fs.writeFile(pdfPath, pdfData);
       });
-      await fs.writeFile(savePath.filePath!, pdfData);
-      return true;
-    });
+      return 'saved';
+    } catch {
+      return 'failed';
+    }
   });
 
-  ipcMain.handle('export:print', async (_event, { html, title }: { html: string; title: string }) => {
+  ipcMain.handle('export:print', async (_event, { html, title }: { html: string; title: string }): Promise<PrintResult> => {
     // Validate payload — reject non-strings and absurdly large HTML (>20 MB)
     // before spinning up a window (mirrors the clipboard guard-rail).
-    if (typeof html !== 'string' || typeof title !== 'string') return false;
-    if (html.length > 20_000_000) return false;
+    if (typeof html !== 'string' || typeof title !== 'string') return 'failed';
+    if (html.length > 20_000_000) return 'failed';
 
-    return withPrintDocument(html, title, (printWin) =>
-      // Keep the window alive until the print callback fires — printToPDF
-      // awaits, but webContents.print is callback-based, so wrap it in a
-      // promise the withPrintDocument teardown waits on.
-      new Promise<boolean>((resolve) => {
-        // printBackground defaults to false for webContents.print, which drops
-        // CSS backgrounds (swatch colors, shaded blocks) — printToPDF passes
-        // printBackground: true, so match it here for parity. preferCSSPageSize
-        // has no webContents.print equivalent (page size comes from @page/the
-        // print dialog), so there's nothing else to align.
-        printWin.webContents.print({ printBackground: true }, (success, errorType) => {
-          if (!success && errorType) {
-            console.error('Print failed:', errorType);
-          }
-          resolve(success);
-        });
-      })
-    );
+    try {
+      return await withPrintDocument(html, title, (printWin) =>
+        // Keep the window alive until the print callback fires — printToPDF
+        // awaits, but webContents.print is callback-based, so wrap it in a
+        // promise the withPrintDocument teardown waits on.
+        new Promise<PrintResult>((resolve) => {
+          // printBackground defaults to false for webContents.print, which drops
+          // CSS backgrounds (swatch colors, shaded blocks) — printToPDF passes
+          // printBackground: true, so match it here for parity. preferCSSPageSize
+          // has no webContents.print equivalent (page size comes from @page/the
+          // print dialog), so there's nothing else to align.
+          printWin.webContents.print({ printBackground: true }, (success, failureReason) => {
+            if (success) {
+              resolve('printed');
+            } else if (failureReason === PRINT_CANCELED_REASON) {
+              resolve('cancelled');
+            } else {
+              console.error('Print failed:', failureReason);
+              resolve('failed');
+            }
+          });
+        })
+      );
+    } catch {
+      return 'failed';
+    }
   });
 
   ipcMain.handle('clipboard:write-html', async (_event, html: string) => {

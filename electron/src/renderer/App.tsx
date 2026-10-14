@@ -52,9 +52,14 @@ const RESTORE_SCROLL_HOLD_MS = 3000;
 
 let toastId = 0;
 
+// The first file the sidebar lists. It shows a level's files before its
+// folders, while scanDirectory lists the folders first.
 function findFirstFile(entries: FileEntry[]): string | null {
+  const file = entries.find((entry) => !entry.isDirectory);
+  if (file) return file.path;
   for (const entry of entries) {
-    if (!entry.isDirectory) return entry.path;
+    const nested = entry.children ? findFirstFile(entry.children) : null;
+    if (nested) return nested;
   }
   return null;
 }
@@ -357,48 +362,68 @@ export function App() {
     });
   }, [content, pendingOpen]);
 
-  const handleOpen = useCallback(async () => {
+  // The open folder, through a ref for callbacks that run later than the
+  // render that made them: openHere once its dialog has closed, and the
+  // listeners below, which are registered once per effect run.
+  const dirPathRef = useRef(dirPath);
+  dirPathRef.current = dirPath;
+
+  const openHere = useCallback(async () => {
     try {
-      const hasContent = content !== null || dirPath !== null;
-      if (hasContent) {
-        await window.electronAPI.openDialogInNewWindow();
-        return;
-      }
       const result = await window.electronAPI.openDialog();
       if (!result) return;
       closeFind();
       if (result.type === 'file') {
+        // Same rule as a file from outside: one outside the open folder
+        // replaces the folder; one inside it keeps the sidebar.
+        const openFolder = dirPathRef.current;
+        if (openFolder !== null && !isInsideFolder(result.filePath, openFolder)) {
+          setDirEntries(null);
+          setDirPath(null);
+          setSidebarVisible(false);
+        }
         setContent(result.content);
         setFilePath(result.filePath);
         setFileDeleted(false);
         setFileError(null);
-        if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTop = 0;
-        }
+        if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
       } else {
         setDirEntries(result.entries);
         setDirPath(result.dirPath);
         setSidebarVisible(true);
-        if (result.entries.length === 0) {
+        const first = findFirstFile(result.entries);
+        if (!first) {
+          setContent(null);
+          setFilePath(null);
+          setFileDeleted(false);
+          setFileError(null);
           addToast('No Markdown files found in this directory', 'info');
-        } else {
-          const first = findFirstFile(result.entries);
-          if (first) {
-            const fileContent = await window.electronAPI.readFile(first);
-            setContent(fileContent);
-            setFilePath(first);
-            setFileDeleted(false);
-            setFileError(null);
-            if (scrollContainerRef.current) {
-              scrollContainerRef.current.scrollTop = 0;
-            }
-          }
+          return;
         }
+        const fileContent = await window.electronAPI.readFile(first);
+        setContent(fileContent);
+        setFilePath(first);
+        setFileDeleted(false);
+        setFileError(null);
+        if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
       }
     } catch {
       addToast('Failed to open', 'error');
     }
-  }, [addToast, closeFind, content, dirPath]);
+  }, [addToast, closeFind]);
+
+  const handleOpen = useCallback(async () => {
+    const hasContent = content !== null || dirPath !== null;
+    if (hasContent) {
+      try {
+        await window.electronAPI.openDialogInNewWindow();
+      } catch {
+        addToast('Failed to open', 'error');
+      }
+      return;
+    }
+    await openHere();
+  }, [addToast, content, dirPath, openHere]);
 
   const handleFileSelect = useCallback(async (path: string) => {
     try {
@@ -465,16 +490,22 @@ export function App() {
     announceDiagramPrep();
     const payload = await preparePrintPayload(contentRef.current, filePath, viewTheme);
     if (!payload) return;
-    const ok = await window.electronAPI.exportPDF(payload);
-    if (ok) addToast('PDF exported', 'success');
+    const result = await window.electronAPI.exportPDF(payload);
+    if (result === 'saved') addToast('PDF exported', 'success');
+    else if (result === 'failed') addToast('PDF export failed', 'error');
   }, [addToast, announceDiagramPrep, filePath, viewTheme]);
 
   const handlePrint = useCallback(async () => {
     announceDiagramPrep();
     const payload = await preparePrintPayload(contentRef.current, filePath, viewTheme);
     if (!payload) return;
-    window.electronAPI.print(payload);
-  }, [announceDiagramPrep, filePath, viewTheme]);
+    try {
+      const result = await window.electronAPI.print(payload);
+      if (result === 'failed') addToast('Print failed', 'error');
+    } catch {
+      addToast('Print failed', 'error');
+    }
+  }, [addToast, announceDiagramPrep, filePath, viewTheme]);
 
   const handleFileContextMenu = useCallback((e: React.MouseEvent, path: string) => {
     e.preventDefault();
@@ -557,11 +588,6 @@ export function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // The listeners below read the open folder through a ref, because they're
-  // registered once per effect run.
-  const dirPathRef = useRef(dirPath);
-  dirPathRef.current = dirPath;
-
   // Handle menu events from main process
   useEffect(() => {
     const removeMenu = window.electronAPI.onMenuEvent((event) => {
@@ -595,6 +621,9 @@ export function App() {
 
     const removeFileOpen = window.electronAPI.onFileOpen((path, fileContent) => {
       closeFind();
+      // Opened into a window that's still restoring, it starts at the top,
+      // not at the restored file's position.
+      heldScrollRef.current = null;
       // A file from outside the open folder replaces the folder; a file
       // inside it keeps the sidebar, which highlights it.
       const openFolder = dirPathRef.current;
@@ -615,33 +644,38 @@ export function App() {
 
     const removeDirOpen = window.electronAPI.onDirOpen(async (dirOpenPath, entries) => {
       closeFind();
+      // Opened into a window that's still restoring, its first file starts at
+      // the top too.
+      heldScrollRef.current = null;
       setDirEntries(entries);
       setDirPath(dirOpenPath);
       setSidebarVisible(true);
       clearPendingWithMinTime();
-      if (entries.length === 0) {
+      const first = findFirstFile(entries);
+      if (!first) {
+        // Nothing to show: don't leave the previous document under the new sidebar.
+        setContent(null);
+        setFilePath(null);
+        setFileDeleted(false);
+        setFileError(null);
         addToast('No Markdown files found in this directory', 'info');
-      } else {
-        const first = findFirstFile(entries);
-        if (first) {
-          try {
-            const fileContent = await window.electronAPI.readFile(first);
-            setContent(fileContent);
-            setFilePath(first);
-            setFileDeleted(false);
-            setFileError(null);
-            if (scrollContainerRef.current) {
-              scrollContainerRef.current.scrollTop = 0;
-            }
-          } catch {
-            addToast('Failed to read file', 'error');
-          }
-        }
+        return;
+      }
+      try {
+        const fileContent = await window.electronAPI.readFile(first);
+        setContent(fileContent);
+        setFilePath(first);
+        setFileDeleted(false);
+        setFileError(null);
+        if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
+      } catch {
+        addToast('Failed to read file', 'error');
       }
     });
 
-    const removeDropRejected = window.electronAPI.onDropRejected(() => {
-      addToast('Emdy opens Markdown files and folders', 'info');
+    const removeDropRejected = window.electronAPI.onDropRejected(({ unsupported, unreadable }) => {
+      if (unsupported > 0) addToast('Emdy opens Markdown files and folders', 'info');
+      if (unreadable > 0) addToast("Couldn't read the dropped file", 'error');
     });
 
     const removeRestore = window.electronAPI.onWindowRestore((state) => {
@@ -699,14 +733,14 @@ export function App() {
     if (fileDeleted) {
       return (
         <main id="main-content">
-          <EmptyState type="file-deleted" onAction={handleOpen} actionLabel="Open Another File" />
+          <EmptyState type="file-deleted" onAction={openHere} actionLabel="Open Another File" />
         </main>
       );
     }
     if (fileError) {
       return (
         <main id="main-content">
-          <EmptyState type="error" message={fileError} onAction={handleOpen} actionLabel="Open Another File" />
+          <EmptyState type="error" message={fileError} onAction={openHere} actionLabel="Open Another File" />
         </main>
       );
     }

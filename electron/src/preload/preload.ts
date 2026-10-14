@@ -113,8 +113,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('dir:open', handler);
     return () => ipcRenderer.removeListener('dir:open', handler);
   },
-  onDropRejected: (callback: () => void) => {
-    const handler = () => callback();
+  onDropRejected: (callback: (info: { unsupported: number; unreadable: number }) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, info: { unsupported: number; unreadable: number }) => callback(info);
     ipcRenderer.on('drop:rejected', handler);
     return () => ipcRenderer.removeListener('drop:rejected', handler);
   },

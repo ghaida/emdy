@@ -539,16 +539,17 @@ export function registerWindowHandlers() {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win || !Array.isArray(paths)) return;
     let openedHere = false;
-    let skipped = 0;
+    let unsupported = 0;
+    let unreadable = 0;
     for (const dropped of paths) {
       if (typeof dropped !== 'string' || !path.isAbsolute(dropped)) {
-        skipped++;
+        unsupported++;
         continue;
       }
       try {
         const stat = await fs.stat(dropped);
         if (!isOpenableDrop(dropped, stat.isDirectory())) {
-          skipped++;
+          unsupported++;
           continue;
         }
         const payload = await loadPath(dropped);
@@ -560,9 +561,11 @@ export function registerWindowHandlers() {
         }
         noteRecent(dropped);
       } catch {
-        skipped++;
+        unreadable++;
       }
     }
-    if (skipped > 0 && !win.isDestroyed()) win.webContents.send('drop:rejected');
+    if ((unsupported > 0 || unreadable > 0) && !win.isDestroyed()) {
+      sendWhenReadyTo(win.webContents, 'drop:rejected', { unsupported, unreadable });
+    }
   });
 }
