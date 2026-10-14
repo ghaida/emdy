@@ -6,8 +6,8 @@ import type { ElectronAPI, FileEntry } from './lib/types';
 import { FILE_TOO_LARGE } from '../shared/read-errors';
 
 // What main sends a window, the call that tells main the page is listening,
-// file reads, the open dialogs, exports, what the window reports about itself
-// and the update checks.
+// file reads, the open dialogs, exports, what the window reports about itself,
+// the update checks and the palette's search.
 const api = {
   onMenuEvent: vi.fn<ElectronAPI['onMenuEvent']>(() => () => undefined),
   onFileOpen: vi.fn<ElectronAPI['onFileOpen']>(() => () => undefined),
@@ -29,6 +29,7 @@ const api = {
   getUpdateStatus: vi.fn<ElectronAPI['getUpdateStatus']>(async () => ({ status: 'idle' })),
   checkForUpdate: vi.fn<ElectronAPI['checkForUpdate']>(async () => ({ status: 'checking' })),
   installUpdate: vi.fn<ElectronAPI['installUpdate']>(async () => false),
+  searchEverything: vi.fn<ElectronAPI['searchEverything']>(async () => []),
 };
 
 // A menu pick, sent to the listener App registered last.
@@ -390,6 +391,38 @@ describe('Export as PDF and Print', () => {
     api.print.mockRejectedValueOnce(new Error('No handler registered for export:print'));
     await chooseWithDocument('print');
     expect(toastMessages()).toEqual(['Print failed']);
+  });
+});
+
+describe('picking a search result in the open file', () => {
+  // "alpha" four times, on lines 3, 5, 9 and 11.
+  const NOTES = '# Notes\n\nalpha one\n\nalpha two\n\nbeta\n\nalpha three\n\nalpha four\n';
+
+  it('lands on the match on the picked line, not the first one', async () => {
+    // What main's search finds there: a snippet for each of the first three lines, with the count.
+    api.searchEverything.mockImplementation(async (query) =>
+      query === 'alpha'
+        ? ([[3, 'alpha one'], [5, 'alpha two'], [9, 'alpha three']] as const).map(([lineNumber, matchLine]) => ({
+            filePath: '/notes/a.md',
+            fileName: 'a.md',
+            type: 'content' as const,
+            lineNumber,
+            matchLine,
+            matchCount: 4,
+          }))
+        : [],
+    );
+    await renderApp();
+    await openFile('/notes/a.md', NOTES);
+    await screen.findAllByText('alpha three');
+    await chooseFromMenu('find');
+    fireEvent.change(screen.getByPlaceholderText('Search this file…'), { target: { value: 'alpha' } });
+    const results = await screen.findByRole('listbox');
+    fireEvent.click(within(results).getByRole('option', { name: /alpha three/ }));
+    await waitFor(() => expect(document.querySelector('.find-bar-counter')?.textContent).toBe('3 of 4'));
+    // The page's own marks, not the minimap's copy of them.
+    const current = document.querySelectorAll('.content-area mark[data-current]');
+    expect(Array.from(current, (mark) => mark.closest('p')?.textContent)).toEqual(['alpha three']);
   });
 });
 
