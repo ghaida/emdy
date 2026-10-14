@@ -48,3 +48,39 @@ describe('Restart to Update', () => {
     expect(screen.queryByText(NOT_READY)).not.toBeInTheDocument();
   });
 });
+
+describe('Opening and closing', () => {
+  it('focuses Close even when an update is ready, and closes on Escape', async () => {
+    mockUpdater(true);
+    const onClose = vi.fn();
+    const user = userEvent.setup();
+    render(<UpdateDialog visible onClose={onClose} readyVersion={ready} />);
+    await screen.findByText(/Emdy 1\.9\.0 is ready to install/);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Close' }));
+    await user.keyboard('{Escape}');
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("doesn't restart for a key typed as it pops up", async () => {
+    // It opens unasked when a download finishes, perhaps while someone types.
+    const { installUpdate } = mockUpdater(true);
+    const user = userEvent.setup();
+    render(<UpdateDialog visible onClose={vi.fn()} readyVersion={ready} />);
+    await screen.findByText(/Emdy 1\.9\.0 is ready to install/);
+    await user.keyboard(' ');
+    expect(installUpdate).not.toHaveBeenCalled();
+  });
+
+  it('focuses Close while it checks', async () => {
+    const api: Partial<ElectronAPI> = {
+      getAppVersion: vi.fn(async () => '1.8.1'),
+      getSkippedVersion: vi.fn(async () => null),
+      // The check never answers.
+      checkForUpdate: vi.fn(() => new Promise<never>(() => undefined)),
+    };
+    window.electronAPI = api as ElectronAPI;
+    render(<UpdateDialog visible onClose={vi.fn()} />);
+    await screen.findByText('Checking for updates…');
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Close' }));
+  });
+});

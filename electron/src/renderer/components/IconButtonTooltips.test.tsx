@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, act } from '@testing-library/react';
+import { render, act, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { SettingsModal } from './SettingsModal';
 import { AboutDialog } from './AboutDialog';
 import { UpdateDialog } from './UpdateDialog';
@@ -118,5 +119,50 @@ describe('icon buttons use the toolbar tooltip', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('Settings', () => {
+  it('focuses Close when it opens, and Escape closes it and goes no further', async () => {
+    const onClose = vi.fn();
+    const windowKeydown = vi.fn();
+    window.addEventListener('keydown', windowKeydown);
+    try {
+      const user = userEvent.setup();
+      render(
+        <SettingsModal
+          visible
+          onClose={onClose}
+          theme="system"
+          colorTheme="warm"
+          onThemeChange={vi.fn()}
+          onColorThemeChange={vi.fn()}
+        />
+      );
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Close' }));
+      await user.keyboard('{Escape}');
+      expect(onClose).toHaveBeenCalledTimes(1);
+      // App closes find on a window-level Escape; this one only closes Settings.
+      expect(windowKeydown).not.toHaveBeenCalled();
+    } finally {
+      window.removeEventListener('keydown', windowKeydown);
+    }
+  });
+
+  it('gives focus back to the button that opened it when it closes', () => {
+    const props = { onClose: vi.fn(), theme: 'system', colorTheme: 'warm', onThemeChange: vi.fn(), onColorThemeChange: vi.fn() } as const;
+    const view = (visible: boolean) => (
+      <>
+        <button>Settings</button>
+        <SettingsModal visible={visible} {...props} />
+      </>
+    );
+    const { rerender } = render(view(false));
+    const opener = screen.getByRole('button', { name: 'Settings' });
+    opener.focus();
+    rerender(view(true));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Close' }));
+    rerender(view(false));
+    expect(document.activeElement).toBe(opener);
   });
 });

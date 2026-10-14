@@ -72,4 +72,24 @@ describe('File menu', () => {
     buildMenu(vi.fn(), false, { paths: [], open: vi.fn(), clear: vi.fn() });
     expect(fileMenu().some((item) => item.role === 'close')).toBe(true);
   });
+
+  it('sets Close apart from the Open items with a separator, with or without a file open', () => {
+    for (const hasFile of [true, false]) {
+      buildMenu(vi.fn(), hasFile, { paths: [], open: vi.fn(), clear: vi.fn() });
+      const items = fileMenu();
+      const close = items.findIndex((item) => item.role === 'close');
+      expect(items[close - 1]?.type).toBe('separator');
+    }
+  });
+});
+
+describe('shortcuts', () => {
+  it('leaves Cmd+M to Minimize and drops the Keyboard Shortcuts item nothing handled', () => {
+    buildMenu(vi.fn(), true, { paths: [], open: vi.fn(), clear: vi.fn() });
+    const template = electron.Menu.setApplicationMenu.mock.calls.at(-1)?.[0] as Item[];
+    const view = template.find((item) => item.label === 'View')?.submenu as Item[];
+    expect(view.find((item) => item.label === 'Toggle Minimap')?.accelerator).toBe('CmdOrCtrl+Shift+M');
+    const help = template.find((item) => item.label === 'Help')?.submenu as Item[];
+    expect(help.some((item) => item.label === 'Keyboard Shortcuts')).toBe(false);
+  });
 });

@@ -38,14 +38,14 @@ export function SettingsModal({
 }: SettingsModalProps) {
   const { mounted, active } = useTransition(visible);
   const modalRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(modalRef, visible);
+  useFocusTrap(modalRef, visible && mounted, onClose);
 
   useEffect(() => {
-    if (visible && modalRef.current) {
+    if (visible && mounted && modalRef.current) {
       const firstFocusable = modalRef.current.querySelector<HTMLElement>('button, [href], input');
       firstFocusable?.focus();
     }
-  }, [visible]);
+  }, [visible, mounted]);
 
   if (!mounted) return null;
 

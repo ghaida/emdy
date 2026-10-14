@@ -227,10 +227,33 @@ export const MarkdownView = React.memo(
             href={href}
             {...props}
             onClick={(e) => {
-              if (href) {
-                e.preventDefault();
-                window.electronAPI.openExternal(href);
+              if (!href) return;
+              e.preventDefault();
+              if (href.startsWith('#')) {
+                // Footnotes and other in-document targets. A footnote's id is
+                // percent-encoded like its link, so the id as written is looked
+                // for first, then the decoded form.
+                const raw = href.slice(1);
+                let decoded = raw;
+                try {
+                  decoded = decodeURIComponent(raw);
+                } catch {
+                  // A % that isn't an escape: only the id as written.
+                }
+                const root = bodyRef.current;
+                const ids = root ? Array.from(root.querySelectorAll<HTMLElement>('[id]')) : [];
+                const target = ids.find((el) => el.id === raw) ?? ids.find((el) => el.id === decoded);
+                if (target) {
+                  target.scrollIntoView({ block: 'start' });
+                  // Focus follows, as with the browser's own jump, so Tab carries
+                  // on from the target. A footnote needs a tabindex for that; a
+                  // link takes focus already and keeps its place in the Tab order.
+                  if (target.tabIndex < 0) target.setAttribute('tabindex', '-1');
+                  target.focus({ preventScroll: true });
+                }
+                return;
               }
+              window.electronAPI.openExternal(href);
             }}
           >
             {children}

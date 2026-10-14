@@ -70,7 +70,7 @@ export function UpdateDialog({ visible, onClose, readyVersion, checkRequest }: U
   const [skippedVersion, setSkippedVersion] = useState<string | null>(null);
   // Restart to Update found no downloaded update in main to install.
   const [staleReady, setStaleReady] = useState(false);
-  useFocusTrap(modalRef, visible);
+  useFocusTrap(modalRef, visible && mounted, onClose);
 
   useEffect(() => {
     if (!visible) return;
@@ -106,6 +106,15 @@ export function UpdateDialog({ visible, onClose, readyVersion, checkRequest }: U
 
     return () => { removeStatus?.(); removeReady?.(); };
   }, [visible, readyVersion, checkRequest]);
+
+  useEffect(() => {
+    if (visible && mounted && modalRef.current) {
+      // Close, not Restart to Update: the dialog can open unasked while
+      // someone is typing, and a Space or Return would restart the app.
+      const firstFocusable = modalRef.current.querySelector<HTMLElement>('button, [href], input');
+      firstFocusable?.focus();
+    }
+  }, [visible, mounted]);
 
   if (!mounted) return null;
 

@@ -30,6 +30,7 @@ export function buildMenu(sendEvent: MenuCallback, hasFile: boolean, recent: Rec
         { label: 'Clear Menu', enabled: recent.paths.length > 0, click: recent.clear },
       ],
     },
+    { type: 'separator' as const },
     { role: 'close' as const },
     ...(hasFile ? [
       { type: 'separator' as const },
@@ -133,7 +134,7 @@ export function buildMenu(sendEvent: MenuCallback, hasFile: boolean, recent: Rec
         },
         {
           label: 'Toggle Minimap',
-          accelerator: 'CmdOrCtrl+M',
+          accelerator: 'CmdOrCtrl+Shift+M',
           click: () => sendEvent('toggle-minimap'),
         },
         { type: 'separator' as const },
@@ -188,19 +189,12 @@ export function buildMenu(sendEvent: MenuCallback, hasFile: boolean, recent: Rec
         ...(isMac ? [
           { type: 'separator' as const },
           { role: 'front' as const },
-        ] : [
-          { role: 'close' as const },
-        ]),
+        ] : []),
       ],
     },
     {
       label: 'Help',
       submenu: [
-        {
-          label: 'Keyboard Shortcuts',
-          click: () => sendEvent('show-shortcuts'),
-        },
-        { type: 'separator' },
         {
           label: 'About Emdy',
           click: () => sendEvent('show-about'),

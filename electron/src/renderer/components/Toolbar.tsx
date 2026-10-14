@@ -297,7 +297,7 @@ export function Toolbar({
             <button
               className={`toolbar-btn${minimapVisible ? ' on' : ''}`}
               onClick={onToggleMinimap}
-              data-tooltip="Toggle minimap  ⌘M"
+              data-tooltip="Toggle minimap  ⇧⌘M"
               aria-label="Toggle minimap"
               aria-expanded={minimapVisible}
               data-toolbar-btn
@@ -379,7 +379,7 @@ export function Toolbar({
             <button
               className={`toolbar-btn${minimapVisible ? ' on' : ''}`}
               onClick={onToggleMinimap}
-              data-tooltip="Toggle minimap  ⌘M"
+              data-tooltip="Toggle minimap  ⇧⌘M"
               aria-label="Toggle minimap"
               aria-expanded={minimapVisible}
               data-toolbar-btn

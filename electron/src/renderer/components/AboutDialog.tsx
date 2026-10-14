@@ -17,7 +17,7 @@ export function AboutDialog({ visible, onClose }: AboutDialogProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const [version, setVersion] = useState('');
   const [update, setUpdate] = useState<'checking' | 'up-to-date' | { version: string } | null>(null);
-  useFocusTrap(modalRef, visible);
+  useFocusTrap(modalRef, visible && mounted, onClose);
 
   useEffect(() => {
     if (visible) {
@@ -35,13 +35,16 @@ export function AboutDialog({ visible, onClose }: AboutDialogProps) {
       };
       showUpdateStatus();
       const removeStatus = window.electronAPI.onUpdateStatus(showUpdateStatus);
-      if (modalRef.current) {
-        const firstFocusable = modalRef.current.querySelector<HTMLElement>('button, [href], input');
-        firstFocusable?.focus();
-      }
       return removeStatus;
     }
   }, [visible]);
+
+  useEffect(() => {
+    if (visible && mounted && modalRef.current) {
+      const firstFocusable = modalRef.current.querySelector<HTMLElement>('button, [href], input');
+      firstFocusable?.focus();
+    }
+  }, [visible, mounted]);
 
   if (!mounted) return null;
 

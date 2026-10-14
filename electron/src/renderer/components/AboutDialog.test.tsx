@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { AboutDialog } from './AboutDialog';
 import type { ElectronAPI } from '../lib/types';
 
@@ -71,5 +72,16 @@ describe('About', () => {
     await screen.findByText(/Checking…/);
     rerender(<AboutDialog visible={false} onClose={vi.fn()} />);
     expect(updater.removeStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it('focuses its first button when it opens, and closes on Escape', async () => {
+    mockUpdater();
+    const onClose = vi.fn();
+    const user = userEvent.setup();
+    render(<AboutDialog visible onClose={onClose} />);
+    await screen.findByText(/Checking…/);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Close' }));
+    await user.keyboard('{Escape}');
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

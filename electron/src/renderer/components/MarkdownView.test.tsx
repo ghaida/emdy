@@ -1,12 +1,14 @@
 import React, { createRef, useRef } from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, waitFor, act, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MarkdownView, type MarkdownViewHandle, type HighlightState } from './MarkdownView';
 import { Minimap } from './Minimap';
 import { warm, cool } from '../lib/color-themes';
 import { parseDesignMd, type DesignTokens } from '../lib/design-md';
 import { FULL_CODE_ATTR } from '../lib/code-export';
 import { countShownMatches } from '../lib/remark-source-lines';
+import type { ElectronAPI } from '../lib/types';
 
 const colors = warm.light;
 
@@ -274,6 +276,87 @@ describe('MarkdownView code blocks', () => {
 
     expect(long.hasAttribute(FULL_CODE_ATTR)).toBe(false);
     expect(long.querySelector('code')!.textContent).toBe(longCode);
+  });
+});
+
+describe('MarkdownView links within the document', () => {
+  // jsdom lays nothing out: see which element each click scrolls into view.
+  function renderLinks(content: string) {
+    const api: Partial<ElectronAPI> = { openExternal: vi.fn() };
+    window.electronAPI = api as ElectronAPI;
+    const scrolled = vi.spyOn(Element.prototype, 'scrollIntoView');
+    const { container } = render(<MarkdownView colors={colors} filePath="/x/a.md" content={content} />);
+    return { container, scrolled, openExternal: api.openExternal };
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('jumps to a footnote and back to where it was cited', () => {
+    const { container, scrolled, openExternal } = renderLinks('A claim.[^1]\n\n[^1]: The source.\n');
+    const citation = screen.getByRole('link', { name: '1' });
+    fireEvent.click(citation);
+    expect(scrolled).toHaveBeenCalledTimes(1);
+    expect(scrolled.mock.contexts[0]).toBe(container.querySelector('li'));
+    fireEvent.click(screen.getByRole('link', { name: 'Back to reference 1' }));
+    expect(scrolled.mock.contexts[1]).toBe(citation);
+    expect(openExternal).not.toHaveBeenCalled();
+  });
+
+  it('moves focus to the footnote, so Tab carries on from there, and back to the citation', async () => {
+    const { container } = renderLinks('A claim.[^1] See [the docs](https://example.com).\n\n[^1]: The source.\n');
+    const user = userEvent.setup();
+    const citation = screen.getByRole('link', { name: '1' });
+    citation.focus();
+    await user.keyboard('{Enter}');
+    expect(document.activeElement).toBe(container.querySelector('li'));
+    await user.tab();
+    expect(document.activeElement).toBe(screen.getByRole('link', { name: 'Back to reference 1' }));
+    await user.keyboard('{Enter}');
+    expect(document.activeElement).toBe(citation);
+    // The citation is a link, so it keeps its place in the Tab order.
+    expect(citation.hasAttribute('tabindex')).toBe(false);
+  });
+
+  it('jumps to the footnote cited, when another footnote id is its decoded form', () => {
+    const { container, scrolled } = renderLinks('One.[^x%41] Two.[^x%2541]\n\n[^x%41]: First.\n[^x%2541]: Second.\n');
+    const items = Array.from(container.querySelectorAll('li'));
+    expect(items.map((li) => li.id)).toEqual(['user-content-fn-x%41', 'user-content-fn-x%2541']);
+    fireEvent.click(screen.getByRole('link', { name: '2' }));
+    expect(scrolled.mock.contexts[0]).toBe(items[1]);
+  });
+
+  it('finds a footnote whose label has a % that is not an escape', () => {
+    // Its id and link keep "%of" as written, which decodeURIComponent rejects.
+    const { container, scrolled, openExternal } = renderLinks('A claim.[^50%off]\n\n[^50%off]: The source.\n');
+    fireEvent.click(screen.getByRole('link', { name: '1' }));
+    expect(scrolled).toHaveBeenCalledTimes(1);
+    expect(scrolled.mock.contexts[0]).toBe(container.querySelector('li'));
+    expect(openExternal).not.toHaveBeenCalled();
+  });
+
+  it('finds a footnote whose label has a letter outside ASCII', () => {
+    // Its id is percent-encoded just like its link.
+    const { container, scrolled } = renderLinks('A claim.[^café]\n\n[^café]: The source.\n');
+    expect(container.querySelector('li')?.id).toBe('user-content-fn-caf%C3%A9');
+    fireEvent.click(screen.getByRole('link', { name: '1' }));
+    expect(scrolled).toHaveBeenCalledTimes(1);
+    expect(scrolled.mock.contexts[0]).toBe(container.querySelector('li'));
+  });
+
+  it('finds a heading whose id has its space encoded, and one whose plain id the link encodes', () => {
+    const { container, scrolled } = renderLinks('[Next](#next%20steps) and [Résumé](#résumé).\n\n## Next steps\n\n## Résumé\n');
+    // Emdy gives headings no ids of its own, so these are set by hand. The
+    // second link's href is #r%C3%A9sum%C3%A9: only its decoded form matches.
+    const [nextSteps, resume] = Array.from(container.querySelectorAll('h2'));
+    nextSteps.id = 'next%20steps';
+    resume.id = 'résumé';
+    fireEvent.click(screen.getByRole('link', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Résumé' }));
+    expect(scrolled).toHaveBeenCalledTimes(2);
+    expect(scrolled.mock.contexts[0]).toBe(nextSteps);
+    expect(scrolled.mock.contexts[1]).toBe(resume);
   });
 });
 
