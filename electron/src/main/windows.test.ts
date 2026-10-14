@@ -155,6 +155,14 @@ function file(name: string): string {
   return filePath;
 }
 
+// Sparse: the file reports `bytes` as its size without taking up the space.
+function sparseFile(name: string, bytes: number): string {
+  const filePath = path.join(dir, name);
+  fs.writeFileSync(filePath, '');
+  fs.truncateSync(filePath, bytes);
+  return filePath;
+}
+
 function writeSession(saved: object[]) {
   fs.writeFileSync(path.join(dir, 'session.json'), JSON.stringify({ version: 1, windows: saved }));
 }
@@ -420,6 +428,29 @@ describe("dropping files Emdy can't open", () => {
     expect(sent(welcome, 'drop:rejected')).toEqual([]);
     reportReady(welcome);
     expect(sent(welcome, 'drop:rejected')).toEqual([['drop:rejected', { unsupported: 1, unreadable: 0 }]]);
+  });
+});
+
+describe('files over the 10 MB cap', () => {
+  it('counts a dropped 12 MB file as unreadable and opens nothing', async () => {
+    await windows.startWindows([]);
+    const [welcome] = live();
+    reportReady(welcome);
+    await drop(welcome, [sparseFile('big.txt', 12 * 1024 * 1024)]);
+    expect(sent(welcome, 'drop:rejected')).toEqual([['drop:rejected', { unsupported: 0, unreadable: 1 }]]);
+    expect(sent(welcome, 'file:open')).toEqual([]);
+    expect(live()).toHaveLength(1);
+  });
+
+  it('brings back a saved window whose file has grown past the cap as its folder alone', async () => {
+    const big = sparseFile('big.md', 11 * 1024 * 1024);
+    writeSession([{ dirPath: dir, filePath: big, scrollTop: 0, bounds: null }]);
+    await windows.startWindows([]);
+    const [win] = live();
+    reportReady(win);
+    const arrived = () => [...sent(win, 'dir:open'), ...sent(win, 'window:restore')];
+    await vi.waitFor(() => expect(arrived()).toHaveLength(1));
+    expect(arrived()[0].slice(0, 2)).toEqual(['dir:open', dir]);
   });
 });
 

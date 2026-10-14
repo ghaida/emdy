@@ -1,6 +1,7 @@
 // Pure rules for paths that reach Emdy from outside a window: the Dock,
 // Finder, Open Recent and drops. Kept free of Electron imports so they can be
 // unit-tested in isolation.
+import { isTextDocument } from '../shared/paths';
 
 export interface RoutingWindow {
   id: number;
@@ -9,11 +10,9 @@ export interface RoutingWindow {
   lastFocusedAt: number;
 }
 
-const OPENABLE_FILE = /\.(md|markdown|txt)$/i;
-
 /** Folders and Markdown or plain-text files can be dropped on a window. */
 export function isOpenableDrop(filePath: string, isDirectory: boolean): boolean {
-  return isDirectory || OPENABLE_FILE.test(filePath);
+  return isDirectory || isTextDocument(filePath);
 }
 
 /**

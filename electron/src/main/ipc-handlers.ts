@@ -1,15 +1,16 @@
 import { ipcMain, dialog, BrowserWindow, shell } from 'electron';
+import { realpathSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { nudgeTrackFileOpen } from './settings-store';
 import { addAllowedRoot, isPathAllowed } from './allowed-paths';
 import { noteRecent } from './recents';
+import { readTextFile } from './read-text';
 import { scanDirectory } from './scan-directory';
 import { registerSearch, searchFiles } from './search';
+import { isTextDocument } from '../shared/paths';
 import type { SearchScope } from '../renderer/lib/types';
 import { openPathInNewWindow } from './windows';
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export function registerFileHandlers() {
   // Combined open dialog — allows selecting either a file or a directory
@@ -28,7 +29,7 @@ export function registerFileHandlers() {
       noteRecent(selected);
       return { type: 'directory' as const, dirPath: selected, entries: await scanDirectory(selected) };
     }
-    const content = await fs.readFile(selected, 'utf-8');
+    const content = await readTextFile(selected);
     addAllowedRoot(path.dirname(selected));
     noteRecent(selected);
     return { type: 'file' as const, filePath: selected, content };
@@ -43,7 +44,7 @@ export function registerFileHandlers() {
     });
     if (result.canceled || result.filePaths.length === 0) return null;
     const filePath = result.filePaths[0];
-    const content = await fs.readFile(filePath, 'utf-8');
+    const content = await readTextFile(filePath);
     addAllowedRoot(path.dirname(filePath));
     noteRecent(filePath);
     return { filePath, content };
@@ -51,11 +52,18 @@ export function registerFileHandlers() {
 
   ipcMain.handle('file:read', async (_event, filePath: string) => {
     if (typeof filePath !== 'string') throw new Error('Invalid argument');
-    if (!isPathAllowed(filePath)) throw new Error('Access denied');
-    const stat = await fs.stat(filePath);
-    if (stat.size > MAX_FILE_SIZE) throw new Error('File too large (>10 MB)');
+    // A link is checked and read where it leads, so a setup.md that links to
+    // .env is refused.
+    let realPath: string;
+    try {
+      realPath = realpathSync(filePath);
+    } catch {
+      throw new Error('File not found');
+    }
+    if (!isPathAllowed(realPath)) throw new Error('Access denied');
+    if (!isTextDocument(realPath)) throw new Error('Access denied');
     nudgeTrackFileOpen();
-    return fs.readFile(filePath, 'utf-8');
+    return readTextFile(realPath);
   });
 
   ipcMain.handle('dir:open-dialog', async (event) => {

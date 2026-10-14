@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { cacheTotals, isTextDocument, registerSearch, searchFiles } from './search';
+import { cacheTotals, registerSearch, searchFiles } from './search';
 
 let dir: string;
 
@@ -76,6 +76,19 @@ describe('searchFiles', () => {
     const results = await searchFiles({ rootPath: null, filePath: open }, 'alpha', never);
     expect(results).not.toBeNull();
     expect(results?.map((r) => r.filePath)).toEqual([open]);
+  });
+
+  it('judges an open file that is a link by where it leads, so a document-named link to .env yields nothing', async () => {
+    write('.env', 'API_KEY=secret-value\n');
+    const setup = path.join(dir, 'setup.md');
+    fs.symlinkSync('.env', setup);
+    const notes = write('notes.md', 'API_KEY goes here\n');
+    const alias = path.join(dir, 'alias.md');
+    fs.symlinkSync(notes, alias);
+    expect(await searchFiles({ rootPath: null, filePath: setup }, 'API_KEY', never)).toEqual([]);
+    // A link to a document is searched, under the name the window shows.
+    const viaLink = await searchFiles({ rootPath: null, filePath: alias }, 'API_KEY', never);
+    expect(viaLink?.map((r) => [r.filePath, r.lineNumber])).toEqual([[alias, 1]]);
   });
 
   it('skips files over 2 MB, dot folders, ignored folders and symlinks', async () => {
@@ -210,17 +223,5 @@ describe('searchFiles', () => {
     expect(reads).toBe(2);
     const { counted, held } = cacheTotals();
     expect(counted).toBe(held);
-  });
-});
-
-describe('isTextDocument', () => {
-  it('accepts Markdown and plain text only', () => {
-    expect(['/n/a.md', '/n/B.MARKDOWN', '/n/todo.txt'].map((p) => isTextDocument(p))).toEqual([true, true, true]);
-    expect(['/n/.env', '/n/id_ed25519', '/n/page.mdx', '/n/md'].map((p) => isTextDocument(p))).toEqual([
-      false,
-      false,
-      false,
-      false,
-    ]);
   });
 });

@@ -3,13 +3,15 @@
 // still on the welcome screen, and the windows open at quit come back at the
 // next launch.
 import { app, BrowserWindow, ipcMain, screen } from 'electron';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { FileEntry, WindowRestoreState } from '../renderer/lib/types';
 import { isInsideFolder } from '../shared/paths';
 import { addAllowedRoot, isPathAllowed, hardenWindow } from './allowed-paths';
+import { writeTextAtomic } from './atomic-write';
 import { isOpenableDrop, pickWindowForPath, type RoutingWindow } from './open-routing';
+import { readTextFile } from './read-text';
 import { scanDirectory } from './scan-directory';
 import {
   buildSession,
@@ -182,7 +184,7 @@ async function loadPath(pathToOpen: string): Promise<OpenPayload> {
     addAllowedRoot(pathToOpen);
     return { kind: 'dir', dirPath: pathToOpen, entries: await scanDirectory(pathToOpen) };
   }
-  const content = await fs.readFile(pathToOpen, 'utf-8');
+  const content = await readTextFile(pathToOpen);
   if (!isPathAllowed(pathToOpen)) addAllowedRoot(path.dirname(pathToOpen));
   return { kind: 'file', filePath: pathToOpen, content };
 }
@@ -376,7 +378,7 @@ function saveSession() {
     });
   }
   try {
-    writeFileSync(sessionPath(), serializeSession(buildSession(windows)), { mode: 0o600 });
+    writeTextAtomic(sessionPath(), serializeSession(buildSession(windows)));
   } catch {
     // userData isn't writable; the next launch just won't restore anything.
   }
@@ -441,7 +443,7 @@ async function loadSavedWindow(saved: SavedWindow): Promise<OpenPayload | null> 
     return folderOnly;
   }
   try {
-    const content = await fs.readFile(filePath, 'utf-8');
+    const content = await readTextFile(filePath);
     if (!isPathAllowed(filePath)) addAllowedRoot(path.dirname(filePath));
     return { kind: 'restore', state: { dirPath, entries, filePath, content, scrollTop } };
   } catch {

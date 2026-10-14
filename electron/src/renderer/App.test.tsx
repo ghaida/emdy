@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, act, screen, within, fireEvent, waitFor } from '@testing-library/react';
 import { App } from './App';
 import type { ElectronAPI, FileEntry } from './lib/types';
+import { FILE_TOO_LARGE } from '../shared/read-errors';
 
 // What main sends a window, the call that tells main the page is listening,
 // file reads, the open dialogs, exports, what the window reports about itself
@@ -20,6 +21,7 @@ const api = {
   checkPendingOpen: vi.fn<ElectronAPI['checkPendingOpen']>(async () => false),
   openDialog: vi.fn<ElectronAPI['openDialog']>(async () => null),
   openDialogInNewWindow: vi.fn<ElectronAPI['openDialogInNewWindow']>(async () => null),
+  openInNewWindow: vi.fn<ElectronAPI['openInNewWindow']>(async () => undefined),
   exportPDF: vi.fn<ElectronAPI['exportPDF']>(async () => 'saved'),
   print: vi.fn<ElectronAPI['print']>(async () => 'printed'),
   reportWindowState: vi.fn<ElectronAPI['reportWindowState']>(),
@@ -307,6 +309,45 @@ describe("a drop Emdy can't open", () => {
     await renderApp();
     await act(async () => api.onDropRejected.mock.calls.at(-1)?.[0](rejected));
     expect(toastMessages()).toEqual(toasts);
+  });
+});
+
+describe('a file over 10 MB', () => {
+  // Main's refusal as the page receives it: only the message crosses IPC.
+  const tooLarge = (channel: string) => new Error(`Error invoking remote method '${channel}': Error: ${FILE_TOO_LARGE}`);
+  const TOO_LARGE_TOAST = 'The file is larger than 10 MB';
+
+  it('is named as too large when ⌘O picks it, in this window or a new one', async () => {
+    await renderApp();
+    api.openDialog.mockRejectedValueOnce(tooLarge('open:dialog'));
+    await chooseFromMenu('open');
+    await waitFor(() => expect(toastMessages()).toEqual([TOO_LARGE_TOAST]));
+    // With a document open, ⌘O opens the pick in a new window.
+    await openFile('/notes/a.md', '# A\n');
+    api.openDialogInNewWindow.mockRejectedValueOnce(tooLarge('open:dialog-in-new-window'));
+    await chooseFromMenu('open');
+    await waitFor(() => expect(toastMessages()).toEqual([TOO_LARGE_TOAST, TOO_LARGE_TOAST]));
+  });
+
+  it('leaves the general message for any other failure to open', async () => {
+    await renderApp();
+    api.openDialog.mockRejectedValueOnce(new Error("Error invoking remote method 'open:dialog': Error: EACCES: permission denied"));
+    await chooseFromMenu('open');
+    await waitFor(() => expect(toastMessages()).toEqual(['Failed to open']));
+  });
+
+  it('is named as too large when Open in New Window refuses it, from the sidebar or its menu', async () => {
+    api.readFile.mockImplementation(async (filePath) => textOf(filePath));
+    api.openInNewWindow.mockRejectedValue(tooLarge('file:open-new-window'));
+    await renderApp();
+    await openFolder('/r', [md('/r/a.md'), md('/r/big.md')]);
+    const big = () => within(screen.getByRole('navigation', { name: 'Files' })).getByRole('button', { name: 'big.md' });
+    fireEvent.click(big(), { metaKey: true });
+    await waitFor(() => expect(toastMessages()).toEqual([TOO_LARGE_TOAST]));
+    fireEvent.contextMenu(big());
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Open in New Window' }));
+    await waitFor(() => expect(toastMessages()).toEqual([TOO_LARGE_TOAST, TOO_LARGE_TOAST]));
+    expect(api.openInNewWindow.mock.calls).toEqual([['/r/big.md'], ['/r/big.md']]);
   });
 });
 

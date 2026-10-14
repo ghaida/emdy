@@ -8,9 +8,10 @@ interface DirectoryBrowserProps {
   rootPath: string | null;
   onFileSelect: (filePath: string) => void;
   onFileContextMenu: (e: React.MouseEvent, filePath: string) => void;
+  onOpenInNewWindow: (filePath: string) => void;
 }
 
-export function DirectoryBrowser({ entries, activePath, onFileSelect, onFileContextMenu }: DirectoryBrowserProps) {
+export function DirectoryBrowser({ entries, activePath, onFileSelect, onFileContextMenu, onOpenInNewWindow }: DirectoryBrowserProps) {
   const handleTreeKeyDown = useCallback((e: React.KeyboardEvent) => {
     const tree = e.currentTarget;
     const items = Array.from(tree.querySelectorAll<HTMLElement>('button.tree-item, button.tree-folder'));
@@ -67,6 +68,7 @@ export function DirectoryBrowser({ entries, activePath, onFileSelect, onFileCont
             activePath={activePath}
             onSelect={onFileSelect}
             onContextMenu={onFileContextMenu}
+            onOpenInNewWindow={onOpenInNewWindow}
           />
         ))}
         {folders.map((folder) => (
@@ -76,6 +78,7 @@ export function DirectoryBrowser({ entries, activePath, onFileSelect, onFileCont
             activePath={activePath}
             onSelect={onFileSelect}
             onContextMenu={onFileContextMenu}
+            onOpenInNewWindow={onOpenInNewWindow}
           />
         ))}
         {rootFiles.length === 0 && folders.length === 0 && (
@@ -86,18 +89,19 @@ export function DirectoryBrowser({ entries, activePath, onFileSelect, onFileCont
   );
 }
 
-function FileItem({ entry, activePath, nested, onSelect, onContextMenu }: {
+function FileItem({ entry, activePath, nested, onSelect, onContextMenu, onOpenInNewWindow }: {
   entry: FileEntry;
   activePath: string | null;
   nested?: boolean;
   onSelect: (path: string) => void;
   onContextMenu: (e: React.MouseEvent, path: string) => void;
+  onOpenInNewWindow: (path: string) => void;
 }) {
   const handleClick = (e: React.MouseEvent) => {
     const modifierPressed = e.metaKey || e.ctrlKey;
     if (modifierPressed) {
       e.preventDefault();
-      window.electronAPI.openInNewWindow(entry.path);
+      onOpenInNewWindow(entry.path);
       return;
     }
     onSelect(entry.path);
@@ -116,11 +120,12 @@ function FileItem({ entry, activePath, nested, onSelect, onContextMenu }: {
   );
 }
 
-function FolderItem({ entry, activePath, onSelect, onContextMenu }: {
+function FolderItem({ entry, activePath, onSelect, onContextMenu, onOpenInNewWindow }: {
   entry: FileEntry;
   activePath: string | null;
   onSelect: (path: string) => void;
   onContextMenu: (e: React.MouseEvent, path: string) => void;
+  onOpenInNewWindow: (path: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -161,6 +166,7 @@ function FolderItem({ entry, activePath, onSelect, onContextMenu }: {
               nested
               onSelect={onSelect}
               onContextMenu={onContextMenu}
+              onOpenInNewWindow={onOpenInNewWindow}
             />
           ))}
           {subfolders.map((sub) => (
@@ -170,6 +176,7 @@ function FolderItem({ entry, activePath, onSelect, onContextMenu }: {
               activePath={activePath}
               onSelect={onSelect}
               onContextMenu={onContextMenu}
+              onOpenInNewWindow={onOpenInNewWindow}
             />
           ))}
         </ul>

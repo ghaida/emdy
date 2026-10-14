@@ -5,11 +5,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { SearchResult, SearchScope } from '../renderer/lib/types';
+import { isTextDocument } from '../shared/paths';
 import { IGNORED_DIRS } from './scan-directory';
 
 const MD_FILE = /\.(md|markdown)$/i;
-const TEXT_DOCUMENT = /\.(md|markdown|txt)$/i;
-const MAX_FILE_BYTES = 2 * 1024 * 1024;
+const MAX_SEARCH_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_CACHE_BYTES = 64 * 1024 * 1024;
 const MAX_RESULTS = 50;
 const SNIPPETS_PER_FILE = 3;
@@ -34,11 +34,6 @@ export function cacheTotals(): { counted: number; held: number } {
   let held = 0;
   for (const entry of cache.values()) held += entry.size * 2;
   return { counted: cacheBytes, held };
-}
-
-/** Markdown or plain text: the files Emdy opens as documents. */
-export function isTextDocument(filePath: string): boolean {
-  return TEXT_DOCUMENT.test(filePath);
 }
 
 // The newest query generation each window (by webContents id) has sent.
@@ -70,6 +65,16 @@ async function listFiles(dir: string, out: string[]): Promise<void> {
   }
 }
 
+// The listing skips links, but the open file can be one. It's judged by where
+// it leads, so a setup.md that links to .env isn't searched.
+async function leadsToTextDocument(filePath: string): Promise<boolean> {
+  try {
+    return isTextDocument(await fs.realpath(filePath));
+  } catch {
+    return false; // missing, or a broken link
+  }
+}
+
 async function loadText(file: string): Promise<CacheEntry | null> {
   let stat;
   try {
@@ -77,7 +82,7 @@ async function loadText(file: string): Promise<CacheEntry | null> {
   } catch {
     return null;
   }
-  if (!stat.isFile() || stat.size > MAX_FILE_BYTES) return null;
+  if (!stat.isFile() || stat.size > MAX_SEARCH_FILE_BYTES) return null;
   const cached = cache.get(file);
   if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) return cached;
   let text: string;
@@ -141,7 +146,7 @@ export async function searchFiles(scope: SearchScope, query: string, isStale: ()
   const inText = new RegExp(source, 'giu');
   const files: string[] = [];
   if (scope.rootPath) await listFiles(scope.rootPath, files);
-  else if (scope.filePath && isTextDocument(scope.filePath)) files.push(scope.filePath);
+  else if (scope.filePath && (await leadsToTextDocument(scope.filePath))) files.push(scope.filePath);
   if (scope.filePath && scope.rootPath) {
     const i = files.indexOf(scope.filePath);
     if (i > 0) {

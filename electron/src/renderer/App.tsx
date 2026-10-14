@@ -31,6 +31,7 @@ import { preparePrintPayload } from './lib/print-payload';
 import { exportNeedsRendering } from './lib/diagram-export';
 import { holdScrollPosition } from './lib/scroll-restore';
 import { isInsideFolder } from '../shared/paths';
+import { FILE_TOO_LARGE } from '../shared/read-errors';
 
 type FindMode = 'multi-persistent' | 'zero' | 'over-cap';
 
@@ -51,6 +52,13 @@ const FIND_QUERY_DEBOUNCE_MS = 150;
 const RESTORE_SCROLL_HOLD_MS = 3000;
 
 let toastId = 0;
+
+// What a failed open says. Main's reason arrives only as the error's text; a
+// file over the size cap is the one worth naming.
+function openFailureMessage(error: unknown): string {
+  const tooLarge = error instanceof Error && error.message.includes(FILE_TOO_LARGE);
+  return tooLarge ? 'The file is larger than 10 MB' : 'Failed to open';
+}
 
 // The first file the sidebar lists. It shows a level's files before its
 // folders, while scanDirectory lists the folders first.
@@ -407,8 +415,8 @@ export function App() {
         setFileError(null);
         if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
       }
-    } catch {
-      addToast('Failed to open', 'error');
+    } catch (error) {
+      addToast(openFailureMessage(error), 'error');
     }
   }, [addToast, closeFind]);
 
@@ -417,13 +425,22 @@ export function App() {
     if (hasContent) {
       try {
         await window.electronAPI.openDialogInNewWindow();
-      } catch {
-        addToast('Failed to open', 'error');
+      } catch (error) {
+        addToast(openFailureMessage(error), 'error');
       }
       return;
     }
     await openHere();
   }, [addToast, content, dirPath, openHere]);
+
+  // ⌘-click in the sidebar, and Open in New Window in a file's menu.
+  const handleOpenInNewWindow = useCallback(async (path: string) => {
+    try {
+      await window.electronAPI.openInNewWindow(path);
+    } catch (error) {
+      addToast(openFailureMessage(error), 'error');
+    }
+  }, [addToast]);
 
   const handleFileSelect = useCallback(async (path: string) => {
     try {
@@ -885,6 +902,7 @@ export function App() {
               rootPath={dirPath}
               onFileSelect={handleFileSelect}
               onFileContextMenu={handleFileContextMenu}
+              onOpenInNewWindow={handleOpenInNewWindow}
             />
           </nav>
         )}
@@ -900,6 +918,7 @@ export function App() {
           onClose={() => setContextMenu(null)}
           onCopyHTML={handleCopyHTML}
           onExportPDF={handleExportPDF}
+          onOpenInNewWindow={handleOpenInNewWindow}
         />
       )}
     </div>

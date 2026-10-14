@@ -10,9 +10,10 @@ interface FileContextMenuProps {
   onClose: () => void;
   onCopyHTML: () => void;
   onExportPDF: () => void;
+  onOpenInNewWindow: (filePath: string) => void;
 }
 
-export function FileContextMenu({ x, y, filePath, isOpenFile, onClose, onCopyHTML, onExportPDF }: FileContextMenuProps) {
+export function FileContextMenu({ x, y, filePath, isOpenFile, onClose, onCopyHTML, onExportPDF, onOpenInNewWindow }: FileContextMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   useFocusTrap(ref, true);
 
@@ -56,7 +57,7 @@ export function FileContextMenu({ x, y, filePath, isOpenFile, onClose, onCopyHTM
         <FolderOpen size={14} strokeWidth={1.5} />
         Show in Finder
       </button>
-      <button className="context-menu-item" role="menuitem" onClick={() => { window.electronAPI.openInNewWindow(filePath); onClose(); }}>
+      <button className="context-menu-item" role="menuitem" onClick={() => { onOpenInNewWindow(filePath); onClose(); }}>
         <ExternalLink size={14} strokeWidth={1.5} />
         Open in New Window
       </button>

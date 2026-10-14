@@ -5,6 +5,7 @@
 import { app } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
+import { writeJsonAtomic } from './atomic-write';
 import { parseRecents, withRecent } from './recent-list';
 
 let recents: string[] | null = null;
@@ -28,7 +29,7 @@ function load(): string[] {
 function save(list: string[]) {
   recents = list;
   try {
-    fs.writeFileSync(recentsPath(), JSON.stringify(list, null, 2), { mode: 0o600 });
+    writeJsonAtomic(recentsPath(), list);
   } catch {
     // userData isn't writable; the list still works until Emdy quits.
   }

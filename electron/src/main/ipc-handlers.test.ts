@@ -18,7 +18,8 @@ vi.mock('electron', () => ({
   BrowserWindow: {},
   shell: {},
 }));
-// These reach Electron's app and windows as they load; the search handler uses none of them.
+// These reach Electron's app and windows as they load. The handlers tested here
+// use none of them, apart from file:read counting an open, which does nothing here.
 vi.mock('./settings-store', () => ({ nudgeTrackFileOpen: vi.fn() }));
 vi.mock('./recents', () => ({ noteRecent: vi.fn() }));
 vi.mock('./windows', () => ({ openPathInNewWindow: vi.fn() }));
@@ -37,6 +38,13 @@ function search(sender: number, query: unknown, scope: unknown, generation: unkn
   const handler = handlers.get('search:everything');
   if (!handler) throw new Error('search:everything is not registered');
   return Promise.resolve(handler({ sender: { id: sender } }, query, scope, generation)) as Promise<SearchResult[] | null>;
+}
+
+// Invokes file:read as a window's sidebar click or live reload would.
+function read(filePath: unknown): Promise<string> {
+  const handler = handlers.get('file:read');
+  if (!handler) throw new Error('file:read is not registered');
+  return Promise.resolve(handler({ sender: { id: 1 } }, filePath)) as Promise<string>;
 }
 
 // A slow drive, as in search.test.ts: every read takes a few milliseconds, and
@@ -108,5 +116,27 @@ describe('search:everything', () => {
     const todo = write('todo.txt', 'API_KEY goes here\n');
     expect(await search(4, 'API_KEY', { rootPath: null, filePath: env }, 1)).toEqual([]);
     expect((await search(4, 'API_KEY', { rootPath: null, filePath: todo }, 2))?.map((r) => r.lineNumber)).toEqual([1]);
+  });
+});
+
+describe('file:read', () => {
+  it('serves Markdown and plain text from an opened folder, and refuses any other file in it', async () => {
+    const notes = write('notes.md', '# Notes\n');
+    const todo = write('todo.TXT', 'milk\n');
+    const env = write('.env', 'API_KEY=secret-value\n');
+    expect(await read(notes)).toBe('# Notes\n');
+    expect(await read(todo)).toBe('milk\n');
+    await expect(read(env)).rejects.toThrow('Access denied');
+  });
+
+  it('checks the file a link points at, so a document-named link to .env is refused', async () => {
+    const notes = write('notes.md', '# Notes\n');
+    write('.env', 'API_KEY=secret-value\n');
+    const setup = path.join(dir, 'setup.md');
+    fs.symlinkSync('.env', setup);
+    const alias = path.join(dir, 'alias.md');
+    fs.symlinkSync(notes, alias);
+    await expect(read(setup)).rejects.toThrow('Access denied');
+    expect(await read(alias)).toBe('# Notes\n');
   });
 });

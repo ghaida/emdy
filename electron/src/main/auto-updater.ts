@@ -1,6 +1,7 @@
 import { app, autoUpdater, ipcMain, BrowserWindow } from 'electron';
 import fsSync from 'node:fs';
 import path from 'node:path';
+import { writeJsonAtomic } from './atomic-write';
 import { RECHECK_INTERVAL_MS, shouldCheckOnFocus } from './update-schedule';
 import { sendWhenReadyTo } from './windows';
 
@@ -33,7 +34,7 @@ function loadState(): UpdateState {
 }
 
 function saveState(state: UpdateState) {
-  fsSync.writeFileSync(statePath, JSON.stringify(state, null, 2), { mode: 0o600 });
+  writeJsonAtomic(statePath, state);
 }
 
 // Track update state for renderer queries

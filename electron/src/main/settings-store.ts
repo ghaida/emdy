@@ -1,6 +1,7 @@
 import { ipcMain, app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
+import { writeJsonAtomic } from './atomic-write';
 import { sanitizeSettings, validateSetting, type Settings } from './settings-schema';
 
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
@@ -14,7 +15,7 @@ function load(): Settings {
 }
 
 function save(settings: Settings) {
-  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), { mode: 0o600 });
+  writeJsonAtomic(settingsPath, settings);
 }
 
 const current = load();
@@ -77,7 +78,7 @@ function loadNudge(): NudgeState {
 }
 
 function saveNudge(state: NudgeState) {
-  fs.writeFileSync(nudgePath, JSON.stringify(state, null, 2), { mode: 0o600 });
+  writeJsonAtomic(nudgePath, state);
 }
 
 const nudge = loadNudge();
